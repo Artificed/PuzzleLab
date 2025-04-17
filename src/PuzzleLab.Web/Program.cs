@@ -1,4 +1,5 @@
 using PuzzleLab.Web.Components;
+using PuzzleLab.Web.Pages;
 
 var builder = WebApplication.CreateBuilder(args);
 
