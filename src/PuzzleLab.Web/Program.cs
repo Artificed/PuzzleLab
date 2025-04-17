@@ -1,6 +1,4 @@
-using Microsoft.EntityFrameworkCore;
-using PuzzleLab.Infrastructure.Persistence;
-using PuzzleLab.Web.Components;
+using PuzzleLab.Web;
 using PuzzleLab.Web.Pages;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,21 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
-builder.Services.AddDbContext<DatabaseContext>(options => {
-    options.UseNpgsql(connectionString,
-        npgsqlOptions => {
-            npgsqlOptions.MigrationsAssembly(typeof(DatabaseContext).Assembly.FullName);
-        });
-    options.UseSnakeCaseNamingConvention();
-});
-
 var app = builder.Build();
-
-var scope = app.Services.CreateScope();
-var db = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
-db.Database.Migrate();
 
 if (!app.Environment.IsDevelopment())
 {

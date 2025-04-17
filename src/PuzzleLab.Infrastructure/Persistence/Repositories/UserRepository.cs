@@ -11,9 +11,9 @@ public class UserRepository(DatabaseContext databaseContext) : IUserRepository
         return databaseContext.Users.ToListAsync(cancellationToken);
     }
 
-    public Task AddAsync(User user, CancellationToken cancellationToken = default)
+    public Task<User?> GetUserByEmail(string email, CancellationToken cancellationToken = default)
     {
-        databaseContext.Users.Add(user);
-        return databaseContext.SaveChangesAsync(cancellationToken);
+        return databaseContext.Users
+            .FirstOrDefaultAsync(x => x.Email == email, cancellationToken);
     }
 }

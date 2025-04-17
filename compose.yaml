@@ -1,14 +1,25 @@
 ﻿services:
-  puzzle_lab:
-    image: puzzle_lab
+  puzzle_lab_web:
+    image: puzzle_lab_web
     restart: unless-stopped
     depends_on:
-      - database
+      - puzzle_lab_api
     build:
       context: .
       dockerfile: ./src/PuzzleLab.Web/Dockerfile
     ports:
       - "8000:8000"
+
+  puzzle_lab_api:
+    image: puzzle_lab_api
+    restart: unless-stopped
+    depends_on:
+      - database
+    build:
+      context: .
+      dockerfile: ./src/PuzzleLab.API/Dockerfile
+    ports:
+      - "3000:3000"
 
   database:
     image: postgres:latest
