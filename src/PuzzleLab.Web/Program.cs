@@ -10,9 +10,13 @@ builder.Services.AddRazorComponents()
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-builder.Services.AddDbContext<DatabaseContext>(options =>
+builder.Services.AddDbContext<DatabaseContext>(options => {
     options.UseNpgsql(connectionString,
-        o => o.MigrationsAssembly(typeof(DatabaseContext).Assembly.FullName)));
+        npgsqlOptions => {
+            npgsqlOptions.MigrationsAssembly(typeof(DatabaseContext).Assembly.FullName);
+        });
+    options.UseSnakeCaseNamingConvention();
+});
 
 var app = builder.Build();
 
