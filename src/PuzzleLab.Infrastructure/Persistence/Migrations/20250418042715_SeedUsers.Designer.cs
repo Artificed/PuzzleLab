@@ -12,7 +12,7 @@ using PuzzleLab.Infrastructure.Persistence;
 namespace PuzzleLab.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20250417165541_SeedUsers")]
+    [Migration("20250418042715_SeedUsers")]
     partial class SeedUsers
     {
         /// <inheritdoc />
@@ -32,15 +32,23 @@ namespace PuzzleLab.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("email");
 
-                    b.Property<string>("Password")
+                    b.Property<DateTime?>("LastLoginAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_login_at");
+
+                    b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("password");
+                        .HasColumnName("password_hash");
 
                     b.Property<string>("Role")
                         .IsRequired()

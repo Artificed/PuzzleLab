@@ -15,7 +15,7 @@ public class LoginCommandHandler(IUserRepository userRepository) : IRequestHandl
             throw new Exception("User not found");
         }
 
-        if (user.Password != request.Password)
+        if (user.PasswordHash != request.Password) // fix later
         {
             throw new Exception("Invalid password");
         }

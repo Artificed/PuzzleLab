@@ -1,9 +1,13 @@
 using Microsoft.EntityFrameworkCore;
+using PuzzleLab.Domain.Entities;
 using PuzzleLab.Domain.Repositories;
 using PuzzleLab.Infrastructure.Persistence;
 using PuzzleLab.Infrastructure.Persistence.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
@@ -23,6 +27,13 @@ builder.Services.AddMediatR(
 builder.Services.AddControllers();
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
 var scope = app.Services.CreateScope();
 
 var db = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
