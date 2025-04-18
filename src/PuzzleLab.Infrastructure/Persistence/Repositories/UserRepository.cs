@@ -6,14 +6,25 @@ namespace PuzzleLab.Infrastructure.Persistence.Repositories;
 
 public class UserRepository(DatabaseContext databaseContext) : IUserRepository
 {
-    public Task<List<User>> GetAllUsersAsync(CancellationToken cancellationToken = default)
+    public async Task<List<User>> GetAllUsersAsync(CancellationToken cancellationToken = default)
     {
-        return databaseContext.Users.ToListAsync(cancellationToken);
+        return await databaseContext.Users.ToListAsync(cancellationToken);
     }
 
-    public Task<User?> GetUserByEmail(string email, CancellationToken cancellationToken = default)
+    public async Task<User?> GetUserByIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        return databaseContext.Users
+        return await databaseContext.Users.FirstOrDefaultAsync(x => x.Id == userId, cancellationToken);
+    }
+
+    public async Task<User?> GetUserByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        return await databaseContext.Users
             .FirstOrDefaultAsync(x => x.Email == email, cancellationToken);
+    }
+
+    public async Task InsertUserAsync(User user, CancellationToken cancellationToken = default)
+    {
+        await databaseContext.Users.AddAsync(user, cancellationToken);
+        await databaseContext.SaveChangesAsync(cancellationToken);
     }
 }
