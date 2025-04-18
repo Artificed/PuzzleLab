@@ -1,18 +1,17 @@
 using PuzzleLab.Domain.Factories;
-using PuzzleLab.Infrastructure.Persistence.Repositories;
+using PuzzleLab.Domain.Repositories;
 
 namespace PuzzleLab.Infrastructure.Persistence.Seeders;
 
-public class QuestionPackageSeeder(DatabaseContext databaseContext)
+public class QuestionPackageSeeder(
+    IQuestionPackageRepository packageRepository,
+    QuestionPackageFactory packageFactory)
 {
-    private readonly QuestionPackageRepository _packageRepository = new(databaseContext);
-    private readonly QuestionPackageFactory _packageFactory = new();
-
     public async Task SeedQuestionPackagesAsync(CancellationToken cancellationToken = default)
     {
         Console.WriteLine("Seeding Question Packages...");
 
-        if ((await _packageRepository.GetAllQuestionPackagesAsync(cancellationToken)).Any())
+        if ((await packageRepository.GetAllQuestionPackagesAsync(cancellationToken)).Any())
         {
             Console.WriteLine("Question Packages already seeded.");
             return;
@@ -31,8 +30,8 @@ public class QuestionPackageSeeder(DatabaseContext databaseContext)
         int count = 0;
         foreach (var (name, description) in packagesToSeed)
         {
-            var package = _packageFactory.CreateQuestionPackage(name, description);
-            await _packageRepository.InsertQuestionPackageAsync(package, cancellationToken);
+            var package = packageFactory.CreateQuestionPackage(name, description);
+            await packageRepository.InsertQuestionPackageAsync(package, cancellationToken);
             count++;
         }
 

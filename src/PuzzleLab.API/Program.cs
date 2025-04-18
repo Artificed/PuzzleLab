@@ -1,11 +1,42 @@
 using Microsoft.EntityFrameworkCore;
 using PuzzleLab.Domain.Entities;
+using PuzzleLab.Domain.Factories;
 using PuzzleLab.Domain.Repositories;
 using PuzzleLab.Infrastructure.Persistence;
 using PuzzleLab.Infrastructure.Persistence.Repositories;
 using PuzzleLab.Infrastructure.Persistence.Seeders;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddScoped<IAnswerRepository, AnswerRepository>();
+builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
+builder.Services.AddScoped<IQuestionPackageRepository, QuestionPackageRepository>();
+builder.Services.AddScoped<IQuizAnswerRepository, QuizAnswerRepository>();
+builder.Services.AddScoped<IQuizRepository, QuizRepository>();
+builder.Services.AddScoped<IQuizSessionRepository, QuizSessionRepository>();
+builder.Services.AddScoped<IQuizUserRepository, QuizUserRepository>();
+builder.Services.AddScoped<IScheduleRepository, ScheduleRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+builder.Services.AddTransient<AnswerFactory>();
+builder.Services.AddTransient<QuestionFactory>();
+builder.Services.AddTransient<QuestionPackageFactory>();
+builder.Services.AddTransient<QuizAnswerFactory>();
+builder.Services.AddTransient<QuizFactory>();
+builder.Services.AddTransient<QuizSessionFactory>();
+builder.Services.AddTransient<QuizUserFactory>();
+builder.Services.AddTransient<ScheduleFactory>();
+builder.Services.AddTransient<UserFactory>();
+
+builder.Services.AddScoped<AnswerSeeder>();
+builder.Services.AddScoped<QuestionSeeder>();
+builder.Services.AddScoped<QuestionPackageSeeder>();
+builder.Services.AddScoped<QuizAnswerSeeder>();
+builder.Services.AddScoped<QuizSeeder>();
+builder.Services.AddScoped<QuizSessionSeeder>();
+builder.Services.AddScoped<QuizUserSeeder>();
+builder.Services.AddScoped<ScheduleSeeder>();
+builder.Services.AddScoped<UserSeeder>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -19,7 +50,6 @@ builder.Services.AddDbContext<DatabaseContext>(options =>
     options.UseSnakeCaseNamingConvention();
 });
 
-builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddMediatR(
     cfg => cfg.RegisterServicesFromAssembly(typeof
         (PuzzleLab.Application.Features.Auth.Commands.LoginCommand).Assembly));
@@ -37,35 +67,37 @@ if (args.Contains("--migrate"))
 
 if (args.Contains("--seed"))
 {
-    var scope = app.Services.CreateScope();
-    var databaseContext = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
+    using (var scope = app.Services.CreateScope())
+    {
+        var serviceProvider = scope.ServiceProvider;
 
-    var userSeeder = new UserSeeder(databaseContext);
-    await userSeeder.SeedUsersAsync();
+        var userSeeder = serviceProvider.GetRequiredService<UserSeeder>();
+        await userSeeder.SeedUsersAsync();
 
-    var questionPackageSeeder = new QuestionPackageSeeder(databaseContext);
-    await questionPackageSeeder.SeedQuestionPackagesAsync();
+        var questionPackageSeeder = serviceProvider.GetRequiredService<QuestionPackageSeeder>();
+        await questionPackageSeeder.SeedQuestionPackagesAsync();
 
-    var questionSeeder = new QuestionSeeder(databaseContext);
-    await questionSeeder.SeedQuestionsAsync();
+        var questionSeeder = serviceProvider.GetRequiredService<QuestionSeeder>();
+        await questionSeeder.SeedQuestionsAsync();
 
-    var answerSeeder = new AnswerSeeder(databaseContext);
-    await answerSeeder.SeedAnswersAsync();
+        var answerSeeder = serviceProvider.GetRequiredService<AnswerSeeder>();
+        await answerSeeder.SeedAnswersAsync();
 
-    var scheduleSeeder = new ScheduleSeeder(databaseContext);
-    await scheduleSeeder.SeedSchedulesAsync();
+        var scheduleSeeder = serviceProvider.GetRequiredService<ScheduleSeeder>();
+        await scheduleSeeder.SeedSchedulesAsync();
 
-    var quizSeeder = new QuizSeeder(databaseContext);
-    await quizSeeder.SeedQuizzesAsync();
+        var quizSeeder = serviceProvider.GetRequiredService<QuizSeeder>();
+        await quizSeeder.SeedQuizzesAsync();
 
-    var quizUserSeeder = new QuizUserSeeder(databaseContext);
-    await quizUserSeeder.SeedQuizUsersAsync();
+        var quizUserSeeder = serviceProvider.GetRequiredService<QuizUserSeeder>();
+        await quizUserSeeder.SeedQuizUsersAsync();
 
-    var quizSessionSeeder = new QuizSessionSeeder(databaseContext);
-    await quizSessionSeeder.SeedQuizSessionsAsync();
+        var quizSessionSeeder = serviceProvider.GetRequiredService<QuizSessionSeeder>();
+        await quizSessionSeeder.SeedQuizSessionsAsync();
 
-    var quizAnswerSeeder = new QuizAnswerSeeder(databaseContext);
-    await quizAnswerSeeder.SeedQuizAnswersAsync();
+        var quizAnswerSeeder = serviceProvider.GetRequiredService<QuizAnswerSeeder>();
+        await quizAnswerSeeder.SeedQuizAnswersAsync();
+    }
 }
 
 if (app.Environment.IsDevelopment())

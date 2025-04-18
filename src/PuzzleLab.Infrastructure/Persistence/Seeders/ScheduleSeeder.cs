@@ -1,18 +1,17 @@
 using PuzzleLab.Domain.Factories;
-using PuzzleLab.Infrastructure.Persistence.Repositories;
+using PuzzleLab.Domain.Repositories;
 
 namespace PuzzleLab.Infrastructure.Persistence.Seeders;
 
-public class ScheduleSeeder(DatabaseContext databaseContext)
+public class ScheduleSeeder(
+    IScheduleRepository scheduleRepository,
+    ScheduleFactory scheduleFactory)
 {
-    private readonly ScheduleRepository _scheduleRepository = new(databaseContext);
-    private readonly ScheduleFactory _scheduleFactory = new();
-
     public async Task SeedSchedulesAsync(CancellationToken cancellationToken = default)
     {
         Console.WriteLine("Seeding Schedules...");
 
-        if ((await _scheduleRepository.GetAllSchedulesAsync(cancellationToken)).Any())
+        if ((await scheduleRepository.GetAllSchedulesAsync(cancellationToken)).Any())
         {
             Console.WriteLine("Schedules already seeded.");
             return;
@@ -30,8 +29,8 @@ public class ScheduleSeeder(DatabaseContext databaseContext)
         for (int i = 0; i < schedulesToSeed.Count; i++)
         {
             var (start, end) = schedulesToSeed[i];
-            var schedule = _scheduleFactory.CreateSchedule(start, end);
-            await _scheduleRepository.InsertScheduleAsync(schedule, cancellationToken);
+            var schedule = scheduleFactory.CreateSchedule(start, end);
+            await scheduleRepository.InsertScheduleAsync(schedule, cancellationToken);
         }
 
         Console.WriteLine($"Seeded limit, {schedulesToSeed.Count} Schedules.");

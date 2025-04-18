@@ -1,43 +1,41 @@
 using PuzzleLab.Domain.Factories;
-using PuzzleLab.Infrastructure.Persistence.Repositories;
+using PuzzleLab.Domain.Repositories;
 
 namespace PuzzleLab.Infrastructure.Persistence.Seeders;
 
-public class QuizAnswerSeeder(DatabaseContext databaseContext)
+public class QuizAnswerSeeder(
+    IQuizAnswerRepository quizAnswerRepository,
+    QuizAnswerFactory quizAnswerFactory,
+    IQuizSessionRepository quizSessionRepository,
+    IQuestionRepository questionRepository,
+    IAnswerRepository answerRepository,
+    IQuizRepository quizRepository)
 {
-    private readonly QuizAnswerRepository _quizAnswerRepository = new(databaseContext);
-    private readonly QuizAnswerFactory _quizAnswerFactory = new();
-
-    private readonly QuizSessionRepository _quizSessionRepository = new(databaseContext);
-    private readonly QuestionRepository _questionRepository = new(databaseContext);
-    private readonly AnswerRepository _answerRepository = new(databaseContext);
-    private readonly QuizRepository _quizRepository = new(databaseContext);
-
     public async Task SeedQuizAnswersAsync(CancellationToken cancellationToken = default)
     {
         Console.WriteLine("Seeding Quiz Answers...");
 
-        if ((await _quizAnswerRepository.GetAllQuizAnswersAsync(cancellationToken)).Any())
+        if ((await quizAnswerRepository.GetAllQuizAnswersAsync(cancellationToken)).Any())
         {
             Console.WriteLine("Quiz Answers already seeded.");
             return;
         }
 
-        var sessions = await _quizSessionRepository.GetAllQuizSessionsAsync(cancellationToken);
+        var sessions = await quizSessionRepository.GetAllQuizSessionsAsync(cancellationToken);
         if (!sessions.Any())
         {
             Console.WriteLine("No Quiz Sessions found. Aborting Quiz Answer seeding.");
             return;
         }
 
-        var quizzes = (await _quizRepository.GetAllQuizzesAsync(cancellationToken))
+        var quizzes = (await quizRepository.GetAllQuizzesAsync(cancellationToken))
             .ToDictionary(q => q.Id); // Faster lookup
 
-        var allQuestions = await _questionRepository.GetAllQuestionsAsync(cancellationToken);
+        var allQuestions = await questionRepository.GetAllQuestionsAsync(cancellationToken);
         var questionsByPackage = allQuestions.GroupBy(q => q.QuestionPackageId)
             .ToDictionary(g => g.Key, g => g.ToList());
 
-        var allAnswers = await _answerRepository.GetAllAnswersAsync(cancellationToken);
+        var allAnswers = await answerRepository.GetAllAnswersAsync(cancellationToken);
         var answersByQuestion = allAnswers.GroupBy(a => a.QuestionId)
             .ToDictionary(g => g.Key, g => g.ToList());
 
@@ -78,14 +76,14 @@ public class QuizAnswerSeeder(DatabaseContext databaseContext)
 
                 var selectedAnswer = possibleAnswers[random.Next(possibleAnswers.Count)];
 
-                var quizAnswer = _quizAnswerFactory.CreateQuizAnswer(
+                var quizAnswer = quizAnswerFactory.CreateQuizAnswer(
                     session.Id,
                     question.Id,
                     selectedAnswer.Id,
                     selectedAnswer.IsCorrect
                 );
 
-                await _quizAnswerRepository.InsertQuizAnswerAsync(quizAnswer, cancellationToken);
+                await quizAnswerRepository.InsertQuizAnswerAsync(quizAnswer, cancellationToken);
                 count++;
             }
         }

@@ -1,18 +1,17 @@
 using PuzzleLab.Domain.Factories;
-using PuzzleLab.Infrastructure.Persistence.Repositories;
+using PuzzleLab.Domain.Repositories;
 
 namespace PuzzleLab.Infrastructure.Persistence.Seeders;
 
-public class UserSeeder(DatabaseContext databaseContext)
+public class UserSeeder(
+    IUserRepository userRepository,
+    UserFactory userFactory)
 {
-    private readonly UserRepository _userRepository = new(databaseContext);
-    private readonly UserFactory _userFactory = new();
-
     public async Task SeedUsersAsync(CancellationToken cancellationToken = default)
     {
-        Console.WriteLine("Seeding Question Packages...");
+        Console.WriteLine("Seeding Users...");
 
-        if ((await _userRepository.GetAllUsersAsync(cancellationToken)).Any())
+        if ((await userRepository.GetAllUsersAsync(cancellationToken)).Any())
         {
             Console.WriteLine("Users already seeded.");
             return;
@@ -20,16 +19,16 @@ public class UserSeeder(DatabaseContext databaseContext)
 
         var defaultPassword = BCrypt.Net.BCrypt.HashPassword("password");
 
-        var admin = _userFactory.CreateUser("admin", "admin@gmail.com", defaultPassword, "Admin");
-        await _userRepository.InsertUserAsync(admin, cancellationToken);
+        var admin = userFactory.CreateUser("admin", "admin@gmail.com", defaultPassword, "Admin");
+        await userRepository.InsertUserAsync(admin, cancellationToken);
 
-        var user1 = _userFactory.CreateUser("user1", "user1@gmail.com", defaultPassword, "User");
-        await _userRepository.InsertUserAsync(user1, cancellationToken);
+        var user1 = userFactory.CreateUser("user1", "user1@gmail.com", defaultPassword, "User");
+        await userRepository.InsertUserAsync(user1, cancellationToken);
 
-        var user2 = _userFactory.CreateUser("user2", "user2@gmail.com", defaultPassword, "User");
-        await _userRepository.InsertUserAsync(user2, cancellationToken);
+        var user2 = userFactory.CreateUser("user2", "user2@gmail.com", defaultPassword, "User");
+        await userRepository.InsertUserAsync(user2, cancellationToken);
 
-        var user3 = _userFactory.CreateUser("user3", "user3@gmail.com", defaultPassword, "User");
-        await _userRepository.InsertUserAsync(user3, cancellationToken);
+        var user3 = userFactory.CreateUser("user3", "user3@gmail.com", defaultPassword, "User");
+        await userRepository.InsertUserAsync(user3, cancellationToken);
     }
 }

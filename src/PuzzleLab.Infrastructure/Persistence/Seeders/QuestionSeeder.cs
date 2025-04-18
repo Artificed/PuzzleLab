@@ -1,27 +1,26 @@
 using PuzzleLab.Domain.Entities;
 using PuzzleLab.Domain.Factories;
-using PuzzleLab.Infrastructure.Persistence.Repositories;
+using PuzzleLab.Domain.Repositories;
 using PuzzleLab.Infrastructure.Persistence.Utils;
 
 namespace PuzzleLab.Infrastructure.Persistence.Seeders;
 
-public class QuestionSeeder(DatabaseContext databaseContext)
+public class QuestionSeeder(
+    IQuestionRepository questionRepository,
+    IQuestionPackageRepository packageRepository,
+    QuestionFactory questionFactory)
 {
-    private readonly QuestionRepository _questionRepository = new(databaseContext);
-    private readonly QuestionPackageRepository _packageRepository = new(databaseContext);
-    private readonly QuestionFactory _questionFactory = new();
-
     public async Task SeedQuestionsAsync(CancellationToken cancellationToken = default)
     {
         Console.WriteLine("Seeding Questions...");
 
-        if ((await _questionRepository.GetAllQuestionsAsync(cancellationToken)).Any())
+        if ((await questionRepository.GetAllQuestionsAsync(cancellationToken)).Any())
         {
             Console.WriteLine("Questions already seeded.");
             return;
         }
 
-        var packages = await _packageRepository.GetAllQuestionPackagesAsync(cancellationToken);
+        var packages = await packageRepository.GetAllQuestionPackagesAsync(cancellationToken);
         if (!packages.Any())
         {
             Console.WriteLine("No Question Packages found. Aborting Question seeding.");
@@ -73,14 +72,14 @@ public class QuestionSeeder(DatabaseContext databaseContext)
 
                 string mimeType = "image/jpg";
 
-                question = _questionFactory.CreateQuestionWithImage(packageId, text, seedImageData, mimeType);
+                question = questionFactory.CreateQuestionWithImage(packageId, text, seedImageData, mimeType);
             }
             else
             {
-                question = _questionFactory.CreateQuestion(packageId, text);
+                question = questionFactory.CreateQuestion(packageId, text);
             }
 
-            await _questionRepository.InsertQuestionAsync(question, cancellationToken);
+            await questionRepository.InsertQuestionAsync(question, cancellationToken);
             count++;
         }
 

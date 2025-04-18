@@ -1,25 +1,24 @@
 using PuzzleLab.Domain.Factories;
-using PuzzleLab.Infrastructure.Persistence.Repositories;
+using PuzzleLab.Domain.Repositories;
 
 namespace PuzzleLab.Infrastructure.Persistence.Seeders;
 
-public class AnswerSeeder(DatabaseContext databaseContext)
+public class AnswerSeeder(
+    IAnswerRepository answerRepository,
+    IQuestionRepository questionRepository,
+    AnswerFactory answerFactory)
 {
-    private readonly AnswerRepository _answerRepository = new(databaseContext);
-    private readonly QuestionRepository _questionRepository = new(databaseContext);
-    private readonly AnswerFactory _answerFactory = new();
-
     public async Task SeedAnswersAsync(CancellationToken cancellationToken = default)
     {
         Console.WriteLine("Seeding Answers...");
 
-        if ((await _answerRepository.GetAllAnswersAsync(cancellationToken)).Any())
+        if ((await answerRepository.GetAllAnswersAsync(cancellationToken)).Any())
         {
             Console.WriteLine("Answers already seeded.");
             return;
         }
 
-        var questions = await _questionRepository.GetAllQuestionsAsync(cancellationToken);
+        var questions = await questionRepository.GetAllQuestionsAsync(cancellationToken);
         if (!questions.Any())
         {
             Console.WriteLine("No Questions found. Aborting Answer seeding.");
@@ -33,8 +32,8 @@ public class AnswerSeeder(DatabaseContext databaseContext)
 
             foreach (var (text, isCorrect) in answersForQuestion)
             {
-                var answer = _answerFactory.CreateAnswer(question.Id, text, isCorrect);
-                await _answerRepository.InsertAnswerAsync(answer, cancellationToken);
+                var answer = answerFactory.CreateAnswer(question.Id, text, isCorrect);
+                await answerRepository.InsertAnswerAsync(answer, cancellationToken);
                 count++;
             }
 
@@ -47,8 +46,8 @@ public class AnswerSeeder(DatabaseContext databaseContext)
             var firstQuestionId = questions.First().Id;
             while (count < 5)
             {
-                var answer = _answerFactory.CreateAnswer(firstQuestionId, $"Placeholder Answer {count + 1}", false);
-                await _answerRepository.InsertAnswerAsync(answer, cancellationToken);
+                var answer = answerFactory.CreateAnswer(firstQuestionId, $"Placeholder Answer {count + 1}", false);
+                await answerRepository.InsertAnswerAsync(answer, cancellationToken);
                 count++;
             }
         }
