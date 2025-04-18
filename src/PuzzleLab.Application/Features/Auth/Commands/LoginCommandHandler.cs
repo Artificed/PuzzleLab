@@ -1,25 +1,38 @@
 using MediatR;
+using PuzzleLab.Application.Common;
 using PuzzleLab.Domain.Entities;
 using PuzzleLab.Domain.Repositories;
 
 namespace PuzzleLab.Application.Features.Auth.Commands;
 
-public class LoginCommandHandler(IUserRepository userRepository) : IRequestHandler<LoginCommand, User>
+public class LoginCommandHandler(IUserRepository userRepository) : IRequestHandler<LoginCommand, Result<User>>
 {
-    public async Task<User> Handle(LoginCommand request, CancellationToken cancellationToken)
+    public async Task<Result<User>> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
-        var user = await userRepository.GetUserByEmailAsync(request.Username, cancellationToken);
+        if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
+        {
+            return Result<User>.Failure(Error.Validation("Email and password are required!"));
+        }
+
+        if (request.Password != request.ConfirmPassword)
+        {
+            return Result<User>.Failure(Error.Validation("Passwords do not match!"));
+        }
+
+        var user = await userRepository.GetUserByEmailAsync(request.Email, cancellationToken);
 
         if (user is null)
         {
-            throw new Exception("User not found");
+            return Result<User>.Failure(Error.NotFound($"User with email {request.Email} not found!"));
         }
 
-        if (user.PasswordHash != request.Password) // fix later
+        var isValidPassword = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
+
+        if (!isValidPassword)
         {
-            throw new Exception("Invalid password");
+            return Result<User>.Failure(Error.Unauthorized("Invalid password!"));
         }
 
-        return user;
+        return Result<User>.Success(user);
     }
 }

@@ -9,28 +9,27 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Content Include="..\.dockerignore">
-        <Link>.dockerignore</Link>
-      </Content>
+        <Content Include="..\.dockerignore">
+            <Link>.dockerignore</Link>
+        </Content>
     </ItemGroup>
 
     <ItemGroup>
-      <_ContentIncludedByDefault Remove="wwwroot\bootstrap\bootstrap.min.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\bootstrap\bootstrap.min.css.map" />
+        <ProjectReference Include="..\PuzzleLab.Application\PuzzleLab.Application.csproj"/>
+        <ProjectReference Include="..\PuzzleLab.Infrastructure\PuzzleLab.Infrastructure.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\PuzzleLab.Application\PuzzleLab.Application.csproj" />
-      <ProjectReference Include="..\PuzzleLab.Infrastructure\PuzzleLab.Infrastructure.csproj" />
+        <PackageReference Include="EFCore.NamingConventions" Version="9.0.0"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.1"/>
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="EFCore.NamingConventions" Version="9.0.0" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        <PrivateAssets>all</PrivateAssets>
-      </PackageReference>
-      <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.1" />
+      <Folder Include="wwwroot\" />
     </ItemGroup>
 
 </Project>
