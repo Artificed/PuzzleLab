@@ -8,9 +8,19 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Content Include="..\.dockerignore">
-        <Link>.dockerignore</Link>
-      </Content>
+        <Content Include="..\.dockerignore">
+            <Link>.dockerignore</Link>
+        </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+        <_ContentIncludedByDefault Remove="Components\Shared\UI\Button.razor"/>
+        <_ContentIncludedByDefault Remove="Components\Shared\UI\Card.razor"/>
+        <_ContentIncludedByDefault Remove="Components\Shared\UI\CardContent.razor"/>
+        <_ContentIncludedByDefault Remove="Components\Shared\UI\CardHeader.razor"/>
+        <_ContentIncludedByDefault Remove="Components\Shared\UI\CheckBox.razor"/>
+        <_ContentIncludedByDefault Remove="Components\Shared\UI\Input.razor"/>
+        <_ContentIncludedByDefault Remove="Components\Shared\UI\Label.razor"/>
     </ItemGroup>
 
 </Project>
