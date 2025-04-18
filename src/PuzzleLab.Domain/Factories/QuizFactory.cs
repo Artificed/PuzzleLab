@@ -4,7 +4,7 @@ namespace PuzzleLab.Domain.Factories;
 
 public class QuizFactory
 {
-    public Quiz CreateQuiz(Guid questionPackageId, Guid? scheduleId = null)
+    public Quiz CreateQuiz(Guid questionPackageId, Guid scheduleId)
     {
         return new Quiz(
             Guid.NewGuid(),

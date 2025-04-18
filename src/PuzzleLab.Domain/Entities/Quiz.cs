@@ -7,7 +7,7 @@ public class Quiz
 {
     [Key] public Guid Id { get; private set; }
     [Required] public Guid QuestionPackageId { get; private set; }
-    public Guid? ScheduleId { get; private set; }
+    [Required] public Guid ScheduleId { get; private set; }
     [Required] public DateTime CreatedAt { get; private set; }
     [Required] public DateTime LastModifiedAt { get; private set; }
 
@@ -21,7 +21,7 @@ public class Quiz
     {
     }
 
-    internal Quiz(Guid id, Guid questionPackageId, Guid? scheduleId = null)
+    internal Quiz(Guid id, Guid questionPackageId, Guid scheduleId)
     {
         Id = id;
         QuestionPackageId = questionPackageId;
@@ -35,12 +35,6 @@ public class Quiz
     public void AssignSchedule(Guid scheduleId)
     {
         ScheduleId = scheduleId;
-        LastModifiedAt = DateTime.UtcNow;
-    }
-
-    public void RemoveSchedule()
-    {
-        ScheduleId = null;
         LastModifiedAt = DateTime.UtcNow;
     }
 }

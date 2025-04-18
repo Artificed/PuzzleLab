@@ -4,16 +4,12 @@ namespace PuzzleLab.Domain.Factories;
 
 public class ScheduleFactory
 {
-    public Schedule CreateSchedule(string name, DateTime startDateTime, DateTime endDateTime, Guid questionPackageId,
-        Guid createdById)
+    public Schedule CreateSchedule(DateTime startDateTime, DateTime endDateTime)
     {
         return new Schedule(
             Guid.NewGuid(),
-            name,
             startDateTime,
-            endDateTime,
-            questionPackageId,
-            createdById
+            endDateTime
         );
     }
 }

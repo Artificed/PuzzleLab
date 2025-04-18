@@ -26,9 +26,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Include="Persistence\SeedData\**\*">
+      <Content Include="Persistence/Seeders/Images\**\*.*">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
+      </Content>
     </ItemGroup>
 
 </Project>

@@ -22,8 +22,8 @@ public class Schedule
     {
     }
 
-    internal Schedule(Guid id, string name, DateTime startDateTime,
-        DateTime endDateTime, Guid questionPackageId, Guid createdById)
+    internal Schedule(Guid id, DateTime startDateTime,
+        DateTime endDateTime)
     {
         if (endDateTime <= startDateTime)
             throw new ArgumentException("End time must be after start time");

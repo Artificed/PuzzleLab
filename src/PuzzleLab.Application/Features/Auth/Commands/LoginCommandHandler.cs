@@ -8,7 +8,7 @@ public class LoginCommandHandler(IUserRepository userRepository) : IRequestHandl
 {
     public async Task<User> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
-        var user = await userRepository.GetUserByEmail(request.Username, cancellationToken);
+        var user = await userRepository.GetUserByEmailAsync(request.Username, cancellationToken);
 
         if (user is null)
         {
