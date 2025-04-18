@@ -4,26 +4,22 @@ namespace PuzzleLab.Domain.Entities;
 
 public class User
 {
-    [Key]
-    public Guid Id { get; private set; }
+    [Key] public Guid Id { get; private set; }
 
-    [Required]
-    public string Username { get; private set; }
+    [Required] public string Username { get; private set; }
 
-    [Required]
-    public string Email { get; private set; }
+    [Required] public string Email { get; private set; }
 
-    [Required]
-    public string PasswordHash { get; private set; }
+    [Required] public string PasswordHash { get; private set; }
 
-    [Required]
-    public string Role { get; private set; }
+    [Required] public string Role { get; private set; }
 
-    [Required]
-    public DateTime CreatedAt { get; private set; }
+    [Required] public DateTime CreatedAt { get; private set; }
 
-    [Required]
     public DateTime? LastLoginAt { get; private set; }
+
+    public virtual ICollection<QuizUser> QuizUsers { get; private set; }
+    public virtual ICollection<QuizSession> QuizSessions { get; private set; }
 
     internal User(Guid id, string username, string email, string passwordHash, string role)
     {
@@ -33,6 +29,8 @@ public class User
         PasswordHash = passwordHash;
         Role = role;
         CreatedAt = DateTime.UtcNow;
+        QuizUsers = new List<QuizUser>();
+        QuizSessions = new List<QuizSession>();
     }
 
     public void UpdateLastLogin()

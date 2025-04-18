@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PuzzleLab.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using PuzzleLab.Infrastructure.Persistence;
 namespace PuzzleLab.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20250418115447_MigrateQuizSessions")]
+    partial class MigrateQuizSessions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -166,52 +169,6 @@ namespace PuzzleLab.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_quizzes_schedule_id");
 
                     b.ToTable("quizzes", (string)null);
-                });
-
-            modelBuilder.Entity("PuzzleLab.Domain.Entities.QuizAnswer", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<bool>("IsCorrect")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_correct");
-
-                    b.Property<DateTime>("LastModifiedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("last_modified_at");
-
-                    b.Property<Guid>("QuestionId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("question_id");
-
-                    b.Property<Guid>("QuizSessionId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("quiz_session_id");
-
-                    b.Property<Guid>("SelectedAnswerId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("selected_answer_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_quiz_answers");
-
-                    b.HasIndex("QuestionId")
-                        .HasDatabaseName("ix_quiz_answers_question_id");
-
-                    b.HasIndex("QuizSessionId")
-                        .HasDatabaseName("ix_quiz_answers_quiz_session_id");
-
-                    b.HasIndex("SelectedAnswerId")
-                        .HasDatabaseName("ix_quiz_answers_selected_answer_id");
-
-                    b.ToTable("quiz_answers", (string)null);
                 });
 
             modelBuilder.Entity("PuzzleLab.Domain.Entities.QuizSession", b =>
@@ -418,36 +375,6 @@ namespace PuzzleLab.Infrastructure.Persistence.Migrations
                     b.Navigation("Schedule");
                 });
 
-            modelBuilder.Entity("PuzzleLab.Domain.Entities.QuizAnswer", b =>
-                {
-                    b.HasOne("PuzzleLab.Domain.Entities.Question", "Question")
-                        .WithMany("QuizAnswers")
-                        .HasForeignKey("QuestionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_quiz_answers_questions_question_id");
-
-                    b.HasOne("PuzzleLab.Domain.Entities.QuizSession", "QuizSession")
-                        .WithMany("QuizAnswers")
-                        .HasForeignKey("QuizSessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_quiz_answers_quiz_sessions_quiz_session_id");
-
-                    b.HasOne("PuzzleLab.Domain.Entities.Answer", "SelectedAnswer")
-                        .WithMany("QuizAnswers")
-                        .HasForeignKey("SelectedAnswerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_quiz_answers_answers_selected_answer_id");
-
-                    b.Navigation("Question");
-
-                    b.Navigation("QuizSession");
-
-                    b.Navigation("SelectedAnswer");
-                });
-
             modelBuilder.Entity("PuzzleLab.Domain.Entities.QuizSession", b =>
                 {
                     b.HasOne("PuzzleLab.Domain.Entities.Quiz", "Quiz")
@@ -490,16 +417,9 @@ namespace PuzzleLab.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("PuzzleLab.Domain.Entities.Answer", b =>
-                {
-                    b.Navigation("QuizAnswers");
-                });
-
             modelBuilder.Entity("PuzzleLab.Domain.Entities.Question", b =>
                 {
                     b.Navigation("Answers");
-
-                    b.Navigation("QuizAnswers");
                 });
 
             modelBuilder.Entity("PuzzleLab.Domain.Entities.QuestionPackage", b =>
@@ -514,11 +434,6 @@ namespace PuzzleLab.Infrastructure.Persistence.Migrations
                     b.Navigation("QuizSessions");
 
                     b.Navigation("QuizUsers");
-                });
-
-            modelBuilder.Entity("PuzzleLab.Domain.Entities.QuizSession", b =>
-                {
-                    b.Navigation("QuizAnswers");
                 });
 
             modelBuilder.Entity("PuzzleLab.Domain.Entities.Schedule", b =>

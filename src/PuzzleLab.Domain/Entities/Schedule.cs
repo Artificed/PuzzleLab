@@ -1,0 +1,48 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace PuzzleLab.Domain.Entities;
+
+public class Schedule
+{
+    [Key] public Guid Id { get; private set; }
+
+    [Required] public DateTime StartDateTime { get; private set; }
+
+    [Required] public DateTime EndDateTime { get; private set; }
+
+    public DateTime CreatedAt { get; private set; }
+
+    public DateTime LastModifiedAt { get; private set; }
+
+    public virtual ICollection<Quiz> Quizzes { get; private set; }
+
+    // For EF Core
+    private Schedule()
+    {
+    }
+
+    internal Schedule(Guid id, string name, DateTime startDateTime,
+        DateTime endDateTime, Guid questionPackageId, Guid createdById)
+    {
+        if (endDateTime <= startDateTime)
+            throw new ArgumentException("End time must be after start time");
+
+        Id = id;
+        StartDateTime = startDateTime;
+        EndDateTime = endDateTime;
+        CreatedAt = DateTime.UtcNow;
+        LastModifiedAt = CreatedAt;
+        Quizzes = new List<Quiz>();
+    }
+
+    public void UpdateTimeWindow(DateTime newStartDateTime, DateTime newEndDateTime)
+    {
+        if (newEndDateTime <= newStartDateTime)
+            throw new ArgumentException("End time must be after start time");
+
+        StartDateTime = newStartDateTime;
+        EndDateTime = newEndDateTime;
+        LastModifiedAt = DateTime.UtcNow;
+    }
+}

@@ -12,8 +12,8 @@ using PuzzleLab.Infrastructure.Persistence;
 namespace PuzzleLab.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20250418052040_UpdateUsersTable")]
-    partial class UpdateUsersTable
+    [Migration("20250418065329_MigrateQuestions")]
+    partial class MigrateQuestions
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,49 @@ namespace PuzzleLab.Infrastructure.Persistence.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("PuzzleLab.Domain.Entities.Question", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<byte[]>("ImageData")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("image_data");
+
+                    b.Property<string>("ImageMimeType")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("image_mime_type");
+
+                    b.Property<DateTime>("LastModifiedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_modified_at");
+
+                    b.Property<Guid>("QuestionPackageId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("question_package_id");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("text");
+
+                    b.HasKey("Id")
+                        .HasName("pk_questions");
+
+                    b.HasIndex("QuestionPackageId")
+                        .HasDatabaseName("ix_questions_question_package_id");
+
+                    b.ToTable("questions", (string)null);
+                });
 
             modelBuilder.Entity("PuzzleLab.Domain.Entities.QuestionPackage", b =>
                 {
@@ -36,23 +79,10 @@ namespace PuzzleLab.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<Guid>("CreatedById")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by_id");
-
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("description");
-
-                    b.Property<int>("DurationInMinutes")
-                        .HasColumnType("integer")
-                        .HasColumnName("duration_in_minutes");
-
-                    b.Property<byte[]>("ImageData")
-                        .IsRequired()
-                        .HasColumnType("bytea")
-                        .HasColumnName("image_data");
 
                     b.Property<DateTime>("LastModifiedAt")
                         .HasColumnType("timestamp with time zone")
@@ -65,9 +95,6 @@ namespace PuzzleLab.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_question_packages");
-
-                    b.HasIndex("CreatedById")
-                        .HasDatabaseName("ix_question_packages_created_by_id");
 
                     b.ToTable("question_packages", (string)null);
                 });
@@ -88,7 +115,7 @@ namespace PuzzleLab.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("email");
 
-                    b.Property<DateTime>("LastLoginAt")
+                    b.Property<DateTime?>("LastLoginAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_login_at");
 
@@ -113,16 +140,21 @@ namespace PuzzleLab.Infrastructure.Persistence.Migrations
                     b.ToTable("users", (string)null);
                 });
 
-            modelBuilder.Entity("PuzzleLab.Domain.Entities.QuestionPackage", b =>
+            modelBuilder.Entity("PuzzleLab.Domain.Entities.Question", b =>
                 {
-                    b.HasOne("PuzzleLab.Domain.Entities.User", "CreatedBy")
-                        .WithMany()
-                        .HasForeignKey("CreatedById")
+                    b.HasOne("PuzzleLab.Domain.Entities.QuestionPackage", "QuestionPackage")
+                        .WithMany("Questions")
+                        .HasForeignKey("QuestionPackageId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_question_packages_users_created_by_id");
+                        .HasConstraintName("fk_questions_question_packages_question_package_id");
 
-                    b.Navigation("CreatedBy");
+                    b.Navigation("QuestionPackage");
+                });
+
+            modelBuilder.Entity("PuzzleLab.Domain.Entities.QuestionPackage", b =>
+                {
+                    b.Navigation("Questions");
                 });
 #pragma warning restore 612, 618
         }

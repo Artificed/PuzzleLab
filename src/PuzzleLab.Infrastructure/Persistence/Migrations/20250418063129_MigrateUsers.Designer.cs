@@ -12,7 +12,7 @@ using PuzzleLab.Infrastructure.Persistence;
 namespace PuzzleLab.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20250418042708_MigrateUsers")]
+    [Migration("20250418063129_MigrateUsers")]
     partial class MigrateUsers
     {
         /// <inheritdoc />
