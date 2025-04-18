@@ -18,8 +18,8 @@ namespace PuzzleLab.Infrastructure.Persistence.Migrations
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     question_package_id = table.Column<Guid>(type: "uuid", nullable: false),
                     text = table.Column<string>(type: "text", nullable: false),
-                    image_data = table.Column<byte[]>(type: "bytea", nullable: false),
-                    image_mime_type = table.Column<string>(type: "text", nullable: false),
+                    image_data = table.Column<byte[]>(type: "bytea", nullable: true),
+                    image_mime_type = table.Column<string>(type: "text", nullable: true),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     last_modified_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },

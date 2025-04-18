@@ -11,9 +11,9 @@ public class Question
 
     [Required] public string Text { get; private set; }
 
-    public byte[] ImageData { get; private set; }
+    public byte[]? ImageData { get; private set; }
 
-    public string ImageMimeType { get; private set; }
+    public string? ImageMimeType { get; private set; }
 
     [Required] public DateTime CreatedAt { get; private set; }
 
@@ -48,7 +48,7 @@ public class Question
         LastModifiedAt = DateTime.UtcNow;
     }
 
-    public void UpdateImage(byte[] newImageData, string mimeType)
+    public void UpdateImage(byte[]? newImageData, string? mimeType)
     {
         ImageData = newImageData;
         ImageMimeType = mimeType;

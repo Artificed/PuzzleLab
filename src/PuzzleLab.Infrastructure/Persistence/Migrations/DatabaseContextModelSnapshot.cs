@@ -71,12 +71,10 @@ namespace PuzzleLab.Infrastructure.Persistence.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<byte[]>("ImageData")
-                        .IsRequired()
                         .HasColumnType("bytea")
                         .HasColumnName("image_data");
 
                     b.Property<string>("ImageMimeType")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("image_mime_type");
 
@@ -434,18 +432,18 @@ namespace PuzzleLab.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_quiz_answers_quiz_sessions_quiz_session_id");
 
-                    b.HasOne("PuzzleLab.Domain.Entities.Answer", "SelectedAnswer")
+                    b.HasOne("PuzzleLab.Domain.Entities.Answer", "Answer")
                         .WithMany("QuizAnswers")
                         .HasForeignKey("SelectedAnswerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_quiz_answers_answers_selected_answer_id");
 
+                    b.Navigation("Answer");
+
                     b.Navigation("Question");
 
                     b.Navigation("QuizSession");
-
-                    b.Navigation("SelectedAnswer");
                 });
 
             modelBuilder.Entity("PuzzleLab.Domain.Entities.QuizSession", b =>

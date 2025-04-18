@@ -11,11 +11,10 @@ builder.Services.AddSwaggerGen();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-builder.Services.AddDbContext<DatabaseContext>(options => {
+builder.Services.AddDbContext<DatabaseContext>(options =>
+{
     options.UseNpgsql(connectionString,
-        npgsqlOptions => {
-            npgsqlOptions.MigrationsAssembly(typeof(DatabaseContext).Assembly.FullName);
-        });
+        npgsqlOptions => { npgsqlOptions.MigrationsAssembly(typeof(DatabaseContext).Assembly.FullName); });
     options.UseSnakeCaseNamingConvention();
 });
 
@@ -28,16 +27,25 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
+if (args.Contains("--migrate"))
+{
+    var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
+    db.Database.Migrate();
+}
+
+if (args.Contains("--seed"))
+{
+    var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
+    // db.Database.Migrate(); // Add this later
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-var scope = app.Services.CreateScope();
-
-var db = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
-db.Database.Migrate();
 
 app.MapControllers();
 app.Run();
