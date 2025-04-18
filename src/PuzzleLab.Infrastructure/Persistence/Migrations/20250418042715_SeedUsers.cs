@@ -18,7 +18,7 @@ namespace PuzzleLab.Infrastructure.Persistence.Migrations
                 values: new object[,]
                 {
                     {
-                        Guid.NewGuid(),
+                        "00000000-0000-0000-0000-000000000000",
                         "admin",
                         "admin@gmail.com",
                         defaultPassword,
@@ -27,7 +27,7 @@ namespace PuzzleLab.Infrastructure.Persistence.Migrations
                         null
                     },
                     {
-                        Guid.NewGuid(),
+                        "11111111-1111-1111-1111-111111111111",
                         "user1",
                         "user1@gmail.com",
                         defaultPassword,

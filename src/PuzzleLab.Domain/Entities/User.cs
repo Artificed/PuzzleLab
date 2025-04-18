@@ -6,11 +6,23 @@ public class User
 {
     [Key]
     public Guid Id { get; private set; }
+
+    [Required]
     public string Username { get; private set; }
+
+    [Required]
     public string Email { get; private set; }
+
+    [Required]
     public string PasswordHash { get; private set; }
+
+    [Required]
     public string Role { get; private set; }
+
+    [Required]
     public DateTime CreatedAt { get; private set; }
+
+    [Required]
     public DateTime? LastLoginAt { get; private set; }
 
     internal User(Guid id, string username, string email, string passwordHash, string role)

@@ -25,4 +25,10 @@
       <Folder Include="Persistence\Migrations\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Include="Persistence\SeedData\**\*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PuzzleLab.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using PuzzleLab.Infrastructure.Persistence;
 namespace PuzzleLab.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20250418045444_MigrateQuestionPackages")]
+    partial class MigrateQuestionPackages
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -85,7 +88,7 @@ namespace PuzzleLab.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("email");
 
-                    b.Property<DateTime>("LastLoginAt")
+                    b.Property<DateTime?>("LastLoginAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_login_at");
 
