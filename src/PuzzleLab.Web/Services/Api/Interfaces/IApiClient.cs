@@ -1,4 +1,4 @@
-namespace PuzzleLab.Web.Interfaces;
+namespace PuzzleLab.Web.Services.Interfaces;
 
 public interface IApiClient
 {

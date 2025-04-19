@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace PuzzleLab.Web.Services;
+namespace PuzzleLab.Web.Services.Ui;
 
 public enum ToastType
 {

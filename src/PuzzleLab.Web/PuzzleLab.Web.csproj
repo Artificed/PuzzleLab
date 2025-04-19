@@ -27,4 +27,8 @@
         <ProjectReference Include="..\PuzzleLab.Shared\PuzzleLab.Shared.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <AdditionalFiles Include="Components\Layout\MainLayout.razor"/>
+    </ItemGroup>
+
 </Project>

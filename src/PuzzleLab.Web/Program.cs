@@ -1,8 +1,8 @@
 using System.Net.Http.Headers;
 using PuzzleLab.Web;
 using PuzzleLab.Web.Interfaces;
-using PuzzleLab.Web.Pages;
-using PuzzleLab.Web.Services;
+using PuzzleLab.Web.Services.Api;
+using PuzzleLab.Web.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
