@@ -36,6 +36,9 @@ public class ApiClient(HttpClient httpClient) : IApiClient
             var response =
                 await httpClient.PostAsJsonAsync(requestUrl, data, _jsonSerializerOptions, cancellationToken);
             response.EnsureSuccessStatusCode();
+
+            Console.WriteLine(response);
+
             return await response.Content.ReadFromJsonAsync<T>(_jsonSerializerOptions, cancellationToken);
         }
         catch (HttpRequestException ex)

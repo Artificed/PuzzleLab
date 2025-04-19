@@ -1,4 +1,11 @@
 @page "/login"
+@using System.ComponentModel.DataAnnotations
+@using PuzzleLab.Shared.DTOs.Requests
+@using PuzzleLab.Web.Interfaces
+
+@inject IAuthService AuthService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
 
 <PageTitle>Login</PageTitle>
 
@@ -8,56 +15,116 @@
             <h1 class="text-3xl font-bold tracking-tight">PuzzleLab</h1>
         </div>
 
-        <div class="space-y-4">
-            <form class="space-y-4">
-                <div class="space-y-2">
-                    <label for="email"
-                           class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        Email
-                    </label>
-                    <input
-                        type="text"
-                        id="email"
-                        placeholder="john.doe@gmail.com"
-                        class="flex h-10 w-full rounded-md border border-gray-200 bg-white mt-1 px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
-                    />
-                </div>
+        <EditForm Model="loginModel" OnValidSubmit="HandleLoginAsync" FormName="loginForm" class="space-y-4">
+            <DataAnnotationsValidator/>
 
-                <div class="space-y-2">
-                    <label for="password"
-                           class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        Password
-                    </label>
-                    <input
-                        type="password"
-                        id="password"
-                        placeholder="••••••••"
-                        class="flex h-10 w-full rounded-md border border-gray-200 bg-white mt-1 px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
-                    />
-                </div>
+            <div class="space-y-2">
+                <label for="email"
+                       class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    Email
+                </label>
+                <InputText @bind-Value="loginModel.Email"
+                           type="email"
+                           id="email"
+                           placeholder="john.doe@gmail.com"
+                           class="flex h-10 w-full rounded-md border border-gray-200 bg-white mt-1 px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"/>
+                <ValidationMessage For="@(() => loginModel.Email)" class="text-red-600 text-xs"/>
+            </div>
 
-                <div class="flex items-center space-x-2">
-                    <input
-                        type="checkbox"
-                        id="remember"
-                        class="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-950"
-                    />
-                    <label for="remember"
-                           class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        Remember me
-                    </label>
-                </div>
+            <div class="space-y-2">
+                <label for="password"
+                       class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    Password
+                </label>
+                <InputText @bind-Value="loginModel.Password"
+                           type="password"
+                           id="password"
+                           placeholder="••••••••"
+                           class="flex h-10 w-full rounded-md border border-gray-200 bg-white mt-1 px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"/>
+                <ValidationMessage For="@(() => loginModel.Password)" class="text-red-600 text-xs"/>
+            </div>
 
-                <button
-                    type="submit"
-                    class="cursor-pointer inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-gray-900 text-gray-50 hover:bg-gray-900/90 h-10 px-4 py-2 w-full"
-                >
-                    Sign in
-                </button>
-            </form>
+            <div class="flex items-center space-x-2">
+                <InputCheckbox @bind-Value="rememberMe"
+                               id="remember"
+                               class="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-950"/>
+                <label for="remember"
+                       class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    Remember me
+                </label>
+            </div>
+
+            <button type="submit"
+                    disabled="@isLoading"
+                    class="cursor-pointer inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-gray-900 text-gray-50 hover:bg-gray-900/90 h-10 px-4 py-2 w-full">
+                @if (isLoading)
+                {
+                    <span>Signing in...</span>
+                }
+                else
+                {
+                    <span>Sign in</span>
+                }
+            </button>
+        </EditForm>
+
+        <div class="text-center text-sm text-gray-500">
+            Don't have an account? <a href="/register" class="underline font-medium">Sign up</a>
         </div>
     </div>
 </div>
 
 @code {
+    private LoginRequest loginModel = new LoginRequest();
+
+    private bool rememberMe = false;
+    private bool isLoading = false;
+    private string? errorMessage = null;
+
+    private async Task HandleLoginAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+        StateHasChanged();
+
+        Console.WriteLine(loginModel.Email + "-" + loginModel.Password);
+
+        try
+        {
+            var loginResponse = await AuthService.LoginAsync(loginModel);
+
+            if (loginResponse != null && !string.IsNullOrEmpty(loginResponse.Token))
+            {
+                Console.WriteLine("Login successful!");
+                Console.WriteLine(loginResponse.Token);
+
+                // TODO: Store the token securely!
+                // Options:
+                // 1. Blazor Server: Store in a scoped service, potentially using ProtectedSessionStorage.
+                // 2. Blazor WASM: Use ProtectedLocalStorage or SessionStorage (less secure for JWTs).
+                // 3. Use a dedicated State Management library.
+                // Example (WASM - less secure for sensitive tokens, use ProtectedLocalStorage for better security):
+                // await LocalStorage.SetItemAsync("authToken", loginResponse.Token);
+
+                // TODO: Update application state to reflect logged-in user. (e.g., update claims principal)
+
+                // NavigationManager.NavigateTo("/dashboard", forceLoad: false);
+            }
+            else
+            {
+                errorMessage = "Invalid email or password. Please try again.";
+                Console.WriteLine("Login failed: Invalid credentials or API error."); // Log failure
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "An unexpected error occurred during login. Please try again later.";
+            Console.Error.WriteLine($"Login exception: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
 }

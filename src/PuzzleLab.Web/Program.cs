@@ -21,8 +21,10 @@ builder.Services.AddHttpClient<IApiClient, ApiClient>(client =>
     client.DefaultRequestHeaders.Accept.Clear();
 
     client.DefaultRequestHeaders.Accept.Add(
-        new MediaTypeWithQualityHeaderValue("application/json"));
+        new MediaTypeWithQualityHeaderValue("Application/json"));
 });
+
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 var app = builder.Build();
 

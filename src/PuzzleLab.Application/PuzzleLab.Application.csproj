@@ -13,6 +13,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\PuzzleLab.Domain\PuzzleLab.Domain.csproj"/>
+        <ProjectReference Include="..\PuzzleLab.Shared\PuzzleLab.Shared.csproj"/>
     </ItemGroup>
 
 </Project>
