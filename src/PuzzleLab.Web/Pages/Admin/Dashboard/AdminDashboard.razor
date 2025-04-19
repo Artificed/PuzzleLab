@@ -2,6 +2,7 @@
 @using PuzzleLab.Shared.DTOs.Responses
 @using PuzzleLab.Web.Services.State
 @using System.Collections.Generic
+@using PuzzleLab.Web.Components.Navbars
 
 @inject NavigationManager NavigationManager
 @inject UserStateService UserState
@@ -11,38 +12,7 @@
 
 <div class="w-full mx-auto px-40">
     <div class="p-8 space-y-6">
-        <div class="flex justify-between items-center border-b border-gray-200 pb-4">
-            <div class="flex items-center justify-center gap-16">
-                <h1 class="text-3xl font-bold">Admin Dashboard</h1>
-                <div class="flex items-center gap-4">
-                    <a href="/admin/question-packages"
-                       class="inline-flex items-center justify-center whitespace-nowrap text-md focus-visible:ring-gray-950 focus-visible:ring-offset-1 h-10 px-4 py-2">
-                        Manage Packages
-                    </a>
-                    <a href="/admin/quizzes"
-                       class="inline-flex items-center justify-center whitespace-nowrap text-md focus-visible:ring-gray-950 focus-visible:ring-offset-1 h-10 px-4 py-2">
-                        Manage Quizzes
-                    </a>
-                    <a href="/admin/users"
-                       class="inline-flex items-center justify-center whitespace-nowrap text-md focus-visible:ring-gray-950 focus-visible:ring-offset-1 h-10 px-4 py-2">
-                        Manage Users
-                    </a>
-                    <a href="/admin/users"
-                       class="inline-flex items-center justify-center whitespace-nowrap text-md focus-visible:ring-gray-950 focus-visible:ring-offset-1 h-10 px-4 py-2">
-                        View Schedules
-                    </a>
-                    <a href="/admin/users"
-                       class="inline-flex items-center justify-center whitespace-nowrap text-md focus-visible:ring-gray-950 focus-visible:ring-offset-1 h-10 px-4 py-2">
-                        View Results
-                    </a>
-                </div>
-            </div>
-
-            <div class="flex items-center space-x-4">
-                <span class="text-sm text-gray-600">Admin</span>
-                <button @onclick="HandleLogout" class="text-sm text-red-600 hover:text-red-800">Logout</button>
-            </div>
-        </div>
+        <AdminNavbar Title="Admin Dashboard" HandleLogout="@HandleLogout"/>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <DashboardCard
@@ -310,5 +280,4 @@
         public DateTime EndDate { get; set; }
         public int AssignedUsersCount { get; set; }
     }
-
 }
