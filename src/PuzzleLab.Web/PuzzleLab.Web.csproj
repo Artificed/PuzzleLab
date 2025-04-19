@@ -23,4 +23,13 @@
         <_ContentIncludedByDefault Remove="Components\Shared\UI\Label.razor"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <Folder Include="Models\" />
+        <Folder Include="Services\"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\PuzzleLab.Shared\PuzzleLab.Shared.csproj" />
+    </ItemGroup>
+
 </Project>

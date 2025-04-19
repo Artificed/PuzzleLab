@@ -17,6 +17,7 @@
     <ItemGroup>
         <ProjectReference Include="..\PuzzleLab.Application\PuzzleLab.Application.csproj"/>
         <ProjectReference Include="..\PuzzleLab.Infrastructure\PuzzleLab.Infrastructure.csproj"/>
+        <ProjectReference Include="..\PuzzleLab.Shared\PuzzleLab.Shared.csproj" />
     </ItemGroup>
 
     <ItemGroup>
