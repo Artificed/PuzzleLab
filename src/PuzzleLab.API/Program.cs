@@ -1,10 +1,15 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using PuzzleLab.Application.Common.Interfaces;
 using PuzzleLab.Domain.Entities;
 using PuzzleLab.Domain.Factories;
 using PuzzleLab.Domain.Repositories;
 using PuzzleLab.Infrastructure.Persistence;
 using PuzzleLab.Infrastructure.Persistence.Repositories;
 using PuzzleLab.Infrastructure.Persistence.Seeders;
+using PuzzleLab.Infrastructure.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -54,7 +59,29 @@ builder.Services.AddMediatR(
     cfg => cfg.RegisterServicesFromAssembly(typeof
         (PuzzleLab.Application.Features.Auth.Commands.LoginCommand).Assembly));
 
+builder.Services.AddAuthentication(x =>
+{
+    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    x.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(x =>
+{
+    x.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+        ValidAudience = builder.Configuration["JwtSettings:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Key"]))
+    };
+});
+
+builder.Services.AddAuthorization();
 builder.Services.AddControllers();
+
+builder.Services.AddScoped<IJwtGenerator, JwtGenerator>();
 
 var app = builder.Build();
 
@@ -105,6 +132,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 app.Run();

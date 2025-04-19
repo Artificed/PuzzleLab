@@ -7,11 +7,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="MediatR" Version="12.5.0" />
+        <PackageReference Include="MediatR" Version="12.5.0"/>
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.15"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\PuzzleLab.Domain\PuzzleLab.Domain.csproj" />
+        <ProjectReference Include="..\PuzzleLab.Domain\PuzzleLab.Domain.csproj"/>
     </ItemGroup>
 
 </Project>

@@ -17,11 +17,12 @@
     <ItemGroup>
         <ProjectReference Include="..\PuzzleLab.Application\PuzzleLab.Application.csproj"/>
         <ProjectReference Include="..\PuzzleLab.Infrastructure\PuzzleLab.Infrastructure.csproj"/>
-        <ProjectReference Include="..\PuzzleLab.Shared\PuzzleLab.Shared.csproj" />
+        <ProjectReference Include="..\PuzzleLab.Shared\PuzzleLab.Shared.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="EFCore.NamingConventions" Version="9.0.0"/>
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.15"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
@@ -30,7 +31,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="wwwroot\" />
+        <Folder Include="wwwroot\"/>
     </ItemGroup>
 
 </Project>
