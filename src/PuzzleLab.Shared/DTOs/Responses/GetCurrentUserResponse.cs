@@ -1,6 +1,3 @@
 namespace PuzzleLab.Shared.DTOs.Responses;
 
-public class GetCurrentUserResponse
-{
-    
-}
+public record GetCurrentUserResponse(Guid Id, string Username, string Email, string Role);

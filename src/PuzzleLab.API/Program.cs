@@ -58,24 +58,50 @@ builder.Services.AddMediatR(
     cfg => cfg.RegisterServicesFromAssembly(typeof
         (PuzzleLab.Application.Features.Auth.Commands.LoginCommand).Assembly));
 
+
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var issuer = jwtSettings["Issuer"]
+             ?? throw new InvalidOperationException("JWT Issuer is not configured in JwtSettings:Issuer");
+var audience = jwtSettings["Audience"]
+               ?? throw new InvalidOperationException("JWT Audience is not configured in JwtSettings:Audience");
+var secretKey = jwtSettings["Key"]
+                ?? throw new InvalidOperationException("JWT Key is not configured in JwtSettings:Key");
+
+var keyBytes = Encoding.UTF8.GetBytes(secretKey);
+const int minKeySizeInBytes = 256 / 8; // HS256 requires 256 bits minimum key size
+if (keyBytes.Length < minKeySizeInBytes)
+{
+    throw new InvalidOperationException(
+        $"JWT Key must be at least {minKeySizeInBytes * 8} bits ({minKeySizeInBytes} bytes) long for HS256. Check JwtSettings:Key. Current length: {keyBytes.Length * 8} bits.");
+}
+
+var securityKey = new SymmetricSecurityKey(keyBytes);
+
 builder.Services.AddAuthentication(x =>
-{
-    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    x.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(x =>
-{
-    x.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
-        ValidAudience = builder.Configuration["JwtSettings:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Key"]))
-    };
-});
+        x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        x.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.RequireHttpsMetadata = builder.Environment.IsProduction();
+        options.SaveToken = true;
+
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+
+            ValidIssuer = issuer,
+            ValidAudience = audience,
+            IssuerSigningKey = securityKey,
+
+            ClockSkew = TimeSpan.Zero
+        };
+    });
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
