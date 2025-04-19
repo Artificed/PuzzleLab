@@ -1,9 +1,10 @@
 using System.Net.Http.Headers;
-using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using Blazored.LocalStorage;
 using PuzzleLab.Web;
 using PuzzleLab.Web.Services.Api;
 using PuzzleLab.Web.Services.Api.Handlers;
 using PuzzleLab.Web.Services.Api.Interfaces;
+using PuzzleLab.Web.Services.State;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +17,16 @@ if (string.IsNullOrEmpty(apiBaseUrl))
     throw new InvalidOperationException("API Base URL 'ApiSettings:BaseUrl' is not configured in appsettings.json");
 }
 
+builder.Services.AddBlazoredLocalStorage();
+builder.Services.AddSingleton<ITokenProvider, InMemoryAuthTokenService>();
+
+// builder.Services.AddScoped<ITokenProvider>(sp =>
+// {
+//     var protectedSessionStorage = sp.GetRequiredService<ILocalStorageService>();
+//     return new AuthTokenService(protectedSessionStorage, "authorization-token");
+// });
+
+builder.Services.AddTransient<AuthHeaderHandler>();
 builder.Services.AddHttpClient<IApiClient, ApiClient>(client =>
     {
         client.BaseAddress = new Uri(apiBaseUrl);
@@ -23,15 +34,8 @@ builder.Services.AddHttpClient<IApiClient, ApiClient>(client =>
     })
     .AddHttpMessageHandler<AuthHeaderHandler>();
 
-builder.Services.AddScoped<ITokenProvider>(sp =>
-{
-    var protectedSessionStorage = sp.GetRequiredService<ProtectedSessionStorage>();
-    return new AuthTokenService(protectedSessionStorage, "authorization-token");
-});
-
 builder.Services.AddScoped<IAuthService, AuthService>();
-
-builder.Services.AddTransient<AuthHeaderHandler>();
+builder.Services.AddScoped<UserStateService>();
 
 var app = builder.Build();
 

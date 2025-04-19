@@ -1,0 +1,40 @@
+﻿@page "/"
+@using PuzzleLab.Web.Services.State
+@rendermode InteractiveServer
+@implements IDisposable
+@inject UserStateService UserState
+
+<PageTitle>Home</PageTitle>
+
+<h1>Hello, world!</h1>
+
+@if (!UserState.IsInitialized || UserState.IsLoading)
+{
+    <p><em>Loading user information...</em></p>
+}
+else if (UserState.CurrentUser is not null)
+{
+    <p>Welcome back, @UserState.CurrentUser.Username! (Email: @UserState.CurrentUser.Email,
+        Role: @UserState.CurrentUser.Role)</p>
+}
+else
+{
+    <p>You are not currently logged in or user information could not be retrieved.</p>
+    <p><a href="/login">Login</a></p>
+}
+
+@code {
+
+    protected override void OnInitialized()
+    {
+        Console.WriteLine("Home page: OnInitialized (using UserStateService).");
+        UserState.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        UserState.OnChange -= StateHasChanged;
+        Console.WriteLine("Home page: Disposed, unsubscribed from UserStateService.OnChange.");
+    }
+
+}

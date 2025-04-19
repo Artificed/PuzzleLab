@@ -28,9 +28,9 @@ public class ApiClient(HttpClient httpClient) : IApiClient
                 ToastService.ShowError("Unknown error occurred", "Error");
             }
         }
-        catch
+        catch (Exception e)
         {
-            ToastService.ShowError("Unable to parse error details", "Error");
+            ToastService.ShowError($"Unable to parse error details: {e.Message}", "Error");
         }
     }
 

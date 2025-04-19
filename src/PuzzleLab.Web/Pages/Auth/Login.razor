@@ -2,12 +2,13 @@
 @using PuzzleLab.Shared.DTOs.Requests
 @using PuzzleLab.Web.Services.Api.Interfaces
 @using PuzzleLab.Web.Services.Ui
+@using PuzzleLab.Web.Services.State
 
 @inject IAuthService AuthService
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
 @inject ITokenProvider TokenProvider
-
+@inject UserStateService UserState
 <PageTitle>Login</PageTitle>
 
 <div class="w-full max-w-md mx-auto mt-10">
@@ -90,22 +91,21 @@
 
             if (loginResponse?.Token is not null)
             {
-                ToastService.ShowSuccess("Login successful!", "Welcome");
-
                 await TokenProvider.SetTokenAsync(loginResponse.Token);
-                NavigationManager.NavigateTo("/dashboard", forceLoad: false);
+                ToastService.ShowSuccess("Login successful!", "Welcome");
+                await UserState.UpdateUserAfterLoginAsync();
+                NavigationManager.NavigateTo("/", forceLoad: false);
             }
             else
             {
-                Console.WriteLine("Login failed!");
+                Console.WriteLine("Login failed (LoginResponse or Token was null).");
+                _isLoading = false;
             }
         }
         catch (Exception e)
         {
             Console.WriteLine($"Login exception: {e.Message}");
-        }
-        finally
-        {
+            ToastService.ShowError($"An unexpected error occurred during login: {e.Message}", "Login Error");
             _isLoading = false;
         }
     }

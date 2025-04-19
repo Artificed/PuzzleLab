@@ -7,4 +7,5 @@ namespace PuzzleLab.Web.Services.Api.Interfaces;
 public interface IAuthService
 {
     Task<LoginResponse?> LoginAsync(LoginRequest loginRequest);
+    Task<GetCurrentUserResponse?> GetCurrentUserAsync();
 }

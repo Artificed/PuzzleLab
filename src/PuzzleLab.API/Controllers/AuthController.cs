@@ -35,6 +35,8 @@ public class AuthController(ISender sender) : ControllerBase
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
+        Console.WriteLine(userId + "dhjkasdhkad");
+
         if (userId == null)
         {
             var error = Error.Unauthorized("User is not logged in yet!");

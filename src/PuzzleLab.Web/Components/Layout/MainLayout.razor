@@ -1,5 +1,7 @@
 @inherits LayoutComponentBase
 @using PuzzleLab.Web.Components.Ui
+@using PuzzleLab.Web.Services.State
+@inject UserStateService UserState
 
 <main class="min-h-screen flex items-center justify-center p-4 bg-gray-50">
     <div class="w-full max-w-md">
@@ -7,3 +9,12 @@
     </div>
     <Toast/>
 </main>
+
+@code {
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UserState.InitializeAsync();
+    }
+
+}
