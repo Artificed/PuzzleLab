@@ -58,7 +58,6 @@ builder.Services.AddMediatR(
     cfg => cfg.RegisterServicesFromAssembly(typeof
         (PuzzleLab.Application.Features.Auth.Commands.LoginCommand).Assembly));
 
-
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var issuer = jwtSettings["Issuer"]
              ?? throw new InvalidOperationException("JWT Issuer is not configured in JwtSettings:Issuer");

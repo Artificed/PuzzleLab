@@ -35,6 +35,7 @@ builder.Services.AddHttpClient<IApiClient, ApiClient>(client =>
     .AddHttpMessageHandler<AuthHeaderHandler>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<UserStateService>();
 
 var app = builder.Build();
