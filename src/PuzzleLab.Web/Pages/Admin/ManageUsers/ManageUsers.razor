@@ -1,11 +1,12 @@
 @page "/admin/users"
-@layout PuzzleLab.Web.Components.Layout.AdminLayout
 
-@using PuzzleLab.Shared.DTOs.Requests
-@using PuzzleLab.Shared.DTOs.Responses
+@layout Components.Layout.AdminLayout
+
 @using PuzzleLab.Web.Services.State
 @using PuzzleLab.Web.Components.Navbars
 @using System.Collections.Generic
+@using PuzzleLab.Shared.DTOs.User.Requests
+@using PuzzleLab.Web.Models
 
 @inject NavigationManager NavigationManager
 @inject UserStateService UserState
@@ -14,15 +15,21 @@
 <PageTitle>Manage Users - PuzzleLab</PageTitle>
 
 <div class="space-y-6">
-    <div class="flex items-center justify-between mb-4">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
         <h1 class="text-2xl font-bold">Manage Users</h1>
-        <div class="relative">
-            <input type="text"
-                   @bind-value="_searchTerm"
-                   @bind-value:event="oninput"
-                   @onkeyup="SearchUsers"
-                   placeholder="Search users..."
-                   class="h-10 w-64 rounded-md border border-gray-200 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1"/>
+        <div class="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+            <div class="relative w-full sm:w-auto">
+                <input type="text"
+                       @bind-value="_searchTerm"
+                       @bind-value:event="oninput"
+                       @onkeyup="SearchUsers"
+                       placeholder="Search users..."
+                       class="h-10 w-full sm:w-64 rounded-md border border-gray-200 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1"/>
+            </div>
+            <button @onclick="ShowAddUserModal"
+                    class="w-full sm:w-auto inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-gray-900 text-gray-50 hover:bg-gray-900/90 h-10 px-4 py-2">
+                Add User
+            </button>
         </div>
     </div>
 
@@ -34,289 +41,123 @@
     }
     else if (_users.Count == 0)
     {
-        <div class="flex justify-center items-center p-8 border border-gray-200 rounded-lg">
-            <p class="text-gray-500">No users found</p>
+        <div class="text-center p-8 border border-gray-200 rounded-lg bg-white shadow-sm">
+            <p class="text-gray-500">No users have been added yet.</p>
+            <button @onclick="ShowAddUserModal" class="mt-4 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-gray-900 text-gray-50 hover:bg-gray-900/90 h-10 px-4 py-2">
+                Add First User
+            </button>
+        </div>
+    }
+    else if (_filteredUsers.Count == 0)
+    {
+        <div class="text-center p-8 border border-gray-200 rounded-lg bg-white shadow-sm">
+            <p class="text-gray-500">No users found matching your search criteria.</p>
         </div>
     }
     else
     {
-        <div class="border border-gray-200 rounded-lg overflow-hidden">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                <tr>
-                    <th scope="col"
-                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Username
-                    </th>
-                    <th scope="col"
-                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email
-                    </th>
-                    <th scope="col"
-                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role
-                    </th>
-                    <th scope="col"
-                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Created At
-                    </th>
-                    <th scope="col"
-                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last
-                        Login
-                    </th>
-                    <th scope="col"
-                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                    </th>
-                </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                @foreach (var user in _filteredUsers)
-                {
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">@user.Username</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@user.Email</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                <span
-                                    class="px-2 py-1 text-xs rounded-full @(user.Role == "Admin" ? "bg-gray-100" : "bg-green-100 text-green-800")">
-                                    @user.Role
-                                </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@user.CreatedAt.ToString("MMM dd, yyyy")</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@(user.LastLoginAt?.ToString("MMM dd, yyyy HH:mm") ?? "Never")</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <div class="flex space-x-2">
-                                <button @onclick="() => ShowEditUserModal(user)"
-                                        class="text-blue-600 hover:text-blue-900">Edit
-                                </button>
-                                <button @onclick="() => ShowDeleteConfirmation(user)"
-                                        class="text-red-600 hover:text-red-900">Delete
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                }
-                </tbody>
-            </table>
+        <div class="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Login</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach (var user in _filteredUsers.Skip((_currentPage - 1) * _pageSize).Take(_pageSize))
+                        {
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">@user.Username</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@user.Email</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <span class="px-2 py-1 text-xs rounded-full @(user.Role == "Admin" ? "bg-gray-200 text-gray-800" : "bg-green-100 text-green-800")">
+                                        @user.Role
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@user.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@(user.LastLoginAt?.ToString("MMM dd, yyyy HH:mm") ?? "Never")</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <div class="flex space-x-4">
+                                        <button @onclick="() => ShowEditUserModal(user)" class="text-blue-600 hover:text-blue-900 hover:underline">Edit</button>
+                                        <button @onclick="() => ShowDeleteConfirmation(user)" class="text-red-600 hover:text-red-900 hover:underline">Delete</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <div class="flex justify-between items-center mt-4">
-            <div class="text-sm text-gray-500">
-                Showing @_filteredUsers.Count of @_users.Count users
-            </div>
-            <div class="flex space-x-2">
-                <button @onclick="PreviousPage"
-                        disabled="@(_currentPage <= 1)"
-                        class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 border border-gray-200 bg-white hover:bg-gray-100 h-10 px-4 py-2">
-                    Previous
-                </button>
-                <span class="inline-flex items-center justify-center h-10 px-4 py-2">
+        @if (_totalPages > 1)
+        {
+            <div class="flex flex-col sm:flex-row justify-between items-center mt-4 gap-4">
+                <div class="text-sm text-gray-500">
+                    Showing @(((_currentPage - 1) * _pageSize) + 1)
+                    to @(Math.Min(_currentPage * _pageSize, _filteredUsers.Count))
+                    of @_filteredUsers.Count users
+                </div>
+                <div class="flex space-x-2">
+                    <button @onclick="PreviousPage"
+                            disabled="@(_currentPage <= 1)"
+                            class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 border border-gray-200 bg-white hover:bg-gray-100 h-10 px-4 py-2">
+                        Previous
+                    </button>
+                    <span class="inline-flex items-center justify-center h-10 px-4 py-2 text-sm text-gray-700">
                         Page @_currentPage of @_totalPages
                     </span>
-                <button @onclick="NextPage"
-                        disabled="@(_currentPage >= _totalPages)"
-                        class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 border border-gray-200 bg-white hover:bg-gray-100 h-10 px-4 py-2">
-                    Next
-                </button>
+                    <button @onclick="NextPage"
+                            disabled="@(_currentPage >= _totalPages)"
+                            class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 border border-gray-200 bg-white hover:bg-gray-100 h-10 px-4 py-2">
+                        Next
+                    </button>
+                </div>
             </div>
-        </div>
+        }
     }
 </div>
 
-@if (_showAddUserModal)
-{
-    <div class="fixed w-full inset-0 bg-black/80 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-            <h2 class="text-xl font-bold mb-4">Add New User</h2>
+<AddUserModal IsVisible="_showAddUserModal"
+              IsSubmitting="_isSubmitting"
+              UserModel="_newUser"
+              OnClose="CloseAddUserModal"
+              OnSubmit="HandleAddUser"/>
 
-            <EditForm Model="_newUser" OnValidSubmit="HandleAddUser" FormName="addUserForm" class="space-y-4">
-                <DataAnnotationsValidator/>
+<EditUserModal IsVisible="_showEditUserModal"
+               IsSubmitting="_isSubmitting"
+               UserModel="_editUser"
+               OnClose="CloseEditUserModal"
+               OnSubmit="HandleEditUser"/>
 
-                <div class="space-y-2">
-                    <label for="username" class="text-sm font-medium">Username</label>
-                    <InputText @bind-Value="_newUser.Username"
-                               id="username"
-                               placeholder="johndoe"
-                               class="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1"/>
-                    <ValidationMessage For="@(() => _newUser.Username)" class="text-red-600 text-xs"/>
-                </div>
-
-                <div class="space-y-2">
-                    <label for="email" class="text-sm font-medium">Email</label>
-                    <InputText @bind-Value="_newUser.Email"
-                               id="email"
-                               type="email"
-                               placeholder="john.doe@example.com"
-                               class="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1"/>
-                    <ValidationMessage For="@(() => _newUser.Email)" class="text-red-600 text-xs"/>
-                </div>
-
-                <div class="space-y-2">
-                    <label for="password" class="text-sm font-medium">Password</label>
-                    <InputText @bind-Value="_newUser.Password"
-                               id="password"
-                               type="password"
-                               placeholder="••••••••"
-                               class="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1"/>
-                    <ValidationMessage For="@(() => _newUser.Password)" class="text-red-600 text-xs"/>
-                </div>
-
-                <div class="space-y-2">
-                    <label for="role" class="text-sm font-medium">Role</label>
-                    <InputSelect @bind-Value="_newUser.Role"
-                                 id="role"
-                                 class="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1">
-                        <option value="User">User</option>
-                        <option value="Admin">Admin</option>
-                    </InputSelect>
-                    <ValidationMessage For="@(() => _newUser.Role)" class="text-red-600 text-xs"/>
-                </div>
-
-                <div class="flex justify-end space-x-2 pt-4">
-                    <button type="button"
-                            @onclick="CloseAddUserModal"
-                            class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 border border-gray-200 bg-white hover:bg-gray-100 h-10 px-4 py-2">
-                        Cancel
-                    </button>
-                    <button type="submit"
-                            disabled="@_isSubmitting"
-                            class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-gray-900 text-gray-50 hover:bg-gray-900/90 h-10 px-4 py-2">
-                        @if (_isSubmitting)
-                        {
-                            <span>Creating...</span>
-                        }
-                        else
-                        {
-                            <span>Create User</span>
-                        }
-                    </button>
-                </div>
-            </EditForm>
-        </div>
-    </div>
-}
-
-@if (_showEditUserModal)
-{
-    <div class="fixed w-full inset-0 bg-black/80 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-            <h2 class="text-xl font-bold mb-4">Edit User</h2>
-
-            <EditForm Model="_editUser" OnValidSubmit="HandleEditUser" FormName="editUserForm" class="space-y-4">
-                <DataAnnotationsValidator/>
-
-                <div class="space-y-2">
-                    <label for="edit-username" class="text-sm font-medium">Username</label>
-                    <InputText @bind-Value="_editUser.Username"
-                               id="edit-username"
-                               class="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1"/>
-                    <ValidationMessage For="@(() => _editUser.Username)" class="text-red-600 text-xs"/>
-                </div>
-
-                <div class="space-y-2">
-                    <label for="edit-email" class="text-sm font-medium">Email</label>
-                    <InputText @bind-Value="_editUser.Email"
-                               id="edit-email"
-                               type="email"
-                               class="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1"/>
-                    <ValidationMessage For="@(() => _editUser.Email)" class="text-red-600 text-xs"/>
-                </div>
-
-                <div class="space-y-2">
-                    <label for="edit-password" class="text-sm font-medium">New Password (leave empty to keep
-                        current)</label>
-                    <InputText @bind-Value="_editUser.Password"
-                               id="edit-password"
-                               type="password"
-                               placeholder="••••••••"
-                               class="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1"/>
-                </div>
-
-                <div class="space-y-2">
-                    <label for="edit-role" class="text-sm font-medium">Role</label>
-                    <InputSelect @bind-Value="_editUser.Role"
-                                 id="edit-role"
-                                 class="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1">
-                        <option value="User">User</option>
-                        <option value="Admin">Admin</option>
-                    </InputSelect>
-                    <ValidationMessage For="@(() => _editUser.Role)" class="text-red-600 text-xs"/>
-                </div>
-
-                <div class="flex justify-end space-x-2 pt-4">
-                    <button type="button"
-                            @onclick="CloseEditUserModal"
-                            class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 border border-gray-200 bg-white hover:bg-gray-100 h-10 px-4 py-2">
-                        Cancel
-                    </button>
-                    <button type="submit"
-                            disabled="@_isSubmitting"
-                            class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-gray-900 text-gray-50 hover:bg-gray-900/90 h-10 px-4 py-2">
-                        @if (_isSubmitting)
-                        {
-                            <span>Saving...</span>
-                        }
-                        else
-                        {
-                            <span>Save Changes</span>
-                        }
-                    </button>
-                </div>
-            </EditForm>
-        </div>
-    </div>
-}
-
-@if (_showDeleteConfirmation)
-{
-    <div class="fixed w-full inset-0 bg-black/80 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-            <h2 class="text-xl font-bold mb-4">Delete User</h2>
-            <p class="mb-6">Are you sure you want to delete the user <span
-                    class="font-bold">@_selectedUser.Username</span>? This action cannot be undone.</p>
-
-            <div class="flex justify-end space-x-2">
-                <button @onclick="CloseDeleteConfirmation"
-                        class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 border border-gray-200 bg-white hover:bg-gray-100 h-10 px-4 py-2">
-                    Cancel
-                </button>
-                <button @onclick="HandleDeleteUser"
-                        disabled="@_isSubmitting"
-                        class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-red-600 text-white hover:bg-red-700 h-10 px-4 py-2">
-                    @if (_isSubmitting)
-                    {
-                        <span>Deleting...</span>
-                    }
-                    else
-                    {
-                        <span>Delete User</span>
-                    }
-                </button>
-            </div>
-        </div>
-    </div>
-}
+<DeleteUserModal IsVisible="_showDeleteConfirmation"
+                 IsSubmitting="_isSubmitting"
+                 UserToDelete="_selectedUser"
+                 OnClose="CloseDeleteConfirmation"
+                 OnConfirm="HandleDeleteUser"/>
 
 @code {
-    private List<UserModel> _users = new();
-    private List<UserModel> _filteredUsers = new();
+    private List<User> _users = new();
+    private List<User> _filteredUsers = new();
     private bool _isLoading = true;
     private bool _isSubmitting = false;
     private string _searchTerm = "";
     private string _selectedRole = "";
     private int _pageSize = 10;
     private int _currentPage = 1;
-    private int _totalPages => (_filteredUsers.Count + _pageSize - 1) / _pageSize;
+    private int _totalPages => (_filteredUsers.Count == 0) ? 1 : ((_filteredUsers.Count + _pageSize - 1) / _pageSize);
 
-    // Add User Modal
     private bool _showAddUserModal = false;
-    private CreateUserModel _newUser = new();
-
-    // Edit User Modal
+    private CreateUserRequest _newUser = new();
     private bool _showEditUserModal = false;
-    private EditUserModel _editUser = new();
-
-    // Delete User Confirmation
+    private EditUserRequest _editUser = new();
     private bool _showDeleteConfirmation = false;
-    private UserModel _selectedUser = new();
+    private User _selectedUser = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -326,12 +167,16 @@
     private async Task LoadUsersAsync()
     {
         _isLoading = true;
+        await InvokeAsync(StateHasChanged);
 
         try
         {
-            // Mock data for demonstration purposes
-            // In a real implementation, you would fetch this from your API
-            _users = new List<UserModel>
+            // TODO: Replace with actual API call
+            // var response = await ApiClient.GetUsersAsync();
+            // _users = response?.Data ?? new List<UserModel>();
+
+            // Mock data:
+            _users = new List<User>
             {
                 new() { Id = Guid.NewGuid().ToString(), Username = "admin", Email = "admin@puzzlelab.com", Role = "Admin", CreatedAt = DateTime.Now.AddDays(-30), LastLoginAt = DateTime.Now.AddHours(-2) },
                 new() { Id = Guid.NewGuid().ToString(), Username = "john.doe", Email = "john.doe@example.com", Role = "User", CreatedAt = DateTime.Now.AddDays(-15), LastLoginAt = DateTime.Now.AddDays(-1) },
@@ -339,33 +184,41 @@
                 new() { Id = Guid.NewGuid().ToString(), Username = "robert.johnson", Email = "robert@example.com", Role = "User", CreatedAt = DateTime.Now.AddDays(-5), LastLoginAt = null }
             };
 
-            FilterUsers();
+            FilterUsers(); // Apply initial filtering (which also resets page)
         }
         catch (Exception ex)
         {
-            // Handle error (you might want to show a toast notification here)
             Console.Error.WriteLine($"Error loading users: {ex.Message}");
+            // TODO: Show error notification to user
         }
         finally
         {
             _isLoading = false;
+            await InvokeAsync(StateHasChanged); // Update UI after loading
         }
     }
 
+    // --- Filtering & Pagination ---
     private void FilterUsers()
     {
-        _filteredUsers = _users
-            .Where(u => string.IsNullOrEmpty(_searchTerm) ||
-                        u.Username.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                        u.Email.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase))
-            .Where(u => string.IsNullOrEmpty(_selectedRole) || u.Role == _selectedRole)
-            .ToList();
+        IEnumerable<User> query = _users;
 
-        // Reset to first page when filtering
-        _currentPage = 1;
+        if (!string.IsNullOrEmpty(_searchTerm))
+        {
+            query = query.Where(u => u.Username.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                                     u.Email.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrEmpty(_selectedRole))
+        {
+            query = query.Where(u => u.Role == _selectedRole);
+        }
+
+        _filteredUsers = query.ToList();
+        _currentPage = 1; // Reset page when filter changes
     }
 
-    private void SearchUsers()
+    private void SearchUsers() // Called by @onkeyup or similar event
     {
         FilterUsers();
     }
@@ -386,145 +239,64 @@
         }
     }
 
-    // Add User Modal Methods
+    // --- Modal Visibility Control ---
     private void ShowAddUserModal()
     {
-        _newUser = new CreateUserModel { Role = "User" };
+        _newUser = new CreateUserRequest();
         _showAddUserModal = true;
     }
 
-    private void CloseAddUserModal()
+    private void CloseAddUserModal() => _showAddUserModal = false;
+
+    private void ShowEditUserModal(User user)
     {
-        _showAddUserModal = false;
-    }
-
-    private async Task HandleAddUser()
-    {
-        _isSubmitting = true;
-
-        try
-        {
-            // In a real implementation, you would send this to your API
-            // For now, we'll just mock adding the user to our list
-            var newUser = new UserModel
-            {
-                Id = Guid.NewGuid().ToString(),
-                Username = _newUser.Username,
-                Email = _newUser.Email,
-                Role = _newUser.Role,
-                CreatedAt = DateTime.Now,
-                LastLoginAt = null
-            };
-
-            _users.Add(newUser);
-            FilterUsers();
-
-            // Close the modal
-            _showAddUserModal = false;
-
-            // Show success notification (you might want to implement a toast service)
-            // ToastService.ShowSuccess("User created successfully!");
-        }
-        catch (Exception ex)
-        {
-            // Handle error (you might want to show a toast notification here)
-            Console.Error.WriteLine($"Error creating user: {ex.Message}");
-        }
-        finally
-        {
-            _isSubmitting = false;
-        }
-    }
-
-    // Edit User Modal Methods
-    private void ShowEditUserModal(UserModel user)
-    {
-        _editUser = new EditUserModel
+        _editUser = new EditUserRequest()
         {
             Id = user.Id,
             Username = user.Username,
             Email = user.Email,
-            Password = string.Empty, // Don't prefill the password
-            Role = user.Role
+            Password = "",
         };
-
         _showEditUserModal = true;
     }
 
-    private void CloseEditUserModal()
-    {
-        _showEditUserModal = false;
-    }
+    private void CloseEditUserModal() => _showEditUserModal = false;
 
-    private async Task HandleEditUser()
-    {
-        _isSubmitting = true;
-
-        try
-        {
-            // In a real implementation, you would send this to your API
-            // For now, we'll just mock updating the user in our list
-            var userToUpdate = _users.FirstOrDefault(u => u.Id == _editUser.Id);
-            if (userToUpdate != null)
-            {
-                userToUpdate.Username = _editUser.Username;
-                userToUpdate.Email = _editUser.Email;
-                userToUpdate.Role = _editUser.Role;
-                // Note: In a real implementation, you'd handle password updates separately
-            }
-
-            FilterUsers();
-
-            // Close the modal
-            _showEditUserModal = false;
-
-            // Show success notification
-            // ToastService.ShowSuccess("User updated successfully!");
-        }
-        catch (Exception ex)
-        {
-            // Handle error
-            Console.Error.WriteLine($"Error updating user: {ex.Message}");
-        }
-        finally
-        {
-            _isSubmitting = false;
-        }
-    }
-
-    // Delete User Confirmation Methods
-    private void ShowDeleteConfirmation(UserModel user)
+    private void ShowDeleteConfirmation(User user)
     {
         _selectedUser = user;
         _showDeleteConfirmation = true;
     }
 
-    private void CloseDeleteConfirmation()
-    {
-        _showDeleteConfirmation = false;
-    }
+    private void CloseDeleteConfirmation() => _showDeleteConfirmation = false;
 
-    private async Task HandleDeleteUser()
+    // --- Modal Action Handlers ---
+    private async Task HandleAddUser(CreateUserRequest model)
     {
         _isSubmitting = true;
-
         try
         {
-            // In a real implementation, you would send this to your API
-            // For now, we'll just mock removing the user from our list
-            _users.RemoveAll(u => u.Id == _selectedUser.Id);
-            FilterUsers();
+            Console.WriteLine($"Attempting to add user: {model.Username}"); // Logging
+            // TODO: API call to create user using 'model'
+            // await ApiClient.CreateUserAsync(model);
 
-            // Close the confirmation dialog
-            _showDeleteConfirmation = false;
+            // Mock: Add to local list
+            var newUser = new User
+            {
+                Id = Guid.NewGuid().ToString(), Username = model.Username, Email = model.Email, CreatedAt = DateTime.Now
+            };
+            _users.Add(newUser); // Add to the master list
 
-            // Show success notification
-            // ToastService.ShowSuccess("User deleted successfully!");
+            await LoadUsersAsync(); // Reloading might be simpler if API doesn't return the full list
+            // OR FilterUsers(); // Just re-apply filters if only adding locally
+
+            CloseAddUserModal();
+            // TODO: Show success notification
         }
         catch (Exception ex)
         {
-            // Handle error
-            Console.Error.WriteLine($"Error deleting user: {ex.Message}");
+            Console.Error.WriteLine($"Error creating user: {ex.Message}");
+            // TODO: Show error notification
         }
         finally
         {
@@ -532,33 +304,69 @@
         }
     }
 
-    // Model classes for the page
-    public class UserModel
+    private async Task HandleEditUser(EditUserRequest model)
     {
-        public string Id { get; set; } = string.Empty;
-        public string Username { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string Role { get; set; } = string.Empty;
-        public DateTime CreatedAt { get; set; }
-        public DateTime? LastLoginAt { get; set; }
+        _isSubmitting = true;
+        try
+        {
+            Console.WriteLine($"Attempting to edit user: {model.Username}"); // Logging
+            // TODO: API call to update user using 'model'
+            // await ApiClient.UpdateUserAsync(model.Id, model);
+
+            // Mock: Update in local list
+            var userToUpdate = _users.FirstOrDefault(u => u.Id == model.Id);
+            if (userToUpdate != null)
+            {
+                userToUpdate.Username = model.Username;
+                userToUpdate.Email = model.Email;
+            }
+
+            await LoadUsersAsync(); // Reloading might be simpler
+            // OR FilterUsers(); // Just re-apply filters if only updating locally
+
+            CloseEditUserModal();
+            // TODO: Show success notification
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error updating user: {ex.Message}");
+            // TODO: Show error notification
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
     }
 
-    public class CreateUserModel
+    private async Task HandleDeleteUser() // Uses _selectedUser from state
     {
-        // Add Data Annotations in a real implementation
-        public string Username { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
-        public string Role { get; set; } = string.Empty;
-    }
+        _isSubmitting = true;
+        try
+        {
+            Console.WriteLine($"Attempting to delete user: {_selectedUser?.Username}"); // Logging
+            if (_selectedUser == null) return; // Safety check
 
-    public class EditUserModel
-    {
-        public string Id { get; set; } = string.Empty;
-        public string Username { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty; // Optional for updates
-        public string Role { get; set; } = string.Empty;
-    }
+            // TODO: API call to delete user using '_selectedUser.Id'
+            // await ApiClient.DeleteUserAsync(_selectedUser.Id);
 
+            // Mock: Remove from local list
+            _users.RemoveAll(u => u.Id == _selectedUser.Id);
+
+            await LoadUsersAsync(); // Reloading might be simpler
+            // OR FilterUsers(); // Just re-apply filters if only removing locally
+
+            CloseDeleteConfirmation();
+            // TODO: Show success notification
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error deleting user: {ex.Message}");
+            // TODO: Show error notification
+        }
+        finally
+        {
+            _isSubmitting = false;
+            _selectedUser = new();
+        }
+    }
 }

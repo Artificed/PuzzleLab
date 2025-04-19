@@ -1,34 +1,34 @@
 @using PuzzleLab.Shared.DTOs.User.Requests
 
-@if (IsVisible && UserModel != null)
+@if (IsVisible)
 {
     <div class="fixed w-full inset-0 bg-black/80 flex items-center justify-center z-50" @onclick="HandleBackdropClick">
         <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md" @onclick:stopPropagation="true">
-            <h2 class="text-xl font-bold mb-4">Edit User</h2>
+            <h2 class="text-xl font-bold mb-4">Add New User</h2>
 
-            <EditForm Model="UserModel" OnValidSubmit="HandleValidSubmit" FormName="editUserForm" class="space-y-4">
+            <EditForm Model="UserModel" OnValidSubmit="HandleValidSubmit" FormName="addUserForm" class="space-y-4">
                 <DataAnnotationsValidator/>
 
                 <div class="space-y-2">
-                    <label for="edit-username" class="text-sm font-medium">Username</label>
-                    <InputText @bind-Value="UserModel.Username" id="edit-username"
+                    <label for="add-username" class="text-sm font-medium">Username</label>
+                    <InputText @bind-Value="UserModel.Username" id="add-username" placeholder="johndoe"
                                class="h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1"/>
                     <ValidationMessage For="@(() => UserModel.Username)" class="text-red-600 text-xs"/>
                 </div>
 
                 <div class="space-y-2">
-                    <label for="edit-email" class="text-sm font-medium">Email</label>
-                    <InputText @bind-Value="UserModel.Email" id="edit-email" type="email"
+                    <label for="add-email" class="text-sm font-medium">Email</label>
+                    <InputText @bind-Value="UserModel.Email" id="add-email" type="email"
+                               placeholder="john.doe@example.com"
                                class="h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1"/>
                     <ValidationMessage For="@(() => UserModel.Email)" class="text-red-600 text-xs"/>
                 </div>
 
                 <div class="space-y-2">
-                    <label for="edit-password" class="text-sm font-medium">New Password (leave empty to keep
-                        current)</label>
-                    <InputText @bind-Value="UserModel.Password" id="edit-password" type="password"
-                               placeholder="••••••••"
+                    <label for="add-password" class="text-sm font-medium">Password</label>
+                    <InputText @bind-Value="UserModel.Password" id="add-password" type="password" placeholder="••••••••"
                                class="h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1"/>
+                    <ValidationMessage For="@(() => UserModel.Password)" class="text-red-600 text-xs"/>
                 </div>
 
                 <div class="flex justify-end space-x-2 pt-4">
@@ -40,11 +40,11 @@
                             class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-gray-900 text-gray-50 hover:bg-gray-900/90 h-10 px-4 py-2">
                         @if (IsSubmitting)
                         {
-                            <span>Saving...</span>
+                            <span>Creating...</span>
                         }
                         else
                         {
-                            <span>Save Changes</span>
+                            <span>Create User</span>
                         }
                     </button>
                 </div>
@@ -56,15 +56,11 @@
 @code {
     [Parameter] public bool IsVisible { get; set; }
     [Parameter] public bool IsSubmitting { get; set; }
-    [Parameter] public EditUserRequest? UserModel { get; set; }
+    [Parameter] public CreateUserRequest UserModel { get; set; } = new();
     [Parameter] public EventCallback OnClose { get; set; }
-    [Parameter] public EventCallback<EditUserRequest> OnSubmit { get; set; }
+    [Parameter] public EventCallback<CreateUserRequest> OnSubmit { get; set; }
 
-    private async Task HandleValidSubmit()
-    {
-        if (UserModel != null) await OnSubmit.InvokeAsync(UserModel);
-    }
-
+    private async Task HandleValidSubmit() => await OnSubmit.InvokeAsync(UserModel);
     private async Task Cancel() => await OnClose.InvokeAsync();
     private async Task HandleBackdropClick() => await OnClose.InvokeAsync();
 }
