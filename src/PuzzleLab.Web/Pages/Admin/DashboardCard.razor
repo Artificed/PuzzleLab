@@ -1,0 +1,17 @@
+<div @onclick="OnClick"
+     class="border border-gray-200 rounded-lg p-6 bg-white hover:shadow-md cursor-pointer transition-shadow">
+    <div class="flex justify-between items-center">
+        <div>
+            <p class="text-sm font-medium text-gray-500">@Title</p>
+            <p class="text-3xl font-bold">@Count</p>
+        </div>
+        <div class="text-3xl">@Icon</div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public int Count { get; set; }
+    [Parameter] public string Icon { get; set; } = string.Empty;
+    [Parameter] public EventCallback OnClick { get; set; }
+}
