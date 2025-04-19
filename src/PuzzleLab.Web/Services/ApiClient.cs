@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 using PuzzleLab.Web.Interfaces;
 
 namespace PuzzleLab.Web.Services;
@@ -11,20 +12,48 @@ public class ApiClient(HttpClient httpClient) : IApiClient
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
+    private async Task ShowErrorFromResponse(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var problem =
+                await response.Content.ReadFromJsonAsync<ProblemDetails>(_jsonSerializerOptions, cancellationToken);
+            if (problem != null)
+            {
+                ToastService.ShowError(problem.Detail ?? "An error occurred", problem.Title ?? "Error");
+            }
+            else
+            {
+                ToastService.ShowError("Unknown error occurred", "Error");
+            }
+        }
+        catch
+        {
+            ToastService.ShowError("Unable to parse error details", "Error");
+        }
+    }
+
     public async Task<T?> GetAsync<T>(string requestUrl, CancellationToken cancellationToken = default)
     {
         try
         {
-            return await httpClient.GetFromJsonAsync<T>(requestUrl, _jsonSerializerOptions, cancellationToken);
+            var response = await httpClient.GetAsync(requestUrl, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                await ShowErrorFromResponse(response, cancellationToken);
+                return default;
+            }
+
+            return await response.Content.ReadFromJsonAsync<T>(_jsonSerializerOptions, cancellationToken);
         }
         catch (HttpRequestException e)
         {
-            Console.Error.WriteLine($"API GET request failed: {e.Message} | Status Code: {e.StatusCode}");
+            ToastService.ShowError(e.Message, "Request Error!");
             return default;
         }
         catch (JsonException e)
         {
-            Console.Error.WriteLine($"API GET JSON deserialization failed: {e.Message}");
+            ToastService.ShowError(e.Message, "JSON deserialization failed");
             return default;
         }
     }
@@ -35,20 +64,18 @@ public class ApiClient(HttpClient httpClient) : IApiClient
         {
             var response =
                 await httpClient.PostAsJsonAsync(requestUrl, data, _jsonSerializerOptions, cancellationToken);
-            response.EnsureSuccessStatusCode();
 
-            Console.WriteLine(response);
+            if (!response.IsSuccessStatusCode)
+            {
+                await ShowErrorFromResponse(response, cancellationToken);
+                return default;
+            }
 
             return await response.Content.ReadFromJsonAsync<T>(_jsonSerializerOptions, cancellationToken);
         }
-        catch (HttpRequestException ex)
+        catch (JsonException e)
         {
-            Console.Error.WriteLine($"API POST request failed: {ex.Message} | Status Code: {ex.StatusCode}");
-            return default;
-        }
-        catch (JsonException ex)
-        {
-            Console.Error.WriteLine($"API POST JSON deserialization failed: {ex.Message}");
+            ToastService.ShowError(e.Message, "JSON deserialization failed");
             return default;
         }
     }
@@ -59,12 +86,15 @@ public class ApiClient(HttpClient httpClient) : IApiClient
         {
             var response =
                 await httpClient.PostAsJsonAsync(requestUrl, data, _jsonSerializerOptions, cancellationToken);
-            response.EnsureSuccessStatusCode();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                await ShowErrorFromResponse(response, cancellationToken);
+            }
         }
-        catch (HttpRequestException ex)
+        catch (JsonException e)
         {
-            Console.Error.WriteLine($"API POST request failed: {ex.Message} | Status Code: {ex.StatusCode}");
-            throw;
+            ToastService.ShowError(e.Message, "JSON deserialization failed");
         }
     }
 
@@ -72,19 +102,19 @@ public class ApiClient(HttpClient httpClient) : IApiClient
     {
         try
         {
-            var response =
-                await httpClient.PutAsJsonAsync(requestUrl, data, _jsonSerializerOptions, cancellationToken);
-            response.EnsureSuccessStatusCode();
+            var response = await httpClient.PutAsJsonAsync(requestUrl, data, _jsonSerializerOptions, cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                await ShowErrorFromResponse(response, cancellationToken);
+                return default;
+            }
+
             return await response.Content.ReadFromJsonAsync<T>(_jsonSerializerOptions, cancellationToken);
         }
-        catch (HttpRequestException ex)
+        catch (JsonException e)
         {
-            Console.Error.WriteLine($"API PUT request failed: {ex.Message} | Status Code: {ex.StatusCode}");
-            return default;
-        }
-        catch (JsonException ex)
-        {
-            Console.Error.WriteLine($"API PUT JSON deserialization failed: {ex.Message}");
+            ToastService.ShowError(e.Message, "JSON deserialization failed");
             return default;
         }
     }
@@ -93,14 +123,16 @@ public class ApiClient(HttpClient httpClient) : IApiClient
     {
         try
         {
-            var response =
-                await httpClient.PutAsJsonAsync(requestUrl, data, _jsonSerializerOptions, cancellationToken);
-            response.EnsureSuccessStatusCode();
+            var response = await httpClient.PutAsJsonAsync(requestUrl, data, _jsonSerializerOptions, cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                await ShowErrorFromResponse(response, cancellationToken);
+            }
         }
-        catch (HttpRequestException ex)
+        catch (JsonException e)
         {
-            Console.Error.WriteLine($"API PUT request failed: {ex.Message} | Status Code: {ex.StatusCode}");
-            throw;
+            ToastService.ShowError(e.Message, "JSON deserialization failed");
         }
     }
 
@@ -109,12 +141,15 @@ public class ApiClient(HttpClient httpClient) : IApiClient
         try
         {
             var response = await httpClient.DeleteAsync(requestUrl, cancellationToken);
-            response.EnsureSuccessStatusCode();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                await ShowErrorFromResponse(response, cancellationToken);
+            }
         }
-        catch (HttpRequestException ex)
+        catch (HttpRequestException e)
         {
-            Console.Error.WriteLine($"API DELETE request failed: {ex.Message} | Status Code: {ex.StatusCode}");
-            throw;
+            ToastService.ShowError(e.Message, "Request Error!");
         }
     }
 }

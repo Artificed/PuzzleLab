@@ -80,15 +80,11 @@
 
     private bool rememberMe = false;
     private bool isLoading = false;
-    private string? errorMessage = null;
 
     private async Task HandleLoginAsync()
     {
         isLoading = true;
-        errorMessage = null;
         StateHasChanged();
-
-        Console.WriteLine($"{loginModel.Email}-{loginModel.Password}");
 
         try
         {
@@ -97,19 +93,18 @@
             if (loginResponse?.Token is not null)
             {
                 ToastService.ShowSuccess("Login successful!", "Welcome");
+
                 // TODO: Store the token securely!
                 // NavigationManager.NavigateTo("/dashboard", forceLoad: false);
             }
             else
             {
-                errorMessage = "Invalid email or password. Please try again.";
-                ToastService.ShowError("Invalid email or password. Please try again.", "Login Failed");
+                Console.WriteLine("Login failed!");
             }
         }
         catch (Exception e)
         {
-            errorMessage = "An unexpected error occurred during login. Please try again later.";
-            ToastService.ShowError("An error occurred during login. Please try again.", "Error");
+            Console.WriteLine($"Login exception: {e.Message}");
         }
         finally
         {
