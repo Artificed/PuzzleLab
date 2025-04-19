@@ -11,6 +11,7 @@ COPY ["./src/PuzzleLab.API/PuzzleLab.API.csproj", "./PuzzleLab.API/"]
 COPY ["./src/PuzzleLab.Infrastructure/PuzzleLab.Infrastructure.csproj", "./PuzzleLab.Infrastructure/"]
 COPY ["./src/PuzzleLab.Domain/PuzzleLab.Domain.csproj", "./PuzzleLab.Domain/"]
 COPY ["./src/PuzzleLab.Application/PuzzleLab.Application.csproj", "./PuzzleLab.Application/"]
+COPY ["./src/PuzzleLab.Shared/PuzzleLab.Shared.csproj", "./PuzzleLab.Shared/"]
 
 RUN dotnet restore "./PuzzleLab.API/PuzzleLab.API.csproj"
 
@@ -18,6 +19,7 @@ COPY ["./src/PuzzleLab.API/", "./PuzzleLab.API/"]
 COPY ["./src/PuzzleLab.Infrastructure/", "./PuzzleLab.Infrastructure/"]
 COPY ["./src/PuzzleLab.Domain/", "./PuzzleLab.Domain/"]
 COPY ["./src/PuzzleLab.Application/", "./PuzzleLab.Application/"]
+COPY ["./src/PuzzleLab.Shared/", "./PuzzleLab.Shared/"]
 
 WORKDIR "/src/PuzzleLab.API"
 RUN dotnet build "PuzzleLab.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
@@ -30,4 +32,4 @@ RUN dotnet publish "PuzzleLab.API.csproj" -c $BUILD_CONFIGURATION -o /app/publis
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "PuzzleLab.API.dll"]
+ENTRYPOINT ["dotnet", "PuzzleLab.API.dll", "--migrate", "--seed"]

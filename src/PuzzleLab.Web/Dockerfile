@@ -8,9 +8,11 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
 COPY ["./src/PuzzleLab.Web/PuzzleLab.Web.csproj", "./PuzzleLab.Web/"]
+COPY ["./src/PuzzleLab.Shared/PuzzleLab.Shared.csproj", "./PuzzleLab.Shared/"]
 RUN dotnet restore "PuzzleLab.Web/PuzzleLab.Web.csproj"
 
 COPY src/PuzzleLab.Web/ ./PuzzleLab.Web/
+COPY src/PuzzleLab.Shared/ ./PuzzleLab.Shared/
 
 WORKDIR "/src/PuzzleLab.Web"
 RUN dotnet build "./PuzzleLab.Web.csproj" -c $BUILD_CONFIGURATION -o /app/build
