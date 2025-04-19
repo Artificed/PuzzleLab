@@ -2,9 +2,9 @@
 @inject NavigationManager NavigationManager
 @inject UserStateService UserState
 
-<div class="flex justify-between items-center border-b border-gray-200 pb-4">
+<div class="flex justify-between items-center border-gray-200">
     <div class="flex items-center justify-center gap-16">
-        <h1 class="text-3xl font-bold">@Title</h1>
+        <a href="/admin/dashboard" class="text-xl font-bold text-gray-800">PuzzleLab Admin</a>
         <div class="flex items-center gap-4">
             <a href="/admin/dashboard"
                class="inline-flex items-center justify-center whitespace-nowrap text-md focus-visible:ring-gray-950 focus-visible:ring-offset-1 h-10 px-4 py-2 @(IsActive("/admin/dashboard") ? "font-medium text-gray-900 underline" : "text-gray-600 hover:text-gray-900")">
@@ -40,13 +40,19 @@
 </div>
 
 @code {
-    [Parameter] public string Title { get; set; } = "Admin Dashboard";
     [Parameter] public EventCallback HandleLogout { get; set; }
 
     private bool IsActive(string href)
     {
-        var relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
-        return relativePath.StartsWith(href.TrimStart('/'));
-    }
+        var relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri).Split('?')[0];
+        var normalizedHref = href.TrimStart('/');
 
+        if (string.IsNullOrEmpty(relativePath) || relativePath.Equals("admin", StringComparison.OrdinalIgnoreCase))
+        {
+            return normalizedHref.Equals("admin/dashboard", StringComparison.OrdinalIgnoreCase);
+        }
+
+        return relativePath.Equals(normalizedHref, StringComparison.OrdinalIgnoreCase) ||
+               relativePath.StartsWith(normalizedHref + "/", StringComparison.OrdinalIgnoreCase);
+    }
 }

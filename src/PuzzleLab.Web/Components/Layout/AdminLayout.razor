@@ -1,0 +1,43 @@
+@inherits LayoutComponentBase
+@using PuzzleLab.Web.Services.State
+@using PuzzleLab.Web.Components
+@using PuzzleLab.Web.Components.Navbars
+
+@inject NavigationManager NavigationManager
+@inject UserStateService UserState
+
+<div class="min-h-screen bg-gray-100">
+    <div class="w-full bg-white shadow-sm">
+        <div class="w-full mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <AdminNavbar HandleLogout="HandleLogout"/>
+        </div>
+    </div>
+
+    <main>
+        <div class="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            @Body
+        </div>
+    </main>
+
+</div>
+
+@code {
+
+    private async Task HandleLogout()
+    {
+        Console.WriteLine("Logout requested from Layout");
+        NavigationManager.NavigateTo("/login", forceLoad: true);
+    }
+
+    // Optional: Add authorization check for the entire layout
+    // protected override async Task OnInitializedAsync()
+    // {
+    //     var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    //     var user = authState.User;
+    //     if (!user.Identity.IsAuthenticated || !user.IsInRole("Admin"))
+    //     {
+    //         NavigationManager.NavigateTo("/login"); // Redirect if not authenticated/authorized
+    //     }
+    // }
+    // @inject AuthenticationStateProvider AuthenticationStateProvider
+}

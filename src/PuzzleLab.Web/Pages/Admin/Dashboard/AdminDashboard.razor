@@ -1,4 +1,6 @@
 @page "/admin/dashboard"
+@layout PuzzleLab.Web.Components.Layout.AdminLayout
+
 @using PuzzleLab.Shared.DTOs.Responses
 @using PuzzleLab.Web.Services.State
 @using System.Collections.Generic
@@ -10,9 +12,8 @@
 
 <PageTitle>Admin Dashboard - PuzzleLab</PageTitle>
 
-<div class="w-full mx-auto px-40">
+<div class="w-full mx-auto px-64">
     <div class="p-8 space-y-6">
-        <AdminNavbar Title="Admin Dashboard" HandleLogout="@HandleLogout"/>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <DashboardCard
@@ -280,4 +281,5 @@
         public DateTime EndDate { get; set; }
         public int AssignedUsersCount { get; set; }
     }
+
 }
