@@ -1,11 +1,12 @@
 @page "/login"
-@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @using PuzzleLab.Shared.DTOs.Requests
-@using PuzzleLab.Web.Interfaces
+@using PuzzleLab.Web.Services.Api.Interfaces
 @using PuzzleLab.Web.Services.Ui
 
 @inject IAuthService AuthService
 @inject NavigationManager NavigationManager
+@inject ProtectedSessionStorage ProtectedSessionStorage
 @rendermode InteractiveServer
 
 <PageTitle>Login</PageTitle>
@@ -13,10 +14,10 @@
 <div class="w-full max-w-md mx-auto mt-10">
     <div class="border border-gray-300 rounded-xl p-12 space-y-8">
         <div class="space-y-2 text-center">
-            <h1 class="text-3xl font-bold tracking-tight">PuzzleLab</h1>
+            <h1 class="text-3xl font-bold">PuzzleLab</h1>
         </div>
 
-        <EditForm Model="loginModel" OnValidSubmit="HandleLoginAsync" FormName="loginForm" class="space-y-4">
+        <EditForm Model="_loginModel" OnValidSubmit="HandleLoginAsync" FormName="loginForm" class="space-y-4">
             <DataAnnotationsValidator/>
 
             <div class="space-y-2">
@@ -24,12 +25,12 @@
                        class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                     Email
                 </label>
-                <InputText @bind-Value="loginModel.Email"
+                <InputText @bind-Value="_loginModel.Email"
                            type="email"
                            id="email"
                            placeholder="john.doe@gmail.com"
                            class="flex h-10 w-full rounded-md border border-gray-200 bg-white mt-1 px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"/>
-                <ValidationMessage For="@(() => loginModel.Email)" class="text-red-600 text-xs"/>
+                <ValidationMessage For="@(() => _loginModel.Email)" class="text-red-600 text-xs"/>
             </div>
 
             <div class="space-y-2">
@@ -37,16 +38,16 @@
                        class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                     Password
                 </label>
-                <InputText @bind-Value="loginModel.Password"
+                <InputText @bind-Value="_loginModel.Password"
                            type="password"
                            id="password"
                            placeholder="••••••••"
                            class="flex h-10 w-full rounded-md border border-gray-200 bg-white mt-1 px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"/>
-                <ValidationMessage For="@(() => loginModel.Password)" class="text-red-600 text-xs"/>
+                <ValidationMessage For="@(() => _loginModel.Password)" class="text-red-600 text-xs"/>
             </div>
 
             <div class="flex items-center space-x-2">
-                <InputCheckbox @bind-Value="rememberMe"
+                <InputCheckbox @bind-Value="_rememberMe"
                                id="remember"
                                class="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-950"/>
                 <label for="remember"
@@ -56,9 +57,9 @@
             </div>
 
             <button type="submit"
-                    disabled="@isLoading"
+                    disabled="@_isLoading"
                     class="cursor-pointer inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-gray-900 text-gray-50 hover:bg-gray-900/90 h-10 px-4 py-2 w-full">
-                @if (isLoading)
+                @if (_isLoading)
                 {
                     <span>Signing in...</span>
                 }
@@ -76,26 +77,25 @@
 </div>
 
 @code {
-    private LoginRequest loginModel = new LoginRequest();
-
-    private bool rememberMe = false;
-    private bool isLoading = false;
+    private readonly LoginRequest _loginModel = new LoginRequest();
+    private bool _isLoading = false;
+    private bool _rememberMe = false; // TODO: Implement this
 
     private async Task HandleLoginAsync()
     {
-        isLoading = true;
+        _isLoading = true;
         StateHasChanged();
 
         try
         {
-            var loginResponse = await AuthService.LoginAsync(loginModel);
+            var loginResponse = await AuthService.LoginAsync(_loginModel);
 
             if (loginResponse?.Token is not null)
             {
                 ToastService.ShowSuccess("Login successful!", "Welcome");
 
-                // TODO: Store the token securely!
-                // NavigationManager.NavigateTo("/dashboard", forceLoad: false);
+                await ProtectedSessionStorage.SetAsync("authorization-token", loginResponse.Token);
+                NavigationManager.NavigateTo("/dashboard", forceLoad: false);
             }
             else
             {
@@ -108,7 +108,7 @@
         }
         finally
         {
-            isLoading = false;
+            _isLoading = false;
         }
     }
 

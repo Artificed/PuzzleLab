@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using PuzzleLab.Application.Common;
+using PuzzleLab.Application.Common.Models;
 
 namespace PuzzleLab.API.Extensions;
 

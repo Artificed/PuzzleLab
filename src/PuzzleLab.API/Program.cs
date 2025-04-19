@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using PuzzleLab.Application.Common.Interfaces;
-using PuzzleLab.Domain.Entities;
 using PuzzleLab.Domain.Factories;
 using PuzzleLab.Domain.Repositories;
 using PuzzleLab.Infrastructure.Persistence;

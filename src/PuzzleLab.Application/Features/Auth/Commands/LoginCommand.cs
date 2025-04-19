@@ -1,5 +1,5 @@
 using MediatR;
-using PuzzleLab.Application.Common;
+using PuzzleLab.Application.Common.Models;
 using PuzzleLab.Shared.DTOs.Responses;
 
 namespace PuzzleLab.Application.Features.Auth.Commands;

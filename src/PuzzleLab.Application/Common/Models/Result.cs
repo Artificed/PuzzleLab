@@ -1,4 +1,4 @@
-namespace PuzzleLab.Application.Common;
+namespace PuzzleLab.Application.Common.Models;
 
 public class Result
 {

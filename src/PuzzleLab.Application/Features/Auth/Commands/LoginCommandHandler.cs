@@ -1,5 +1,5 @@
 using MediatR;
-using PuzzleLab.Application.Common;
+using PuzzleLab.Application.Common.Models;
 using PuzzleLab.Application.Common.Interfaces;
 using PuzzleLab.Domain.Repositories;
 using PuzzleLab.Shared.DTOs.Responses;
@@ -34,6 +34,6 @@ public class LoginCommandHandler(IUserRepository userRepository, IJwtGenerator j
 
         var tokenString = jwtGenerator.GenerateToken(user);
 
-        return Result<LoginResponse>.Success(new LoginResponse(){Token = tokenString});
+        return Result<LoginResponse>.Success(new LoginResponse() { Token = tokenString });
     }
 }
