@@ -12,168 +12,165 @@
 
 <PageTitle>Admin Dashboard - PuzzleLab</PageTitle>
 
-<div class="w-full mx-auto px-64">
-    <div class="p-8 space-y-6">
+<div class="space-y-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <DashboardCard
+            Title="Question Packages"
+            Count="@_questionPackagesCount"
+            Icon="📚"
+            OnClick="@(() => NavigationManager.NavigateTo("/admin/question-packages"))"
+        />
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <DashboardCard
-                Title="Question Packages"
-                Count="@_questionPackagesCount"
-                Icon="📚"
-                OnClick="@(() => NavigationManager.NavigateTo("/admin/question-packages"))"
-            />
+        <DashboardCard
+            Title="Questions"
+            Count="@_questionsCount"
+            Icon="❓"
+            OnClick="@(() => NavigationManager.NavigateTo("/admin/questions"))"/>
 
-            <DashboardCard
-                Title="Questions"
-                Count="@_questionsCount"
-                Icon="❓"
-                OnClick="@(() => NavigationManager.NavigateTo("/admin/questions"))"/>
+        <DashboardCard
+            Title="Active Schedules"
+            Count="@_activeSchedulesCount"
+            Icon="📅"
+            OnClick="@(() => NavigationManager.NavigateTo("/admin/schedules"))"/>
+    </div>
 
-            <DashboardCard
-                Title="Active Schedules"
-                Count="@_activeSchedulesCount"
-                Icon="📅"
-                OnClick="@(() => NavigationManager.NavigateTo("/admin/schedules"))"/>
-        </div>
-
-        @* --- Recent Tests & Users Section --- *@
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-            <div class="border border-gray-200 rounded-lg p-4 space-y-4">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-lg font-medium">Recent Tests</h2>
-                    <a href="/admin/reports" class="text-sm text-gray-600 hover:text-gray-900">View all</a>
-                </div>
-
-                @if (_recentQuizSessions.Count > 0)
-                {
-                    <div class="space-y-3">
-                        @foreach (var session in _recentQuizSessions)
-                        {
-                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-md">
-                                <div>
-                                    <p class="font-medium">@session.Username</p>
-                                    <p class="text-sm text-gray-600">@session.QuizName</p>
-                                </div>
-                                <div class="text-right">
-                                    <p class="font-medium">@session.Score%</p>
-                                    <p class="text-xs text-gray-500">@session.CompletedDate.ToShortDateString()</p>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                }
-                else
-                {
-                    <div class="flex items-center justify-center h-32 text-gray-500">
-                        No recent tests
-                    </div>
-                }
+    @* --- Recent Tests & Users Section --- *@
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+        <div class="border border-gray-200 rounded-lg p-4 space-y-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-medium">Recent Tests</h2>
+                <a href="/admin/reports" class="text-sm text-gray-600 hover:text-gray-900">View all</a>
             </div>
 
-            <div class="border border-gray-200 rounded-lg p-4 space-y-4">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-lg font-medium">Users</h2>
-                    <a href="/admin/users" class="text-sm text-gray-600 hover:text-gray-900">Manage users</a>
+            @if (_recentQuizSessions.Count > 0)
+            {
+                <div class="space-y-3">
+                    @foreach (var session in _recentQuizSessions)
+                    {
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+                            <div>
+                                <p class="font-medium">@session.Username</p>
+                                <p class="text-sm text-gray-600">@session.QuizName</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-medium">@session.Score%</p>
+                                <p class="text-xs text-gray-500">@session.CompletedDate.ToShortDateString()</p>
+                            </div>
+                        </div>
+                    }
                 </div>
+            }
+            else
+            {
+                <div class="flex items-center justify-center h-32 text-gray-500">
+                    No recent tests
+                </div>
+            }
+        </div>
 
-                @if (_recentUsers.Count > 0)
-                {
-                    <div class="space-y-2">
-                        @foreach (var user in _recentUsers)
+        <div class="border border-gray-200 rounded-lg p-4 space-y-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-medium">Users</h2>
+                <a href="/admin/users" class="text-sm text-gray-600 hover:text-gray-900">Manage users</a>
+            </div>
+
+            @if (_recentUsers.Count > 0)
+            {
+                <div class="space-y-2">
+                    @foreach (var user in _recentUsers)
+                    {
+                        <div class="flex justify-between items-center p-2">
+                            <div class="flex items-center">
+                                <div
+                                    class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">
+                                    @user.Username[0]
+                                </div>
+                                <div class="ml-2">
+                                    <p class="font-medium">@user.Username</p>
+                                    <p class="text-xs text-gray-500">@user.Email</p>
+                                </div>
+                            </div>
+                            <span
+                                class="text-xs px-2 py-1 rounded-full @(user.Role == "Admin" ? "bg-gray-200" : "bg-green-100 text-green-800")">
+                                @user.Role
+                            </span>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="flex items-center justify-center h-32 text-gray-500">
+                    No users found
+                </div>
+            }
+        </div>
+    </div>
+
+    @* --- Upcoming Schedules Section --- *@
+    <div class="grid grid-cols-1 mt-6">
+        <div class="border border-gray-200 rounded-lg p-4 space-y-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-medium">Upcoming Quizzes</h2>
+                <a href="/admin/schedules" class="text-sm text-gray-600 hover:text-gray-900">View all</a>
+            </div>
+
+            @if (_upcomingSchedules.Count > 0)
+            {
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead>
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Name
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Question Package
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Start Date
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                End Date
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Users
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach (var schedule in _upcomingSchedules)
                         {
-                            <div class="flex justify-between items-center p-2">
-                                <div class="flex items-center">
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">@schedule.Name</div>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <div class="text-sm text-gray-500">@schedule.QuestionPackageName</div>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap">
                                     <div
-                                        class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">
-                                        @user.Username[0]
-                                    </div>
-                                    <div class="ml-2">
-                                        <p class="font-medium">@user.Username</p>
-                                        <p class="text-xs text-gray-500">@user.Email</p>
-                                    </div>
-                                </div>
-                                <span
-                                    class="text-xs px-2 py-1 rounded-full @(user.Role == "Admin" ? "bg-gray-200" : "bg-green-100 text-green-800")">
-                                    @user.Role
-                                </span>
-                            </div>
-                        }
-                    </div>
-                }
-                else
-                {
-                    <div class="flex items-center justify-center h-32 text-gray-500">
-                        No users found
-                    </div>
-                }
-            </div>
-        </div>
-
-        @* --- Upcoming Schedules Section --- *@
-        <div class="grid grid-cols-1 mt-6">
-            <div class="border border-gray-200 rounded-lg p-4 space-y-4">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-lg font-medium">Upcoming Quizzes</h2>
-                    <a href="/admin/schedules" class="text-sm text-gray-600 hover:text-gray-900">View all</a>
-                </div>
-
-                @if (_upcomingSchedules.Count > 0)
-                {
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead>
-                            <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Name
-                                </th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Question Package
-                                </th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Start Date
-                                </th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    End Date
-                                </th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Users
-                                </th>
+                                        class="text-sm text-gray-500">@schedule.StartDate.ToString("MMM dd, yyyy HH:mm")</div>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <div
+                                        class="text-sm text-gray-500">@schedule.EndDate.ToString("MMM dd, yyyy HH:mm")</div>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <div class="text-sm text-gray-500">@schedule.AssignedUsersCount</div>
+                                </td>
                             </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach (var schedule in _upcomingSchedules)
-                            {
-                                <tr class="hover:bg-gray-50">
-                                    <td class="px-4 py-3 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-gray-900">@schedule.Name</div>
-                                    </td>
-                                    <td class="px-4 py-3 whitespace-nowrap">
-                                        <div class="text-sm text-gray-500">@schedule.QuestionPackageName</div>
-                                    </td>
-                                    <td class="px-4 py-3 whitespace-nowrap">
-                                        <div
-                                            class="text-sm text-gray-500">@schedule.StartDate.ToString("MMM dd, yyyy HH:mm")</div>
-                                    </td>
-                                    <td class="px-4 py-3 whitespace-nowrap">
-                                        <div
-                                            class="text-sm text-gray-500">@schedule.EndDate.ToString("MMM dd, yyyy HH:mm")</div>
-                                    </td>
-                                    <td class="px-4 py-3 whitespace-nowrap">
-                                        <div class="text-sm text-gray-500">@schedule.AssignedUsersCount</div>
-                                    </td>
-                                </tr>
-                            }
-                            </tbody>
-                        </table>
-                    </div>
-                }
-                else
-                {
-                    <div class="flex items-center justify-center h-32 text-gray-500">
-                        No upcoming schedules
-                    </div>
-                }
-            </div>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="flex items-center justify-center h-32 text-gray-500">
+                    No upcoming schedules
+                </div>
+            }
         </div>
     </div>
 </div>

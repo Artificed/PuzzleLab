@@ -6,15 +6,15 @@
 @inject NavigationManager NavigationManager
 @inject UserStateService UserState
 
-<div class="min-h-screen bg-gray-100">
-    <div class="w-full bg-white shadow-sm">
-        <div class="w-full mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<div class="min-h-screen bg-gray-100 flex flex-col">
+    <div class="w-full bg-white shadow-sm flex-shrink-0">
+        <div class="w-full mx-auto px-16 py-4">
             <AdminNavbar HandleLogout="HandleLogout"/>
         </div>
     </div>
 
-    <main>
-        <div class="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="flex-grow flex justify-center items-center">
+        <div class="w-full mx-auto px-64 py-8 mb-6">
             @Body
         </div>
     </main>
