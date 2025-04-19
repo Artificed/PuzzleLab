@@ -1,14 +1,15 @@
 using MediatR;
 using PuzzleLab.Application.Common.Models;
 using PuzzleLab.Domain.Repositories;
-using PuzzleLab.Shared.DTOs.Responses;
+using PuzzleLab.Shared.DTOs.Auth.Responses;
 
 namespace PuzzleLab.Application.Features.Auth.Queries;
 
 public class GetCurrentUserQueryHandler(IUserRepository userRepository)
     : IRequestHandler<GetCurrentUserQuery, Result<GetCurrentUserResponse>>
 {
-    public async Task<Result<GetCurrentUserResponse>> Handle(GetCurrentUserQuery request, CancellationToken cancellationToken)
+    public async Task<Result<GetCurrentUserResponse>> Handle(GetCurrentUserQuery request,
+        CancellationToken cancellationToken)
     {
         var currentUser = await userRepository.GetUserByIdAsync(request.UserId, cancellationToken);
 

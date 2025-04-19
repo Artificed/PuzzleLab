@@ -3,11 +3,11 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using PuzzleLab.Application.Features.Auth.Commands;
 using PuzzleLab.API.Extensions;
-using PuzzleLab.Shared.DTOs.Requests;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using PuzzleLab.Application.Common.Models;
 using PuzzleLab.Application.Features.Auth.Queries;
+using PuzzleLab.Shared.DTOs.Auth.Requests;
 
 namespace PuzzleLab.API.Controllers;
 

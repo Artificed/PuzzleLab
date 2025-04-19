@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http.HttpResults;
-using PuzzleLab.Shared.DTOs.Requests;
-using PuzzleLab.Shared.DTOs.Responses;
+using PuzzleLab.Shared.DTOs.Auth.Requests;
+using PuzzleLab.Shared.DTOs.Auth.Responses;
 
 namespace PuzzleLab.Web.Services.Api.Interfaces;
 

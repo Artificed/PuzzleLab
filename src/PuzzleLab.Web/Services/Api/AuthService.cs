@@ -1,5 +1,5 @@
-using PuzzleLab.Shared.DTOs.Requests;
-using PuzzleLab.Shared.DTOs.Responses;
+using PuzzleLab.Shared.DTOs.Auth.Requests;
+using PuzzleLab.Shared.DTOs.Auth.Responses;
 using PuzzleLab.Web.Services.Api.Interfaces;
 
 namespace PuzzleLab.Web.Services.Api;

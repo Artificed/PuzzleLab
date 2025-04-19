@@ -1,4 +1,4 @@
-namespace PuzzleLab.Shared.DTOs.Requests;
+namespace PuzzleLab.Shared.DTOs.Auth.Requests;
 
 public class LoginRequest
 {
