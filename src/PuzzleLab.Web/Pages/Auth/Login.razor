@@ -2,6 +2,7 @@
 @using System.ComponentModel.DataAnnotations
 @using PuzzleLab.Shared.DTOs.Requests
 @using PuzzleLab.Web.Interfaces
+@using PuzzleLab.Web.Services
 
 @inject IAuthService AuthService
 @inject NavigationManager NavigationManager
@@ -87,39 +88,28 @@
         errorMessage = null;
         StateHasChanged();
 
-        Console.WriteLine(loginModel.Email + "-" + loginModel.Password);
+        Console.WriteLine($"{loginModel.Email}-{loginModel.Password}");
 
         try
         {
             var loginResponse = await AuthService.LoginAsync(loginModel);
 
-            if (loginResponse != null && !string.IsNullOrEmpty(loginResponse.Token))
+            if (loginResponse?.Token is not null)
             {
-                Console.WriteLine("Login successful!");
-                Console.WriteLine(loginResponse.Token);
-
+                ToastService.ShowSuccess("Login successful!", "Welcome");
                 // TODO: Store the token securely!
-                // Options:
-                // 1. Blazor Server: Store in a scoped service, potentially using ProtectedSessionStorage.
-                // 2. Blazor WASM: Use ProtectedLocalStorage or SessionStorage (less secure for JWTs).
-                // 3. Use a dedicated State Management library.
-                // Example (WASM - less secure for sensitive tokens, use ProtectedLocalStorage for better security):
-                // await LocalStorage.SetItemAsync("authToken", loginResponse.Token);
-
-                // TODO: Update application state to reflect logged-in user. (e.g., update claims principal)
-
                 // NavigationManager.NavigateTo("/dashboard", forceLoad: false);
             }
             else
             {
                 errorMessage = "Invalid email or password. Please try again.";
-                Console.WriteLine("Login failed: Invalid credentials or API error."); // Log failure
+                ToastService.ShowError("Invalid email or password. Please try again.", "Login Failed");
             }
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
             errorMessage = "An unexpected error occurred during login. Please try again later.";
-            Console.Error.WriteLine($"Login exception: {ex.Message}");
+            ToastService.ShowError("An error occurred during login. Please try again.", "Error");
         }
         finally
         {

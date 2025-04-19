@@ -1,0 +1,134 @@
+@using PuzzleLab.Web.Services
+@implements IDisposable
+
+<div class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 w-80">
+    @foreach (var toast in _toasts)
+    {
+        <div class="@GetToastClasses(toast) flex items-center p-4 w-80 rounded-md animate-slide-in"
+             role="alert"
+             @key="toast.Id">
+            <div class="flex-shrink-0 mr-3">
+                @switch (toast.Type)
+                {
+                    case ToastType.Success:
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                  clip-rule="evenodd"/>
+                        </svg>
+                        break;
+                    case ToastType.Error:
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                  clip-rule="evenodd"/>
+                        </svg>
+                        break;
+                    case ToastType.Info:
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v4a1 1 0 102 0V7zm-1-5a1 1 0 100 2 1 1 0 000-2z"
+                                  clip-rule="evenodd"/>
+                        </svg>
+                        break;
+                }
+            </div>
+            <div class="ml-1">
+                @if (!string.IsNullOrEmpty(toast.Title))
+                {
+                    <h3 class="font-semibold">@toast.Title</h3>
+                }
+                <div class="text-sm">@toast.Message</div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<ToastNotification> _toasts = new();
+    private Dictionary<Guid, CancellationTokenSource> _toastTimers = new();
+
+    protected override void OnInitialized()
+    {
+        ToastService.OnToastAdded += HandleToastAdded;
+    }
+
+    private async void HandleToastAdded(ToastNotification toast)
+    {
+        await InvokeAsync(() =>
+        {
+            _toasts.Add(toast);
+
+            var cts = new CancellationTokenSource();
+            _toastTimers[toast.Id] = cts;
+
+            StateHasChanged();
+            StartRemoveTimer(toast, cts.Token);
+        });
+    }
+
+    private void StartRemoveTimer(ToastNotification toast, CancellationToken token)
+    {
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(toast.DurationMs, token);
+                await InvokeAsync(() => RemoveToastInternal(toast.Id));
+            }
+            catch (TaskCanceledException)
+            {
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in toast timer task: {ex.Message}");
+            }
+            finally
+            {
+                if (_toastTimers.TryGetValue(toast.Id, out var cts))
+                {
+                    _toastTimers.Remove(toast.Id);
+                    cts.Dispose();
+                }
+            }
+        }, token);
+    }
+
+    private void RemoveToastInternal(Guid id)
+    {
+        if (_toastTimers.TryGetValue(id, out var cts))
+        {
+            cts.Cancel();
+        }
+
+        var toast = _toasts.FirstOrDefault(t => t.Id == id);
+        if (toast != null)
+        {
+            _toasts.Remove(toast);
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        ToastService.OnToastAdded -= HandleToastAdded;
+
+        foreach (var kvp in _toastTimers.Values)
+        {
+            kvp.Cancel();
+            kvp.Dispose();
+        }
+
+        _toastTimers.Clear();
+        GC.SuppressFinalize(this);
+    }
+
+    private string GetToastClasses(ToastNotification toast) => toast.Type switch
+    {
+        ToastType.Success => "bg-green-100 text-green-800 border-l-4 border-green-500",
+        ToastType.Error => "bg-red-100 text-red-800 border-l-4 border-red-500",
+        ToastType.Info => "bg-blue-100 text-blue-800 border-l-4 border-blue-500",
+        _ => "bg-gray-100 text-gray-800 border-l-4 border-gray-500"
+    };
+
+}
