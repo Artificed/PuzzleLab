@@ -1,6 +1,8 @@
 using System.Net.Http.Headers;
+using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using PuzzleLab.Web;
 using PuzzleLab.Web.Services.Api;
+using PuzzleLab.Web.Services.Api.Handlers;
 using PuzzleLab.Web.Services.Api.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,15 +17,21 @@ if (string.IsNullOrEmpty(apiBaseUrl))
 }
 
 builder.Services.AddHttpClient<IApiClient, ApiClient>(client =>
-{
-    client.BaseAddress = new Uri(apiBaseUrl);
-    client.DefaultRequestHeaders.Accept.Clear();
+    {
+        client.BaseAddress = new Uri(apiBaseUrl);
+        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+    })
+    .AddHttpMessageHandler<AuthHeaderHandler>();
 
-    client.DefaultRequestHeaders.Accept.Add(
-        new MediaTypeWithQualityHeaderValue("Application/json"));
+builder.Services.AddScoped<ITokenProvider>(sp =>
+{
+    var protectedSessionStorage = sp.GetRequiredService<ProtectedSessionStorage>();
+    return new AuthTokenService(protectedSessionStorage, "authorization-token");
 });
 
 builder.Services.AddScoped<IAuthService, AuthService>();
+
+builder.Services.AddTransient<AuthHeaderHandler>();
 
 var app = builder.Build();
 
