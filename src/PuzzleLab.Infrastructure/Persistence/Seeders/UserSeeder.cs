@@ -17,7 +17,7 @@ public class UserSeeder(
             return;
         }
 
-        var defaultPassword = BCrypt.Net.BCrypt.HashPassword("password");
+        var defaultPassword = "password";
 
         var admin = userFactory.CreateUser("admin", "admin@gmail.com", defaultPassword, "Admin");
         await userRepository.InsertUserAsync(admin, cancellationToken);
