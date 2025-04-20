@@ -1,6 +1,476 @@
-@page "/ManageQuizSchedules"
-<h3>ManageQuizSchedules</h3>
+@page "/admin/quiz-schedules"
+@layout Components.Layout.AdminLayout
+
+@using System.Collections.Generic
+@using PuzzleLab.Shared.DTOs.QuestionPackage
+@using PuzzleLab.Shared.DTOs.QuizSchedule
+@using PuzzleLab.Shared.DTOs.QuizSchedule.Requests
+@using PuzzleLab.Web.Services.Api.Interfaces
+@using PuzzleLab.Web.Services.Ui
+
+@inject NavigationManager NavigationManager
+@* @inject IScheduleService ScheduleService *@
+@inject IQuestionPackageService QuestionPackageService
+@rendermode InteractiveServer
+
+<PageTitle>Quiz Schedules - PuzzleLab</PageTitle>
+
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+        <h1 class="text-2xl font-bold">Quiz Schedules</h1>
+        <div class="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+            <div class="relative w-full sm:w-auto">
+                <input type="text"
+                       @bind-value="_searchTerm"
+                       @bind-value:event="oninput"
+                       @onkeyup="SearchSchedules"
+                       placeholder="Search schedules..."
+                       class="h-10 w-full sm:w-64 rounded-md border border-gray-200 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1"/>
+            </div>
+            <button @onclick="ShowAddScheduleModal"
+                    class="w-full sm:w-auto inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-gray-900 text-gray-50 hover:bg-gray-900/90 h-10 px-4 py-2">
+                Add Schedule
+            </button>
+        </div>
+    </div>
+
+    @if (_isLoading)
+    {
+        <div class="flex justify-center p-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        </div>
+    }
+    else if (_schedules.Count == 0)
+    {
+        <div class="text-center p-8 border border-gray-200 rounded-lg bg-white shadow-sm">
+            <p class="text-gray-500">No schedules have been created yet.</p>
+            <button @onclick="ShowAddScheduleModal"
+                    class="mt-4 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-gray-900 text-gray-50 hover:bg-gray-900/90 h-10 px-4 py-2">
+                Create First Schedule
+            </button>
+        </div>
+    }
+    else if (_filteredSchedules.Count == 0)
+    {
+        <div class="text-center p-8 border border-gray-200 rounded-lg bg-white shadow-sm">
+            <p class="text-gray-500">No schedules found matching your search criteria.</p>
+        </div>
+    }
+    else
+    {
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            @foreach (var schedule in _filteredSchedules.Skip((_currentPage - 1) * _pageSize).Take(_pageSize))
+            {
+                <div
+                    class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200">
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-1">@schedule.Title</h3>
+                        <h3 class="text-md text-gray-900 mb-2">@schedule.Description</h3>
+                        <div class="flex items-center justify-start text-sm text-gray-600 mt-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
+                                 stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <span>Start: @schedule.StartTime.ToString("MMM dd, yyyy HH:mm")</span>
+                        </div>
+                        <div class="flex items-center justify-start text-sm text-gray-600 mt-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
+                                 stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span>End: @schedule.EndTime.ToString("MMM dd, yyyy HH:mm")</span>
+                        </div>
+                        <div class="flex items-center justify-start text-sm text-gray-600 mt-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
+                                 stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                            </svg>
+                            <span>Participants: @schedule.ParticipantCount</span>
+                        </div>
+                        <div class="flex items-center justify-start text-sm text-gray-600 mt-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
+                                 stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                            <span>Question Count: @schedule.QuestionCount</span>
+                        </div>
+
+                        <div class="mt-4 flex items-center justify-between pt-4 border-t border-gray-200">
+                            <button @onclick="() => ShowManageParticipantsModal(schedule)"
+                                    class="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                                    title="Manage Participants">
+                                Manage Participants
+                            </button>
+                            <div class="flex space-x-3">
+                                <button @onclick="() => ShowEditScheduleModal(schedule)"
+                                        title="Edit Schedule"
+                                        class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-full">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                         viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                </button>
+                                <button @onclick="() => ShowDeleteConfirmation(schedule)"
+                                        title="Delete Schedule"
+                                        class="p-1.5 text-red-600 hover:bg-red-50 rounded-full">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                         viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (_totalPages > 1)
+        {
+            <div class="flex flex-col sm:flex-row justify-between items-center mt-4 gap-4">
+                <div class="text-sm text-gray-500">
+                    Showing @(((_currentPage - 1) * _pageSize) + 1)
+                    to @(Math.Min(_currentPage * _pageSize, _filteredSchedules.Count))
+                    of @_filteredSchedules.Count schedules
+                </div>
+                <div class="flex space-x-2">
+                    <button @onclick="PreviousPage"
+                            disabled="@(_currentPage <= 1)"
+                            class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 border border-gray-200 bg-white hover:bg-gray-100 h-10 px-4 py-2">
+                        Previous
+                    </button>
+                    <span class="inline-flex items-center justify-center h-10 px-4 py-2 text-sm text-gray-700">
+                        Page @_currentPage of @_totalPages
+                    </span>
+                    <button @onclick="NextPage"
+                            disabled="@(_currentPage >= _totalPages)"
+                            class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 border border-gray-200 bg-white hover:bg-gray-100 h-10 px-4 py-2">
+                        Next
+                    </button>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+<AddScheduleModal IsVisible="_showAddScheduleModal"
+                  IsSubmitting="_isSubmitting"
+                  ScheduleModel="_newSchedule"
+                  QuestionPackages="_questionPackages"
+                  OnClose="CloseAddScheduleModal"
+                  OnSubmit="HandleAddSchedule"/>
+
+<EditScheduleModal IsVisible="_showEditScheduleModal"
+                   IsSubmitting="_isSubmitting"
+                   ScheduleModel="_editSchedule"
+                   QuestionPackages="_questionPackages"
+                   OnClose="CloseEditScheduleModal"
+                   OnSubmit="HandleEditSchedule"/>
+
+<DeleteScheduleModal IsVisible="_showDeleteConfirmation"
+                     IsSubmitting="_isSubmitting"
+                     ScheduleToDelete="_selectedSchedule"
+                     OnClose="CloseDeleteConfirmation"
+                     OnConfirm="HandleDeleteSchedule"/>
+
+<ManageParticipantsModal IsVisible="_showManageParticipantsModal"
+                         IsSubmitting="_isSubmitting"
+                         Schedule="_selectedSchedule"
+                         OnClose="CloseManageParticipantsModal"
+                         OnSaveSuccess="HandleParticipantsSaved"/>
 
 @code {
-    
+    private List<QuizScheduleDto> _schedules = new();
+    private List<QuizScheduleDto> _filteredSchedules = new();
+    private List<QuestionPackageDto> _questionPackages = new();
+    private bool _isLoading = true;
+    private bool _isSubmitting = false;
+    private string _searchTerm = "";
+    private int _pageSize = 9;
+    private int _currentPage = 1;
+    private int _totalPages => (_filteredSchedules.Count == 0) ? 1 : ((_filteredSchedules.Count + _pageSize - 1) / _pageSize);
+
+    // Modal visibility flags
+    private bool _showAddScheduleModal = false;
+    private bool _showEditScheduleModal = false;
+    private bool _showDeleteConfirmation = false;
+    private bool _showManageParticipantsModal = false;
+
+    // DTO objects for modals
+    private CreateQuizScheduleRequest _newSchedule = new();
+    private UpdateQuizScheduleRequest _editSchedule = new();
+    private QuizScheduleDto _selectedSchedule = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _isLoading = true;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            // Mocked question packages
+            _questionPackages = new List<QuestionPackageDto>
+            {
+                new(
+                    Guid.NewGuid(),
+                    "General Knowledge",
+                    "A collection of trivia questions across various topics.",
+                    50,
+                    DateTime.Now.AddDays(-10),
+                    DateTime.Now.AddDays(-2)
+                ),
+                new(
+                    Guid.NewGuid(),
+                    "Math Quiz",
+                    "Mathematics-related problems and puzzles.",
+                    40,
+                    DateTime.Now.AddDays(-8),
+                    null
+                ),
+                new(
+                    Guid.NewGuid(),
+                    "Science Basics",
+                    "Covers basic science topics for beginners.",
+                    30,
+                    DateTime.Now.AddDays(-5),
+                    DateTime.Now.AddDays(-1)
+                )
+            };
+
+            // We'll assign these mock IDs for the schedule to reference
+            var package1 = _questionPackages[0];
+            var package2 = _questionPackages[1];
+            var package3 = _questionPackages[2];
+
+            // Mocked schedules
+            _schedules = new List<QuizScheduleDto>
+            {
+                new()
+                {
+                    QuizId = Guid.NewGuid(),
+                    Title = "Morning Quiz",
+                    Description = "This is a test hahahaha",
+                    QuizPackageId = package1.Id,
+                    StartTime = DateTime.Now.AddDays(1).Date.AddHours(9),
+                    EndTime = DateTime.Now.AddDays(1).Date.AddHours(10),
+                    ParticipantCount = 25,
+                    QuestionCount = 10
+                },
+                new()
+                {
+                    QuizId = Guid.NewGuid(),
+                    Title = "Afternoon Challenge",
+                    Description = "This is a test hahahaha",
+                    QuizPackageId = package2.Id,
+                    StartTime = DateTime.Now.AddDays(2).Date.AddHours(14),
+                    EndTime = DateTime.Now.AddDays(2).Date.AddHours(15),
+                    ParticipantCount = 30,
+                    QuestionCount = 10
+                },
+                new()
+                {
+                    QuizId = Guid.NewGuid(),
+                    Title = "Evening Showdown",
+                    Description = "This is a test hahahaha",
+                    QuizPackageId = package3.Id,
+                    StartTime = DateTime.Now.AddDays(3).Date.AddHours(18),
+                    EndTime = DateTime.Now.AddDays(3).Date.AddHours(19),
+                    ParticipantCount = 18,
+                    QuestionCount = 10
+                }
+            };
+
+            FilterSchedules();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error loading mock data: {ex.Message}");
+            ToastService.ShowError("Failed to load mock data.");
+        }
+        finally
+        {
+            _isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void FilterSchedules()
+    {
+        if (string.IsNullOrWhiteSpace(_searchTerm))
+        {
+            _filteredSchedules = _schedules.ToList();
+        }
+        else
+        {
+            _filteredSchedules = _schedules
+                .Where(s => s.Title.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
+        _currentPage = 1;
+    }
+
+    private void SearchSchedules()
+    {
+        FilterSchedules();
+    }
+
+    private void PreviousPage()
+    {
+        if (_currentPage > 1)
+        {
+            _currentPage--;
+        }
+    }
+
+    private void NextPage()
+    {
+        if (_currentPage < _totalPages)
+        {
+            _currentPage++;
+        }
+    }
+
+    // Modal handlers
+    private void ShowAddScheduleModal()
+    {
+        _newSchedule = new CreateQuizScheduleRequest()
+        {
+            StartTime = DateTime.Now.AddDays(1).Date.AddHours(9),
+            EndTime = DateTime.Now.AddDays(1).Date.AddHours(10)
+        };
+        _showAddScheduleModal = true;
+    }
+
+    private void CloseAddScheduleModal() => _showAddScheduleModal = false;
+
+    private void ShowEditScheduleModal(QuizScheduleDto schedule)
+    {
+        _editSchedule = new UpdateQuizScheduleRequest()
+        {
+            QuizId = schedule.QuizId,
+            QuestionPackageId = schedule.QuizPackageId,
+            StartTime = schedule.StartTime,
+            EndTime = schedule.EndTime
+        };
+        _showEditScheduleModal = true;
+    }
+
+    private void CloseEditScheduleModal() => _showEditScheduleModal = false;
+
+    private void ShowDeleteConfirmation(QuizScheduleDto schedule)
+    {
+        _selectedSchedule = schedule;
+        _showDeleteConfirmation = true;
+    }
+
+    private void CloseDeleteConfirmation() => _showDeleteConfirmation = false;
+
+    private void ShowManageParticipantsModal(QuizScheduleDto schedule)
+    {
+        _selectedSchedule = schedule;
+        _showManageParticipantsModal = true;
+    }
+
+    private void CloseManageParticipantsModal() => _showManageParticipantsModal = false;
+
+    // CRUD operation handlers
+    private async Task HandleAddSchedule(CreateQuizScheduleRequest model)
+    {
+        _isSubmitting = true;
+        try
+        {
+            // var response = await ScheduleService.CreateScheduleAsync(model);
+            //
+            // if (response?.ScheduleDto != null)
+            // {
+            //     await LoadData();
+            //     CloseAddScheduleModal();
+            //     ToastService.ShowSuccess("Schedule created successfully!");
+            // }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error creating schedule: {ex.Message}");
+            ToastService.ShowError("Failed to create schedule.");
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private async Task HandleEditSchedule(UpdateQuizScheduleRequest model)
+    {
+        _isSubmitting = true;
+        try
+        {
+            // var response = await ScheduleService.UpdateScheduleAsync(model);
+            //
+            // if (response?.ScheduleDto != null)
+            // {
+            //     await LoadData();
+            //     CloseEditScheduleModal();
+            //     ToastService.ShowSuccess("Schedule updated successfully!");
+            // }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error updating schedule: {ex.Message}");
+            ToastService.ShowError("Failed to update schedule.");
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private async Task HandleDeleteSchedule()
+    {
+        _isSubmitting = true;
+        try
+        {
+            var request = new DeleteQuizScheduleRequest()
+            {
+                QuizId = _selectedSchedule.QuizId
+            };
+
+            // var response = await ScheduleService.DeleteScheduleAsync(request);
+            //
+            // if (response != null)
+            // {
+            //     await LoadData();
+            //     CloseDeleteConfirmation();
+            //     ToastService.ShowSuccess("Schedule deleted successfully!");
+            // }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error deleting schedule: {ex.Message}");
+            ToastService.ShowError("Failed to delete schedule.");
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private async Task HandleParticipantsSaved()
+    {
+        await LoadData();
+        CloseManageParticipantsModal();
+        ToastService.ShowSuccess("Participants updated successfully!");
+    }
+
 }
