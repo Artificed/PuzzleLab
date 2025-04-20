@@ -9,7 +9,7 @@ public class QuestionPackageRepository(DatabaseContext databaseContext) : IQuest
 {
     public async Task<List<QuestionPackage>> GetAllQuestionPackagesAsync(CancellationToken cancellationToken = default)
     {
-        return await databaseContext.QuestionPackages.ToListAsync(cancellationToken);
+        return await databaseContext.QuestionPackages.Include(qp => qp.Quizzes).ToListAsync(cancellationToken);
     }
 
     public async Task<QuestionPackage?> GetQuestionPackageByIdAsync(Guid packageId,
