@@ -11,9 +11,22 @@ public class AnswerRepository(DatabaseContext databaseContext) : IAnswerReposito
         return await databaseContext.Answers.ToListAsync(cancellationToken);
     }
 
-    public async Task<Answer?> GetAnswerByIdAsync(Guid answerId, CancellationToken cancellationToken = default)
+    public async Task ClearAnswersByQuestionIdAsync(Guid questionId, CancellationToken cancellationToken = default)
     {
-        return await databaseContext.Answers.FirstOrDefaultAsync(x => x.Id == answerId, cancellationToken);
+        var answers = await databaseContext.Answers
+            .Where(x => x.QuestionId == questionId)
+            .ToListAsync(cancellationToken);
+
+        databaseContext.Answers.RemoveRange(answers);
+        await databaseContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<List<Answer>> GetAnswersByQuestionIdAsync(Guid questionId,
+        CancellationToken cancellationToken = default)
+    {
+        return await databaseContext.Answers
+            .Where(x => x.QuestionId == questionId)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task InsertAnswerAsync(Answer answer, CancellationToken cancellationToken = default)
