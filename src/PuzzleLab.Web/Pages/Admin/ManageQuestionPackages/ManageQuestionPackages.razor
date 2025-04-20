@@ -3,10 +3,10 @@
 @using System.Timers
 @using PuzzleLab.Shared.DTOs.QuestionPackage
 @using PuzzleLab.Shared.DTOs.QuestionPackage.Requests
-@using PuzzleLab.Web.Models
-@using PuzzleLab.Web.Services
+@using PuzzleLab.Web.Services.Api.Interfaces
 @using PuzzleLab.Web.Services.Ui
 @inject NavigationManager NavigationManager
+@inject IQuestionPackageService QuestionPackageService
 
 @* @inject IQuestionPackageService QuestionPackageService *@
 
@@ -88,12 +88,12 @@
                     @foreach (var package in _filteredPackages.Skip((_currentPage - 1) * _pageSize).Take(_pageSize))
                     {
                         <tr class="hover:bg-gray-50 cursor-pointer"
-                            @onclick="() => NavigateToPackageDetails(package.Id)">
+                            @onclick="() => NavigateToPackageDetails(package.Id.ToString())">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">@package.Name</td>
                             <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">@package.Description</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@(package.QuestionsCount) questions</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@package.CreatedAt.ToString("MMM dd, yyyy")</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@package.LastModifiedAt.ToString("MMM dd, yyyy HH:mm")</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@package.LastModifiedAt?.ToString("MMM dd, yyyy")</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium" @onclick:stopPropagation="true">
                                 <div class="flex space-x-4">
                                     <button @onclick="() => ShowEditPackageModal(package)"
@@ -158,8 +158,8 @@
                             OnConfirm="HandleDeletePackage"/>
 
 @code {
-    private List<QuestionPackage> _packages = new();
-    private List<QuestionPackage> _filteredPackages = new();
+    private List<QuestionPackageDto> _packages = new();
+    private List<QuestionPackageDto> _filteredPackages = new();
     private bool _isLoading = true;
     private bool _isSubmitting = false;
     private string _searchTerm = "";
@@ -191,9 +191,8 @@
         _isLoading = true;
         try
         {
-            // This will be replaced with actual API call
-            await Task.Delay(500); // Simulate API delay
-            _packages = GenerateMockPackages();
+            var response = await QuestionPackageService.GetAllQuestionPackagesAsync();
+            _packages = response?.QuestionPackageDtos ?? new();
             _filteredPackages = _packages;
         }
         catch (Exception ex)
@@ -206,19 +205,6 @@
             _isLoading = false;
             StateHasChanged();
         }
-    }
-
-    private List<QuestionPackage> GenerateMockPackages()
-    {
-        // Mock data for development - will be replaced with API call
-        return new List<QuestionPackage>
-        {
-            new QuestionPackage { Id = Guid.NewGuid().ToString(), Name = "Basic Mathematics", Description = "Fundamental arithmetic and algebra concepts for beginners", QuestionsCount = 25, CreatedAt = DateTime.Now.AddDays(-30), LastModifiedAt = DateTime.Now.AddDays(-5) },
-            new QuestionPackage { Id = Guid.NewGuid().ToString(), Name = "Advanced Physics", Description = "Complex physics problems including mechanics, thermodynamics, and quantum physics", QuestionsCount = 15, CreatedAt = DateTime.Now.AddDays(-25), LastModifiedAt = DateTime.Now.AddDays(-3) },
-            new QuestionPackage { Id = Guid.NewGuid().ToString(), Name = "Computer Science Fundamentals", Description = "Basic concepts of programming, data structures, and algorithms", QuestionsCount = 30, CreatedAt = DateTime.Now.AddDays(-20), LastModifiedAt = DateTime.Now.AddDays(-2) },
-            new QuestionPackage { Id = Guid.NewGuid().ToString(), Name = "English Literature", Description = "Questions about famous literary works and authors from the 19th and 20th centuries", QuestionsCount = 20, CreatedAt = DateTime.Now.AddDays(-15), LastModifiedAt = DateTime.Now.AddDays(-1) },
-            new QuestionPackage { Id = Guid.NewGuid().ToString(), Name = "World History", Description = "Comprehensive coverage of global historical events and figures", QuestionsCount = 40, CreatedAt = DateTime.Now.AddDays(-10), LastModifiedAt = DateTime.Now.AddHours(-12) },
-        };
     }
 
     private void SearchPackages(KeyboardEventArgs e)
@@ -287,19 +273,23 @@
         _isSubmitting = true;
         try
         {
-            // This will be replaced with actual API call
-            await Task.Delay(500); // Simulate API delay
+            var response = await QuestionPackageService.CreateQuestionPackageAsync(package);
 
-            // Mock implementation - add to local list
+            if (response is null)
+            {
+                ToastService.ShowError("Failed to create question package.", "Error Creating Package!");
+                return;
+            }
 
-            // _packages.Add(package);
-            _filteredPackages = new List<QuestionPackage>(_packages);
+            _filteredPackages = new List<QuestionPackageDto>(_packages);
             if (!string.IsNullOrWhiteSpace(_searchTerm))
             {
                 SearchPackages(null);
             }
 
-            ToastService.ShowSuccess("Question package created successfully.");
+            await LoadPackages();
+
+            ToastService.ShowSuccess($"Question package with name {response.QuestionPackageDto.Name} created successfully.", "Package Created!");
             _showAddPackageModal = false;
         }
         catch (Exception ex)
@@ -314,11 +304,11 @@
         }
     }
 
-    private void ShowEditPackageModal(QuestionPackage package)
+    private void ShowEditPackageModal(QuestionPackageDto package)
     {
         _editPackage = new UpdateQuestionPackageRequest
         {
-            Id = package.Id,
+            Id = package.Id.ToString(),
             Name = package.Name,
             Description = package.Description,
         };
@@ -335,25 +325,23 @@
         _isSubmitting = true;
         try
         {
-            // This will be replaced with actual API call
-            await Task.Delay(500); // Simulate API delay
+            var response = await QuestionPackageService.UpdateQuestionPackageAsync(package);
 
-            // Mock implementation - update in local list
-            var index = _packages.FindIndex(p => p.Id == package.Id);
-            if (index >= 0)
+            if (response is null)
             {
-                // package.LastModifiedAt = DateTime.Now;
-                // package.QuestionsCount = _packages[index].QuestionsCount;
-                // package.CreatedAt = _packages[index].CreatedAt;
-                // _packages[index] = package;
-                // _filteredPackages = new List<QuestionPackage>(_packages);
-                // if (!string.IsNullOrWhiteSpace(_searchTerm))
-                // {
-                //     SearchPackages(null);
-                // }
+                ToastService.ShowError("Failed to update question package.", "Error Updating Package!");
+                return;
             }
 
-            ToastService.ShowSuccess("Question package updated successfully.");
+            _filteredPackages = new List<QuestionPackageDto>(_packages);
+            if (!string.IsNullOrWhiteSpace(_searchTerm))
+            {
+                SearchPackages(null);
+            }
+
+            await LoadPackages();
+
+            ToastService.ShowSuccess($"Question package with name {response.QuestionPackageDto.Name} updated successfully.", "Package Updated!");
             _showEditPackageModal = false;
         }
         catch (Exception ex)
@@ -368,9 +356,9 @@
         }
     }
 
-    private void ShowDeleteConfirmation(QuestionPackage package)
+    private void ShowDeleteConfirmation(QuestionPackageDto package)
     {
-        // _selectedPackage = package;
+        _selectedPackage = package;
         _showDeleteConfirmation = true;
     }
 
@@ -384,18 +372,27 @@
         _isSubmitting = true;
         try
         {
-            // This will be replaced with actual API call
-            await Task.Delay(500); // Simulate API delay
+            var request = new DeleteQuestionPackageRequest()
+            {
+                Id = package.Id.ToString()
+            };
+            var response = await QuestionPackageService.DeleteQuestionPackageAsync(request);
 
-            // Mock implementation - remove from local list
-            _packages.RemoveAll(p => p.Id == package.Id.ToString());
-            _filteredPackages = new List<QuestionPackage>(_packages);
+            if (response is null)
+            {
+                ToastService.ShowError("Failed to delete question package.", "Error Deleting Package!");
+                return;
+            }
+
+            _filteredPackages = new List<QuestionPackageDto>(_packages);
             if (!string.IsNullOrWhiteSpace(_searchTerm))
             {
                 SearchPackages(null);
             }
 
-            ToastService.ShowSuccess("Question package deleted successfully.");
+            await LoadPackages();
+
+            ToastService.ShowSuccess($"Question package with name {response.Name} deleted successfully.", "Package Deleted!");
             _showDeleteConfirmation = false;
         }
         catch (Exception ex)
@@ -415,16 +412,6 @@
     public void Dispose()
     {
         _debounceTimer?.Dispose();
-    }
-
-    public class QuestionPackage
-    {
-        public string Id { get; set; }
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public int QuestionsCount { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime LastModifiedAt { get; set; }
     }
 
 }

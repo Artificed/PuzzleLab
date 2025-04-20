@@ -36,6 +36,7 @@ builder.Services.AddHttpClient<IApiClient, ApiClient>(client =>
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IQuestionPackageService, QuestionPackageService>();
 builder.Services.AddScoped<UserStateService>();
 
 var app = builder.Build();
