@@ -10,4 +10,6 @@ public interface IQuestionPackageRepository
         CancellationToken cancellationToken = default);
 
     Task InsertQuestionPackageAsync(QuestionPackage questionPackage, CancellationToken cancellationToken = default);
+    Task UpdateQuestionPackageAsync(QuestionPackage questionPackage, CancellationToken cancellationToken = default);
+    Task DeleteQuestionPackageAsync(QuestionPackage questionPackage, CancellationToken cancellationToken = default);
 }

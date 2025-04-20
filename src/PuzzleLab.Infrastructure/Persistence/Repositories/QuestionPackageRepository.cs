@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PuzzleLab.Domain.Entities;
 using PuzzleLab.Domain.Repositories;
-using PuzzleLab.Infrastructure.Persistence;
 
 namespace PuzzleLab.Infrastructure.Persistence.Repositories;
 
@@ -15,12 +14,24 @@ public class QuestionPackageRepository(DatabaseContext databaseContext) : IQuest
     public async Task<QuestionPackage?> GetQuestionPackageByIdAsync(Guid packageId,
         CancellationToken cancellationToken = default)
     {
-        return await databaseContext.QuestionPackages.FirstOrDefaultAsync(x => x.Id == packageId, cancellationToken);
+        return await databaseContext.QuestionPackages.Include(qp => qp.Quizzes).FirstOrDefaultAsync(x => x.Id == packageId, cancellationToken);
     }
 
     public async Task InsertQuestionPackageAsync(QuestionPackage package, CancellationToken cancellationToken = default)
     {
         await databaseContext.QuestionPackages.AddAsync(package, cancellationToken);
+        await databaseContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task UpdateQuestionPackageAsync(QuestionPackage package, CancellationToken cancellationToken = default)
+    {
+        databaseContext.QuestionPackages.Update(package);
+        await databaseContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DeleteQuestionPackageAsync(QuestionPackage package, CancellationToken cancellationToken = default)
+    {
+        databaseContext.QuestionPackages.Remove(package);
         await databaseContext.SaveChangesAsync(cancellationToken);
     }
 }
