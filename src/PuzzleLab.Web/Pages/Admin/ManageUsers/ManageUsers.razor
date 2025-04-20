@@ -9,6 +9,7 @@
 @using PuzzleLab.Shared.DTOs.User.Requests
 @using PuzzleLab.Web.Models
 @using PuzzleLab.Web.Services.Api.Interfaces
+@using PuzzleLab.Web.Services.Ui
 
 @inject NavigationManager NavigationManager
 @inject IUserService UserService
@@ -215,7 +216,6 @@
         }
     }
 
-    // --- Filtering & Pagination ---
     private void FilterUsers()
     {
         IEnumerable<User> query = _users;
@@ -227,10 +227,10 @@
         }
 
         _filteredUsers = query.ToList();
-        _currentPage = 1; // Reset page when filter changes
+        _currentPage = 1;
     }
 
-    private void SearchUsers() // Called by @onkeyup or similar event
+    private void SearchUsers()
     {
         FilterUsers();
     }
@@ -251,7 +251,6 @@
         }
     }
 
-    // --- Modal Visibility Control ---
     private void ShowAddUserModal()
     {
         _newUser = new CreateUserRequest();
@@ -288,22 +287,17 @@
         _isSubmitting = true;
         try
         {
-            Console.WriteLine($"Attempting to add user: {model.Username}"); // Logging
-            // TODO: API call to create user using 'model'
-            // await ApiClient.CreateUserAsync(model);
+            var response = await UserService.CreateUserAsync(model);
 
-            // Mock: Add to local list
-            var newUser = new User
+            if (response is null)
             {
-                Id = Guid.NewGuid().ToString(), Username = model.Username, Email = model.Email, CreatedAt = DateTime.Now
-            };
-            _users.Add(newUser); // Add to the master list
+                return;
+            }
 
-            await LoadUsersAsync(); // Reloading might be simpler if API doesn't return the full list
-            // OR FilterUsers(); // Just re-apply filters if only adding locally
-
+            await LoadUsersAsync();
             CloseAddUserModal();
-            // TODO: Show success notification
+
+            ToastService.ShowSuccess($"User with name ${response.userDto.Username} created successfully!", "Insert Success!");
         }
         catch (Exception ex)
         {
