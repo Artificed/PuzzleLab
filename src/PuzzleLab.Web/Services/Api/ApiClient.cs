@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using PuzzleLab.Web.Services.Api.Interfaces;
@@ -137,12 +138,17 @@ public class ApiClient(HttpClient httpClient) : IApiClient
         }
     }
 
-    public async Task DeleteAsync(string requestUrl, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(string requestUrl, object data, CancellationToken cancellationToken = default)
     {
         try
         {
-            var response = await httpClient.DeleteAsync(requestUrl, cancellationToken);
+            var json = JsonSerializer.Serialize(data, _jsonSerializerOptions);
+            var request = new HttpRequestMessage(HttpMethod.Delete, requestUrl)
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            };
 
+            var response = await httpClient.SendAsync(request, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
                 await ShowErrorFromResponse(response, cancellationToken);
@@ -151,6 +157,41 @@ public class ApiClient(HttpClient httpClient) : IApiClient
         catch (HttpRequestException e)
         {
             ToastService.ShowError(e.Message, "Request Error!");
+        }
+        catch (JsonException e)
+        {
+            ToastService.ShowError(e.Message, "JSON serialization failed");
+        }
+    }
+
+    public async Task<T?> DeleteAsync<T>(string requestUrl, object data, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var json = JsonSerializer.Serialize(data, _jsonSerializerOptions);
+            var request = new HttpRequestMessage(HttpMethod.Delete, requestUrl)
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            };
+
+            var response = await httpClient.SendAsync(request, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                await ShowErrorFromResponse(response, cancellationToken);
+                return default;
+            }
+
+            return await response.Content.ReadFromJsonAsync<T>(_jsonSerializerOptions, cancellationToken);
+        }
+        catch (HttpRequestException e)
+        {
+            ToastService.ShowError(e.Message, "Request Error!");
+            return default;
+        }
+        catch (JsonException e)
+        {
+            ToastService.ShowError(e.Message, "JSON deserialization failed");
+            return default;
         }
     }
 }
