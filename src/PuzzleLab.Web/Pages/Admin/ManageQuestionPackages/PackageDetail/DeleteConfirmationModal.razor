@@ -1,12 +1,11 @@
 @using PuzzleLab.Shared.DTOs.Question
 @using PuzzleLab.Web.Services.Api.Interfaces
-@using PuzzleLab.Web.Services.Ui
 
 @inject IQuestionService QuestionService
 
 @if (IsVisible && QuestionToDelete != null)
 {
-    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50"
+    <div class="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
          @onclick="HandleOverlayClick">
         <div class="bg-white rounded-lg shadow-xl max-w-md mx-4" @onclick:stopPropagation>
             <div class="p-6">

@@ -134,7 +134,7 @@
     }
     else
     {
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             @foreach (var question in _filteredQuestions.Skip((_currentPage - 1) * _pageSize).Take(_pageSize))
             {
                 <div
@@ -142,7 +142,7 @@
                     @onclick="() => NavigateToQuestionDetails(question.Id.ToString())">
                     @if (question.ImageData != null && !string.IsNullOrEmpty(question.ImageMimeType))
                     {
-                        <div class="w-full h-60 bg-gray-100 overflow-hidden">
+                        <div class="w-full h-96 bg-gray-100 overflow-hidden">
                             <img src="data:@question.ImageMimeType;base64,@Convert.ToBase64String(question.ImageData)"
                                  alt="Question image" class="w-full h-full object-cover"/>
                         </div>
