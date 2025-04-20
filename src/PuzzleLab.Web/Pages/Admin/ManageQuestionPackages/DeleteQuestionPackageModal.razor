@@ -1,0 +1,74 @@
+@using PuzzleLab.Shared.DTOs.QuestionPackage
+@using PuzzleLab.Web.Models
+
+<div class="@(_isVisible ? "fixed inset-0 bg-black/80 flex items-center justify-center z-50" : "hidden")">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold">Delete Question Package</h2>
+            <button @onclick="OnClose" class="text-gray-500 hover:text-gray-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                     stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="py-4">
+            <p class="text-gray-700">
+                Are you sure you want to delete the package <span class="font-semibold">@(PackageToDelete?.Name)</span>?
+            </p>
+            <p class="text-gray-700 mt-2">
+                This action will delete the package and all questions associated with it. This cannot be undone.
+            </p>
+
+            @if (PackageToDelete?.QuestionsCount > 0)
+            {
+                <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+                    <p class="text-yellow-700">
+                        <span class="font-bold">Warning:</span> This package
+                        contains @(PackageToDelete?.QuestionsCount) questions that will also be deleted.
+                    </p>
+                </div>
+            }
+        </div>
+
+        <div class="mt-6 flex justify-end space-x-3">
+            <button type="button"
+                    @onclick="OnClose"
+                    class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900">
+                Cancel
+            </button>
+            <button type="button"
+                    @onclick="HandleDelete"
+                    disabled="@IsSubmitting"
+                    class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                @if (IsSubmitting)
+                {
+                    <span
+                        class="inline-block w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    <span>Deleting...</span>
+                }
+                else
+                {
+                    <span>Delete Package</span>
+                }
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public bool IsSubmitting { get; set; }
+    [Parameter] public QuestionPackageDto PackageToDelete { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<QuestionPackageDto> OnConfirm { get; set; }
+
+    private bool _isVisible => IsVisible;
+
+    private async Task HandleDelete()
+    {
+        await OnConfirm.InvokeAsync(PackageToDelete);
+    }
+
+}

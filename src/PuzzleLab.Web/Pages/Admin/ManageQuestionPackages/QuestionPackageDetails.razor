@@ -1,0 +1,391 @@
+@page "/admin/question-packages/{PackageId}"
+@layout Components.Layout.AdminLayout
+@using System.Timers
+@using PuzzleLab.Shared.DTOs.QuestionPackage
+@using PuzzleLab.Web.Models
+@using PuzzleLab.Web.Services
+@using PuzzleLab.Web.Services.Ui
+@inject NavigationManager NavigationManager
+
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+        <div class="flex items-center space-x-4">
+            <button @onclick="NavigateBack" class="text-gray-600 hover:text-gray-900">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                     stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+            </button>
+            <h1 class="text-2xl font-bold">@(_package?.Name ?? "Package Details")</h1>
+        </div>
+        <div class="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+            <div class="relative w-full sm:w-auto">
+                <input type="text"
+                       @bind-value="_searchTerm"
+                       @bind-value:event="oninput"
+                       @onkeyup="SearchQuestions"
+                       placeholder="Search questions..."
+                       class="h-10 w-full sm:w-64 rounded-md border border-gray-200 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1"/>
+            </div>
+            <button @onclick="ShowAddQuestionModal"
+                    class="w-full sm:w-auto inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-gray-900 text-gray-50 hover:bg-gray-900/90 h-10 px-4 py-2">
+                Add Question
+            </button>
+        </div>
+    </div>
+
+    @if (_package != null)
+    {
+        <div class="bg-white rounded-lg border border-gray-200 p-4 mb-6 shadow-sm">
+            <div class="flex flex-col md:flex-row justify-between">
+                <div>
+                    <h2 class="text-xl font-semibold">@_package.Name</h2>
+                    <p class="text-gray-600 mt-1">@_package.Description</p>
+                </div>
+                <div class="mt-4 md:mt-0 flex flex-col md:items-end">
+                    <div class="flex items-center text-sm text-gray-500">
+                        <span>Created: @_package.CreatedAt.ToString("MMM dd, yyyy")</span>
+                    </div>
+                    <div class="flex items-center text-sm text-gray-500 mt-1">
+                        <span>Last Modified: @_package.LastModifiedAt.ToString("MMM dd, yyyy HH:mm")</span>
+                    </div>
+                    <div class="flex items-center text-sm text-gray-500 mt-1">
+                        <span>Total Questions: @_questions.Count</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (_isLoading)
+    {
+        <div class="flex justify-center p-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        </div>
+    }
+    else if (_questions.Count == 0)
+    {
+        <div class="text-center p-8 border border-gray-200 rounded-lg bg-white shadow-sm">
+            <p class="text-gray-500">No questions have been added to this package yet.</p>
+            <button @onclick="ShowAddQuestionModal"
+                    class="mt-4 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-gray-900 text-gray-50 hover:bg-gray-900/90 h-10 px-4 py-2">
+                Add First Question
+            </button>
+        </div>
+    }
+    else if (_filteredQuestions.Count == 0)
+    {
+        <div class="text-center p-8 border border-gray-200 rounded-lg bg-white shadow-sm">
+            <p class="text-gray-500">No questions found matching your search criteria.</p>
+        </div>
+    }
+    else
+    {
+        <div class="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Question Text
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Has Image
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Answers
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Created At
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach (var question in _filteredQuestions.Skip((_currentPage - 1) * _pageSize).Take(_pageSize))
+                    {
+                        <tr class="hover:bg-gray-50 cursor-pointer"
+                            @onclick="() => NavigateToQuestionDetails(question.Id)">
+                            <td class="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">@question.Text</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                @if (question.HasImage)
+                                {
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        Yes
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        No
+                                    </span>
+                                }
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@question.AnswersCount answers</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@question.CreatedAt.ToString("MMM dd, yyyy")</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium" @onclick:stopPropagation="true">
+                                <div class="flex space-x-4">
+                                    <button @onclick="() => ShowEditQuestionModal(question)"
+                                            class="text-blue-600 hover:text-blue-900 hover:underline">Edit
+                                    </button>
+                                    <button @onclick="() => ShowDeleteConfirmation(question)"
+                                            class="text-red-600 hover:text-red-900 hover:underline">Delete
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        @if (_totalPages > 1)
+        {
+            <div class="flex flex-col sm:flex-row justify-between items-center mt-4 gap-4">
+                <div class="text-sm text-gray-500">
+                    Showing @(((_currentPage - 1) * _pageSize) + 1)
+                    to @(Math.Min(_currentPage * _pageSize, _filteredQuestions.Count))
+                    of @_filteredQuestions.Count questions
+                </div>
+                <div class="flex space-x-2">
+                    <button @onclick="PreviousPage"
+                            disabled="@(_currentPage <= 1)"
+                            class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 border border-gray-200 bg-white hover:bg-gray-100 h-10 px-4 py-2">
+                        Previous
+                    </button>
+                    <span class="inline-flex items-center justify-center h-10 px-4 py-2 text-sm text-gray-700">
+                        Page @_currentPage of @_totalPages
+                    </span>
+                    <button @onclick="NextPage"
+                            disabled="@(_currentPage >= _totalPages)"
+                            class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 border border-gray-200 bg-white hover:bg-gray-100 h-10 px-4 py-2">
+                        Next
+                    </button>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+<!-- Add modals for question management here -->
+<!-- These would be similar to the package modals but with question-specific fields -->
+
+@code {
+    [Parameter] public string PackageId { get; set; }
+
+    private QuestionPackageDto _package;
+    private List<Question> _questions = new();
+    private List<Question> _filteredQuestions = new();
+    private bool _isLoading = true;
+    private bool _isSubmitting = false;
+    private string _searchTerm = "";
+    private Timer _debounceTimer;
+
+    // Pagination
+    private int _pageSize = 10;
+    private int _currentPage = 1;
+    private int _totalPages => (int)Math.Ceiling(_filteredQuestions.Count / (double)_pageSize);
+
+    // Modal states
+    private bool _showAddQuestionModal = false;
+    private bool _showEditQuestionModal = false;
+    private bool _showDeleteConfirmation = false;
+
+    // Modal models
+    private Question _newQuestion = new();
+    private Question _editQuestion = new();
+    private Question _selectedQuestion = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _debounceTimer = new Timer(300);
+        _debounceTimer.Elapsed += DebounceTimerElapsed;
+        _debounceTimer.AutoReset = false;
+
+        await LoadPackageDetails();
+        await LoadQuestions();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // if (!string.IsNullOrEmpty(PackageId) && (_package == null || _package.Id != PackageId))
+        {
+            await LoadPackageDetails();
+            await LoadQuestions();
+        }
+    }
+
+    private async Task LoadPackageDetails()
+    {
+        _isLoading = true;
+        try
+        {
+            // This will be replaced with actual API call
+            await Task.Delay(300); // Simulate API delay
+
+            // Mock implementation
+            // _package = new QuestionPackagesPage.QuestionPackage/*
+            // {
+            //     Id = PackageId,
+            //     Name = "Sample Package",
+            //     Description = "This is a sample question package for demonstration purposes.",
+            //     QuestionsCount = 0,
+            //     CreatedAt = DateTime.Now.AddDays(-10),
+            //     LastModifiedAt = DateTime.Now.AddDays(-2)
+            // };*/
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("Failed to load package details.");
+            Console.WriteLine($"Error loading package details: {ex.Message}");
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadQuestions()
+    {
+        _isLoading = true;
+        try
+        {
+            // This will be replaced with actual API call
+            await Task.Delay(500); // Simulate API delay
+
+            // Mock implementation
+            _questions = GenerateMockQuestions();
+            _filteredQuestions = _questions;
+
+            if (_package != null)
+            {
+                // _package.QuestionsCount = _questions.Count;
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("Failed to load questions.");
+            Console.WriteLine($"Error loading questions: {ex.Message}");
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private List<Question> GenerateMockQuestions()
+    {
+        // Mock data for development - will be replaced with API call
+        return new List<Question>
+        {
+            new Question { Id = Guid.NewGuid().ToString(), Text = "What is the capital of France?", HasImage = false, AnswersCount = 4, CreatedAt = DateTime.Now.AddDays(-9), LastModifiedAt = DateTime.Now.AddDays(-9) },
+            new Question { Id = Guid.NewGuid().ToString(), Text = "Which of the following is a prime number?", HasImage = false, AnswersCount = 4, CreatedAt = DateTime.Now.AddDays(-8), LastModifiedAt = DateTime.Now.AddDays(-8) },
+            new Question { Id = Guid.NewGuid().ToString(), Text = "Identify the correct chemical formula for water:", HasImage = false, AnswersCount = 4, CreatedAt = DateTime.Now.AddDays(-7), LastModifiedAt = DateTime.Now.AddDays(-7) },
+            new Question { Id = Guid.NewGuid().ToString(), Text = "Which data structure operates on a LIFO principle?", HasImage = false, AnswersCount = 4, CreatedAt = DateTime.Now.AddDays(-6), LastModifiedAt = DateTime.Now.AddDays(-6) },
+            new Question { Id = Guid.NewGuid().ToString(), Text = "Identify the object in this image:", HasImage = true, AnswersCount = 4, CreatedAt = DateTime.Now.AddDays(-5), LastModifiedAt = DateTime.Now.AddDays(-5) },
+        };
+    }
+
+    private void SearchQuestions(KeyboardEventArgs e)
+    {
+        _debounceTimer.Stop();
+        _debounceTimer.Start();
+    }
+
+    private void DebounceTimerElapsed(object sender, ElapsedEventArgs e)
+    {
+        InvokeAsync(() =>
+        {
+            if (string.IsNullOrWhiteSpace(_searchTerm))
+            {
+                _filteredQuestions = _questions;
+            }
+            else
+            {
+                _filteredQuestions = _questions
+                    .Where(q => q.Text.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+            }
+
+            _currentPage = 1;
+            StateHasChanged();
+        });
+    }
+
+    private void NavigateBack()
+    {
+        NavigationManager.NavigateTo("/admin/question-packages");
+    }
+
+    private void NavigateToQuestionDetails(string questionId)
+    {
+        NavigationManager.NavigateTo($"/admin/questions/{questionId}");
+    }
+
+    private void NextPage()
+    {
+        if (_currentPage < _totalPages)
+        {
+            _currentPage++;
+        }
+    }
+
+    private void PreviousPage()
+    {
+        if (_currentPage > 1)
+        {
+            _currentPage--;
+        }
+    }
+
+    #region Modal Handlers
+
+    private void ShowAddQuestionModal()
+    {
+        // Implementation would go here
+        ToastService.ShowInfo("Add question functionality would be implemented here");
+    }
+
+    private void ShowEditQuestionModal(Question question)
+    {
+        // Implementation would go here
+        ToastService.ShowInfo("Edit question functionality would be implemented here");
+    }
+
+    private void ShowDeleteConfirmation(Question question)
+    {
+        // Implementation would go here
+        ToastService.ShowInfo("Delete question functionality would be implemented here");
+    }
+
+    #endregion
+
+    public void Dispose()
+    {
+        _debounceTimer?.Dispose();
+    }
+
+    public class Question
+    {
+        public string Id { get; set; }
+        public string Text { get; set; }
+        public bool HasImage { get; set; }
+        public int AnswersCount { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime LastModifiedAt { get; set; }
+    }
+
+}

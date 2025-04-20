@@ -1,0 +1,430 @@
+@page "/admin/question-packages"
+@layout Components.Layout.AdminLayout
+@using System.Timers
+@using PuzzleLab.Shared.DTOs.QuestionPackage
+@using PuzzleLab.Shared.DTOs.QuestionPackage.Requests
+@using PuzzleLab.Web.Models
+@using PuzzleLab.Web.Services
+@using PuzzleLab.Web.Services.Ui
+@inject NavigationManager NavigationManager
+
+@* @inject IQuestionPackageService QuestionPackageService *@
+
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+        <h1 class="text-2xl font-bold">Manage Question Packages</h1>
+        <div class="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+            <div class="relative w-full sm:w-auto">
+                <input type="text"
+                       @bind-value="_searchTerm"
+                       @bind-value:event="oninput"
+                       @onkeyup="SearchPackages"
+                       placeholder="Search packages..."
+                       class="h-10 w-full sm:w-64 rounded-md border border-gray-200 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1"/>
+            </div>
+            <button @onclick="ShowAddPackageModal"
+                    class="w-full sm:w-auto inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-gray-900 text-gray-50 hover:bg-gray-900/90 h-10 px-4 py-2">
+                Add Package
+            </button>
+        </div>
+    </div>
+
+    @if (_isLoading)
+    {
+        <div class="flex justify-center p-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        </div>
+    }
+    else if (_packages.Count == 0)
+    {
+        <div class="text-center p-8 border border-gray-200 rounded-lg bg-white shadow-sm">
+            <p class="text-gray-500">No question packages have been added yet.</p>
+            <button @onclick="ShowAddPackageModal"
+                    class="mt-4 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-gray-900 text-gray-50 hover:bg-gray-900/90 h-10 px-4 py-2">
+                Add First Package
+            </button>
+        </div>
+    }
+    else if (_filteredPackages.Count == 0)
+    {
+        <div class="text-center p-8 border border-gray-200 rounded-lg bg-white shadow-sm">
+            <p class="text-gray-500">No packages found matching your search criteria.</p>
+        </div>
+    }
+    else
+    {
+        <div class="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Name
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Description
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Questions
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Created At
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Last Modified
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach (var package in _filteredPackages.Skip((_currentPage - 1) * _pageSize).Take(_pageSize))
+                    {
+                        <tr class="hover:bg-gray-50 cursor-pointer"
+                            @onclick="() => NavigateToPackageDetails(package.Id)">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">@package.Name</td>
+                            <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">@package.Description</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@(package.QuestionsCount) questions</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@package.CreatedAt.ToString("MMM dd, yyyy")</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@package.LastModifiedAt.ToString("MMM dd, yyyy HH:mm")</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium" @onclick:stopPropagation="true">
+                                <div class="flex space-x-4">
+                                    <button @onclick="() => ShowEditPackageModal(package)"
+                                            class="text-blue-600 hover:text-blue-900 hover:underline">Edit
+                                    </button>
+                                    <button @onclick="() => ShowDeleteConfirmation(package)"
+                                            class="text-red-600 hover:text-red-900 hover:underline">Delete
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        @if (_totalPages > 1)
+        {
+            <div class="flex flex-col sm:flex-row justify-between items-center mt-4 gap-4">
+                <div class="text-sm text-gray-500">
+                    Showing @(((_currentPage - 1) * _pageSize) + 1)
+                    to @(Math.Min(_currentPage * _pageSize, _filteredPackages.Count))
+                    of @_filteredPackages.Count packages
+                </div>
+                <div class="flex space-x-2">
+                    <button @onclick="PreviousPage"
+                            disabled="@(_currentPage <= 1)"
+                            class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 border border-gray-200 bg-white hover:bg-gray-100 h-10 px-4 py-2">
+                        Previous
+                    </button>
+                    <span class="inline-flex items-center justify-center h-10 px-4 py-2 text-sm text-gray-700">
+                        Page @_currentPage of @_totalPages
+                    </span>
+                    <button @onclick="NextPage"
+                            disabled="@(_currentPage >= _totalPages)"
+                            class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 border border-gray-200 bg-white hover:bg-gray-100 h-10 px-4 py-2">
+                        Next
+                    </button>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+<AddQuestionPackageModal IsVisible="_showAddPackageModal"
+                         IsSubmitting="_isSubmitting"
+                         PackageModel="_newPackage"
+                         OnClose="CloseAddPackageModal"
+                         OnSubmit="HandleAddPackage"/>
+
+<UpdateQuestionPackageModal IsVisible="_showEditPackageModal"
+                            IsSubmitting="_isSubmitting"
+                            PackageModel="_editPackage"
+                            OnClose="CloseEditPackageModal"
+                            OnSubmit="HandleEditPackage"/>
+
+<DeleteQuestionPackageModal IsVisible="_showDeleteConfirmation"
+                            IsSubmitting="_isSubmitting"
+                            PackageToDelete="_selectedPackage"
+                            OnClose="CloseDeleteConfirmation"
+                            OnConfirm="HandleDeletePackage"/>
+
+@code {
+    private List<QuestionPackage> _packages = new();
+    private List<QuestionPackage> _filteredPackages = new();
+    private bool _isLoading = true;
+    private bool _isSubmitting = false;
+    private string _searchTerm = "";
+    private Timer _debounceTimer;
+
+    private int _pageSize = 10;
+    private int _currentPage = 1;
+    private int _totalPages => (int)Math.Ceiling(_filteredPackages.Count / (double)_pageSize);
+
+    private bool _showAddPackageModal = false;
+    private bool _showEditPackageModal = false;
+    private bool _showDeleteConfirmation = false;
+
+    private CreateQuestionPackageRequest _newPackage = new();
+    private UpdateQuestionPackageRequest _editPackage = new();
+    private QuestionPackageDto _selectedPackage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _debounceTimer = new Timer(300);
+        _debounceTimer.Elapsed += DebounceTimerElapsed;
+        _debounceTimer.AutoReset = false;
+
+        await LoadPackages();
+    }
+
+    private async Task LoadPackages()
+    {
+        _isLoading = true;
+        try
+        {
+            // This will be replaced with actual API call
+            await Task.Delay(500); // Simulate API delay
+            _packages = GenerateMockPackages();
+            _filteredPackages = _packages;
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("Failed to load question packages.");
+            Console.WriteLine($"Error loading packages: {ex.Message}");
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private List<QuestionPackage> GenerateMockPackages()
+    {
+        // Mock data for development - will be replaced with API call
+        return new List<QuestionPackage>
+        {
+            new QuestionPackage { Id = Guid.NewGuid().ToString(), Name = "Basic Mathematics", Description = "Fundamental arithmetic and algebra concepts for beginners", QuestionsCount = 25, CreatedAt = DateTime.Now.AddDays(-30), LastModifiedAt = DateTime.Now.AddDays(-5) },
+            new QuestionPackage { Id = Guid.NewGuid().ToString(), Name = "Advanced Physics", Description = "Complex physics problems including mechanics, thermodynamics, and quantum physics", QuestionsCount = 15, CreatedAt = DateTime.Now.AddDays(-25), LastModifiedAt = DateTime.Now.AddDays(-3) },
+            new QuestionPackage { Id = Guid.NewGuid().ToString(), Name = "Computer Science Fundamentals", Description = "Basic concepts of programming, data structures, and algorithms", QuestionsCount = 30, CreatedAt = DateTime.Now.AddDays(-20), LastModifiedAt = DateTime.Now.AddDays(-2) },
+            new QuestionPackage { Id = Guid.NewGuid().ToString(), Name = "English Literature", Description = "Questions about famous literary works and authors from the 19th and 20th centuries", QuestionsCount = 20, CreatedAt = DateTime.Now.AddDays(-15), LastModifiedAt = DateTime.Now.AddDays(-1) },
+            new QuestionPackage { Id = Guid.NewGuid().ToString(), Name = "World History", Description = "Comprehensive coverage of global historical events and figures", QuestionsCount = 40, CreatedAt = DateTime.Now.AddDays(-10), LastModifiedAt = DateTime.Now.AddHours(-12) },
+        };
+    }
+
+    private void SearchPackages(KeyboardEventArgs e)
+    {
+        _debounceTimer.Stop();
+        _debounceTimer.Start();
+    }
+
+    private void DebounceTimerElapsed(object sender, ElapsedEventArgs e)
+    {
+        InvokeAsync(() =>
+        {
+            if (string.IsNullOrWhiteSpace(_searchTerm))
+            {
+                _filteredPackages = _packages;
+            }
+            else
+            {
+                _filteredPackages = _packages
+                    .Where(p => p.Name.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                                p.Description.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+            }
+
+            _currentPage = 1;
+            StateHasChanged();
+        });
+    }
+
+    private void NavigateToPackageDetails(string packageId)
+    {
+        NavigationManager.NavigateTo($"/admin/question-packages/{packageId}");
+    }
+
+    private void NextPage()
+    {
+        if (_currentPage < _totalPages)
+        {
+            _currentPage++;
+        }
+    }
+
+    private void PreviousPage()
+    {
+        if (_currentPage > 1)
+        {
+            _currentPage--;
+        }
+    }
+
+    #region Modal Handlers
+
+    private void ShowAddPackageModal()
+    {
+        _newPackage = new CreateQuestionPackageRequest();
+        _showAddPackageModal = true;
+    }
+
+    private void CloseAddPackageModal()
+    {
+        _showAddPackageModal = false;
+    }
+
+    private async Task HandleAddPackage(CreateQuestionPackageRequest package)
+    {
+        _isSubmitting = true;
+        try
+        {
+            // This will be replaced with actual API call
+            await Task.Delay(500); // Simulate API delay
+
+            // Mock implementation - add to local list
+
+            // _packages.Add(package);
+            _filteredPackages = new List<QuestionPackage>(_packages);
+            if (!string.IsNullOrWhiteSpace(_searchTerm))
+            {
+                SearchPackages(null);
+            }
+
+            ToastService.ShowSuccess("Question package created successfully.");
+            _showAddPackageModal = false;
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("Failed to create question package.");
+            Console.WriteLine($"Error creating package: {ex.Message}");
+        }
+        finally
+        {
+            _isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ShowEditPackageModal(QuestionPackage package)
+    {
+        _editPackage = new UpdateQuestionPackageRequest
+        {
+            Id = package.Id,
+            Name = package.Name,
+            Description = package.Description,
+        };
+        _showEditPackageModal = true;
+    }
+
+    private void CloseEditPackageModal()
+    {
+        _showEditPackageModal = false;
+    }
+
+    private async Task HandleEditPackage(UpdateQuestionPackageRequest package)
+    {
+        _isSubmitting = true;
+        try
+        {
+            // This will be replaced with actual API call
+            await Task.Delay(500); // Simulate API delay
+
+            // Mock implementation - update in local list
+            var index = _packages.FindIndex(p => p.Id == package.Id);
+            if (index >= 0)
+            {
+                // package.LastModifiedAt = DateTime.Now;
+                // package.QuestionsCount = _packages[index].QuestionsCount;
+                // package.CreatedAt = _packages[index].CreatedAt;
+                // _packages[index] = package;
+                // _filteredPackages = new List<QuestionPackage>(_packages);
+                // if (!string.IsNullOrWhiteSpace(_searchTerm))
+                // {
+                //     SearchPackages(null);
+                // }
+            }
+
+            ToastService.ShowSuccess("Question package updated successfully.");
+            _showEditPackageModal = false;
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("Failed to update question package.");
+            Console.WriteLine($"Error updating package: {ex.Message}");
+        }
+        finally
+        {
+            _isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ShowDeleteConfirmation(QuestionPackage package)
+    {
+        // _selectedPackage = package;
+        _showDeleteConfirmation = true;
+    }
+
+    private void CloseDeleteConfirmation()
+    {
+        _showDeleteConfirmation = false;
+    }
+
+    private async Task HandleDeletePackage(QuestionPackageDto package)
+    {
+        _isSubmitting = true;
+        try
+        {
+            // This will be replaced with actual API call
+            await Task.Delay(500); // Simulate API delay
+
+            // Mock implementation - remove from local list
+            _packages.RemoveAll(p => p.Id == package.Id.ToString());
+            _filteredPackages = new List<QuestionPackage>(_packages);
+            if (!string.IsNullOrWhiteSpace(_searchTerm))
+            {
+                SearchPackages(null);
+            }
+
+            ToastService.ShowSuccess("Question package deleted successfully.");
+            _showDeleteConfirmation = false;
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("Failed to delete question package.");
+            Console.WriteLine($"Error deleting package: {ex.Message}");
+        }
+        finally
+        {
+            _isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    #endregion
+
+    public void Dispose()
+    {
+        _debounceTimer?.Dispose();
+    }
+
+    public class QuestionPackage
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public int QuestionsCount { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime LastModifiedAt { get; set; }
+    }
+
+}
