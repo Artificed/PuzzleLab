@@ -69,11 +69,7 @@ public class QuestionController(ISender sender) : ControllerBase
     public async Task<IActionResult> UpdateQuestion([FromBody] UpdateQuestionRequest request,
         CancellationToken cancellationToken)
     {
-        var command = new UpdateQuestionCommand(
-            request.Id,
-            request.Text,
-            request.ImageData,
-            request.ImageMimeType);
+        var command = new UpdateQuestionCommand(request.Id, request.Text);
 
         var result = await sender.Send(command, cancellationToken);
 

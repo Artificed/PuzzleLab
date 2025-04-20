@@ -19,7 +19,6 @@ public class UpdateQuestionCommandHandler(IQuestionRepository questionRepository
         }
 
         question.UpdateText(request.Text);
-        question.UpdateImage(request.ImageData, request.ImageMimeType);
 
         await questionRepository.UpdateQuestionAsync(question, cancellationToken);
 
