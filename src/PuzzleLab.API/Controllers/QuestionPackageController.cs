@@ -25,6 +25,20 @@ public class QuestionPackageController(ISender sender) : ControllerBase
         return Ok(result.Value);
     }
 
+    [HttpGet("{packageId}")]
+    public async Task<IActionResult> GetQuestionPackageById(string packageId, CancellationToken cancellationToken)
+    {
+        var query = new GetQuestionPackageByIdQuery(Guid.Parse(packageId));
+        var result = await sender.Send(query, cancellationToken);
+
+        if (result.IsFailure)
+        {
+            return this.MapErrorToAction(result.Error);
+        }
+
+        return Ok(result.Value);
+    }
+
     [HttpPost("create")]
     public async Task<IActionResult> CreateQuestionPackage(
         [FromBody] CreateQuestionPackageRequest request,

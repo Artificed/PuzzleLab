@@ -18,7 +18,7 @@ public class GetAllQuestionPackagesQueryHandler(IQuestionPackageRepository quest
             qp.Id,
             qp.Name,
             qp.Description,
-            qp.Quizzes?.Count ?? 0,
+            qp.Questions.Count,
             qp.CreatedAt,
             qp.LastModifiedAt
         )).ToList();

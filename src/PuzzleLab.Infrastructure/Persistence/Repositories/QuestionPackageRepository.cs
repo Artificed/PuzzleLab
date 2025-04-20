@@ -8,13 +8,14 @@ public class QuestionPackageRepository(DatabaseContext databaseContext) : IQuest
 {
     public async Task<List<QuestionPackage>> GetAllQuestionPackagesAsync(CancellationToken cancellationToken = default)
     {
-        return await databaseContext.QuestionPackages.Include(qp => qp.Quizzes).ToListAsync(cancellationToken);
+        return await databaseContext.QuestionPackages.Include(qp => qp.Questions).ToListAsync(cancellationToken);
     }
 
     public async Task<QuestionPackage?> GetQuestionPackageByIdAsync(Guid packageId,
         CancellationToken cancellationToken = default)
     {
-        return await databaseContext.QuestionPackages.Include(qp => qp.Quizzes).FirstOrDefaultAsync(x => x.Id == packageId, cancellationToken);
+        return await databaseContext.QuestionPackages.Include(qp => qp.Questions)
+            .FirstOrDefaultAsync(x => x.Id == packageId, cancellationToken);
     }
 
     public async Task InsertQuestionPackageAsync(QuestionPackage package, CancellationToken cancellationToken = default)
