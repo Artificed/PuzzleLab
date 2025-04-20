@@ -15,8 +15,6 @@ public class Schedule
 
     public DateTime LastModifiedAt { get; private set; }
 
-    public virtual ICollection<Quiz> Quizzes { get; private set; }
-
     // For EF Core
     private Schedule()
     {
@@ -33,7 +31,6 @@ public class Schedule
         EndDateTime = endDateTime;
         CreatedAt = DateTime.UtcNow;
         LastModifiedAt = CreatedAt;
-        Quizzes = new List<Quiz>();
     }
 
     public void UpdateTimeWindow(DateTime newStartDateTime, DateTime newEndDateTime)

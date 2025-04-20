@@ -17,4 +17,19 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
     public DbSet<QuizUser> QuizUsers { get; set; }
     public DbSet<QuizSession> QuizSessions { get; set; }
     public DbSet<QuizAnswer> QuizAnswers { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Quiz>()
+            .HasOne(q => q.Schedule)
+            .WithOne()
+            .HasForeignKey<Quiz>(q => q.ScheduleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Quiz>()
+            .HasIndex(q => q.ScheduleId)
+            .IsUnique();
+    }
 }
