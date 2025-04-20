@@ -143,7 +143,8 @@
                     <div class="cursor-pointer">
                         @if (question.ImageData != null && !string.IsNullOrEmpty(question.ImageMimeType))
                         {
-                            <div class="w-full h-96 bg-gray-100 overflow-hidden">
+                            <div class="w-full h-96 bg-gray-100 overflow-hidden"
+                                 @onclick="() => ShowManageAnswersModal(question)">
                                 <img
                                     src="data:@question.ImageMimeType;base64,@Convert.ToBase64String(question.ImageData)"
                                     alt="Question image" class="w-full h-full object-cover"/>

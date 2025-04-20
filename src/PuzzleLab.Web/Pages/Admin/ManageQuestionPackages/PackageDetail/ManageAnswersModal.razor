@@ -1,10 +1,11 @@
 @using PuzzleLab.Shared.DTOs.Answer
 @using PuzzleLab.Shared.DTOs.Answer.Requests
 @using PuzzleLab.Shared.DTOs.Question
+@using PuzzleLab.Web.Services.Api
 @using PuzzleLab.Web.Services.Api.Interfaces
 @using PuzzleLab.Web.Services.Ui
 
-@* @inject IAnswerService AnswerService *@
+@inject IAnswerService AnswerService
 @inject IQuestionService QuestionService
 
 <div class="@(IsVisible ? "fixed inset-0 flex items-center justify-center z-50" : "hidden")">
@@ -46,47 +47,49 @@
 
                 <h4 class="text-lg font-medium mb-4">Answers (Max 4)</h4>
 
-                <div class="space-y-4">
+                <div class="mb-3 text-sm font-medium text-gray-600">
+                    Use the button to select the correct answer.
+                </div>
+
+                <div class="space-y-3">
                     @for (int i = 0; i < _answers.Count; i++)
                     {
                         var index = i;
                         <div
-                            class="flex items-start space-x-4 p-4 border border-gray-200 rounded-lg @(_answers[index].IsCorrect ? "bg-green-50 border-green-300" : "")">
-                            <div class="flex-1">
-                                <div class="flex items-center">
-                                    <input type="radio"
-                                           id="correct-@index"
-                                           name="correctAnswer"
-                                           checked="@_answers[index].IsCorrect"
-                                           @onchange="() => SetCorrectAnswer(index)"
-                                           class="h-4 w-4 text-blue-600 focus:ring-blue-500"/>
-                                    <label for="correct-@index" class="ml-2 text-sm text-gray-700">Mark As
-                                        Correct</label>
-                                </div>
-                                <div class="mt-2">
-                                    <input type="text"
-                                           placeholder="Enter answer text"
-                                           @bind="_answers[index].Text"
-                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"/>
-                                </div>
+                            class="flex items-center p-3 border rounded-md @(_answers[index].IsCorrect ? "bg-green-50 border-green-300" : "border-gray-200")">
+                            <div class="mr-3 flex-shrink-0">
+                                <input type="radio"
+                                       id="correct-@index"
+                                       name="correctAnswer"
+                                       checked="@_answers[index].IsCorrect"
+                                       @onchange="() => SetCorrectAnswer(index)"
+                                       class="h-4 w-4 text-blue-600 focus:ring-black cursor-pointer"/>
                             </div>
-                            <button @onclick="() => RemoveAnswer(index)"
-                                    class="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-50">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                                     stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                </svg>
-                            </button>
+                            <div class="flex-1">
+                                <input type="text"
+                                       placeholder="Enter answer text"
+                                       @bind="_answers[index].Text"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black"/>
+                            </div>
+                            <div class="flex items-center justify-center ml-2 w-10 flex-shrink-0">
+                                <button @onclick="() => RemoveAnswer(index)"
+                                        class="text-gray-400 hover:text-red-500 p-1.5 rounded-full hover:bg-red-50 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                                         viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     }
 
                     @if (_answers.Count < 4)
                     {
                         <button @onclick="AddNewAnswer"
-                                class="w-full flex justify-center items-center px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:text-gray-800 hover:border-gray-400">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
-                                 stroke="currentColor">
+                                class="w-full flex justify-center items-center px-4 py-2.5 border border-dashed border-gray-300 rounded-md text-gray-500 hover:text-gray-700 hover:border-gray-400 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none"
+                                 viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M12 4v16m8-8H4"/>
                             </svg>
@@ -98,11 +101,11 @@
 
             <div class="border-t border-gray-200 px-6 py-4 flex justify-end space-x-3 bg-gray-50">
                 <button @onclick="OnClose"
-                        class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black">
                     Cancel
                 </button>
                 <button @onclick="SaveAnswers"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled="@_isSaving">
                     @if (_isSaving)
                     {
@@ -127,7 +130,7 @@
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public EventCallback<List<AnswerDto>> OnSaveSuccess { get; set; }
 
-    private List<AnswerDto> _answers = new();
+    private List<CreateAnswerDto> _answers = new();
     private bool _isLoading = false;
     private bool _isSaving = false;
 
@@ -144,18 +147,26 @@
         _isLoading = true;
         try
         {
-            // You'll need to implement this API method
-            // var request = new GetAnswersByQuestionIdRequest { QuestionId = Question.Id.ToString() };
-            // var response = await AnswerService.GetAnswersByQuestionIdAsync(request);
-            // _answers = response?.AnswerDtos?.ToList() ?? new List<AnswerDto>();
+            var request = new GetAnswersByQuestionRequest() { QuestionId = Question.Id };
+            var response = await AnswerService.GetAnswersByQuestionIdAsync(request);
 
-            // Ensure at least one answer exists
+            if (response?.AnswerDtos is null)
+            {
+                ToastService.ShowError("Failed to load answers! Please try again", "Error Loading Answers");
+                return;
+            }
+
+            _answers = response.AnswerDtos?.Select(ans => new CreateAnswerDto
+            {
+                Text = ans.Text,
+                IsCorrect = ans.IsCorrect
+            }).ToList() ?? new List<CreateAnswerDto>();
+
             if (_answers.Count == 0)
             {
                 AddNewAnswer();
             }
 
-            // Ensure one answer is marked as correct
             if (!_answers.Any(a => a.IsCorrect))
             {
                 _answers[0].IsCorrect = true;
@@ -180,10 +191,8 @@
             return;
         }
 
-        _answers.Add(new AnswerDto
+        _answers.Add(new CreateAnswerDto()
         {
-            Id = Guid.NewGuid(),
-            QuestionId = Question.Id,
             Text = "",
             IsCorrect = _answers.Count == 0
         });
@@ -200,7 +209,6 @@
         var isCorrect = _answers[index].IsCorrect;
         _answers.RemoveAt(index);
 
-        // If we removed the correct answer, set the first remaining answer as correct
         if (isCorrect && _answers.Any())
         {
             _answers[0].IsCorrect = true;
@@ -238,23 +246,22 @@
         _isSaving = true;
         try
         {
-            // You'll need to implement this API method
-            /*var request = new SaveAnswersRequest
+            var request = new SaveAnswersRequest
             {
                 QuestionId = Question.Id.ToString(),
-                Answers = _answers
+                AnswerData = _answers
             };
 
             var response = await AnswerService.SaveAnswersAsync(request);
 
-            if (response?.Success == true)
+            if (response?.SavedAnswers is null)
             {
-                await OnSaveSuccess.InvokeAsync(_answers);
+                ToastService.ShowError("Failed to save answers! Please try again", "Error Saving Answers");
             }
             else
             {
-                _validationErrors.Add(response?.ErrorMessage ?? "Failed to save answers. Please try again.");
-            }*/
+                ToastService.ShowSuccess("Answers saved successfully!", "Success!");
+            }
         }
         catch (Exception ex)
         {
