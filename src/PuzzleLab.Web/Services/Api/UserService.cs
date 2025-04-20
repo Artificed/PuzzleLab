@@ -17,4 +17,16 @@ public class UserService(IApiClient apiClient) : IUserService
         var user = await apiClient.PostAsync<CreateUserResponse>("/api/user/create", createUserRequest);
         return user;
     }
+
+    public async Task<UpdateUserResponse?> UpdateUserAsync(EditUserRequest updateUserRequest)
+    {
+        var user = await apiClient.PutAsync<UpdateUserResponse>("/api/user/update", updateUserRequest);
+        return user;
+    }
+
+    public async Task<DeleteUserResponse?> DeleteUserAsync(DeleteUserRequest deleteUserRequest)
+    {
+        var user = await apiClient.DeleteAsync<DeleteUserResponse?>("/api/user/delete", deleteUserRequest);
+        return user;
+    }
 }

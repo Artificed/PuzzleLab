@@ -7,4 +7,6 @@ public interface IUserService
 {
     Task<GetAllUsersResponse?> GetAllUsersAsync();
     Task<CreateUserResponse?> CreateUserAsync(CreateUserRequest createUserRequest);
+    Task<UpdateUserResponse?> UpdateUserAsync(EditUserRequest updateUserRequest);
+    Task<DeleteUserResponse?> DeleteUserAsync(DeleteUserRequest deleteUserRequest);
 }

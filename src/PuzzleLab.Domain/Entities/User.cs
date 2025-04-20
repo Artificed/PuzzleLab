@@ -33,6 +33,21 @@ public class User
         QuizSessions = new List<QuizSession>();
     }
 
+    public void UpdateUsername(string username)
+    {
+        Username = username;
+    }
+
+    public void UpdateEmail(string email)
+    {
+        Email = email;
+    }
+
+    public void UpdatePasswordHash(string passwordHash)
+    {
+        PasswordHash = passwordHash;
+    }
+
     public void UpdateLastLogin()
     {
         LastLoginAt = DateTime.UtcNow;

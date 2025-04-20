@@ -27,4 +27,16 @@ public class UserRepository(DatabaseContext databaseContext) : IUserRepository
         await databaseContext.Users.AddAsync(user, cancellationToken);
         await databaseContext.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task UpdateUserAsync(User user, CancellationToken cancellationToken = default)
+    {
+        databaseContext.Users.Update(user);
+        await databaseContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DeleteUserAsync(User user, CancellationToken cancellationToken = default)
+    {
+        databaseContext.Users.Remove(user);
+        await databaseContext.SaveChangesAsync(cancellationToken);
+    }
 }
