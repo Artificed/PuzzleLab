@@ -207,17 +207,20 @@
     }
 </div>
 
-<AddEditQuestionModal IsVisible="_showAddEditModal"
-                      QuestionToEdit="_selectedQuestion"
-                      PackageId="@PackageId"
-                      OnClose="CloseModals"
-                      OnSaveSuccess="HandleSaveSuccess"/>
+<AddQuestionModal IsVisible="_showAddQuestionModal"
+                  PackageId="@PackageId"
+                  OnClose="CloseModals"
+                  OnSaveSuccess="HandleSaveSuccess"/>
+
+<UpdateQuestionModal IsVisible="_showEditQuestionModal"
+                     QuestionToEdit="_selectedQuestion"
+                     OnClose="CloseModals"
+                     OnSaveSuccess="HandleSaveSuccess"/>
 
 <DeleteConfirmationModal IsVisible="_showDeleteConfirmation"
                          QuestionToDelete="_selectedQuestion"
                          OnClose="CloseModals"
                          OnConfirm="HandleDeleteConfirmed"/>
-
 
 @code {
     [Parameter] public string PackageId { get; set; }
@@ -232,7 +235,9 @@
     private int _currentPage = 1;
     private int _totalPages => (_filteredQuestions == null || _filteredQuestions.Count == 0) ? 1 : (int)Math.Ceiling(_filteredQuestions.Count / (double)_pageSize);
 
-    private bool _showAddEditModal = false;
+    // Modal visibility flags
+    private bool _showAddQuestionModal = false;
+    private bool _showEditQuestionModal = false;
     private bool _showDeleteConfirmation = false;
     private QuestionDto _selectedQuestion;
 
@@ -368,33 +373,38 @@
         }
     }
 
+    // Modal handling methods
     private void ShowAddQuestionModal()
     {
-        _selectedQuestion = null;
+        _showAddQuestionModal = true;
+        _showEditQuestionModal = false;
         _showDeleteConfirmation = false;
-        _showAddEditModal = true;
+        _selectedQuestion = null;
         StateHasChanged();
     }
 
     private void ShowEditQuestionModal(QuestionDto question)
     {
         _selectedQuestion = question;
+        _showAddQuestionModal = false;
+        _showEditQuestionModal = true;
         _showDeleteConfirmation = false;
-        _showAddEditModal = true;
         StateHasChanged();
     }
 
     private void ShowDeleteConfirmation(QuestionDto question)
     {
         _selectedQuestion = question;
-        _showAddEditModal = false;
+        _showAddQuestionModal = false;
+        _showEditQuestionModal = false;
         _showDeleteConfirmation = true;
         StateHasChanged();
     }
 
     private void CloseModals()
     {
-        _showAddEditModal = false;
+        _showAddQuestionModal = false;
+        _showEditQuestionModal = false;
         _showDeleteConfirmation = false;
         _selectedQuestion = null;
         StateHasChanged();

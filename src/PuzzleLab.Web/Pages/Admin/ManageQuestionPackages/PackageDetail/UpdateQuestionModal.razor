@@ -1,17 +1,16 @@
 @using PuzzleLab.Shared.DTOs.Question
 @using PuzzleLab.Shared.DTOs.Question.Requests
 @using PuzzleLab.Web.Services.Api.Interfaces
-@using PuzzleLab.Web.Services.Ui
 
 @inject IQuestionService QuestionService
 
-@if (IsVisible)
+@if (IsVisible && QuestionToEdit != null)
 {
     <div class="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
          @onclick="HandleOverlayClick">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-xl mx-4" @onclick:stopPropagation>
             <div class="flex justify-between items-center px-6 py-4 border-b">
-                <h3 class="text-lg font-medium">@(_isEditMode ? "Edit Question" : "Add New Question")</h3>
+                <h3 class="text-lg font-medium">Edit Question</h3>
                 <button @onclick="Close" class="text-gray-400 hover:text-gray-500">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
                          stroke="currentColor">
@@ -20,18 +19,36 @@
                 </button>
             </div>
             <div class="p-6">
-                @* --- FORM CONTENT WILL GO HERE --- *@
-                @* Example: You'd typically have an EditForm here *@
-                @if (_isEditMode && QuestionToEdit != null)
-                {
-                    <p>Editing Question: @QuestionToEdit.Text (ID: @QuestionToEdit.Id)</p>
-                }
-                else
-                {
-                    <p>Adding new question to Package ID: @PackageId</p>
-                }
-                <p class="text-gray-700 mt-4 italic">Question form implementation will go here.</p>
-                @* --- END FORM CONTENT --- *@
+                <EditForm Model="@_model" OnValidSubmit="HandleSave">
+                    <DataAnnotationsValidator/>
+                    <ValidationSummary class="text-red-600 text-sm mb-4"/>
+
+                    <div class="mb-4">
+                        <label for="questionText" class="block text-sm font-medium text-gray-700 mb-1">Question
+                            Text</label>
+                        <InputTextArea id="questionText"
+                                       @bind-Value="_model.Text"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                       rows="3"/>
+                        <ValidationMessage For="@(() => _model.Text)" class="text-red-500 text-sm"/>
+                    </div>
+
+                    @if (QuestionToEdit.ImageData != null && !string.IsNullOrEmpty(QuestionToEdit.ImageMimeType))
+                    {
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Existing Image</label>
+                            <div class="mt-2">
+                                <img
+                                    src="data:@QuestionToEdit.ImageMimeType;base64,@Convert.ToBase64String(QuestionToEdit.ImageData)"
+                                    alt="Question image" class="max-h-48 rounded-md"/>
+                            </div>
+                            <p class="text-gray-500 text-sm mt-1">
+                                Note: To change the image, please use the "Add Question" option and delete this
+                                question.
+                            </p>
+                        </div>
+                    }
+                </EditForm>
 
                 @if (!string.IsNullOrEmpty(_errorMessage))
                 {
@@ -52,7 +69,7 @@
                         <span
                             class="inline-block h-4 w-4 mr-2 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
                     }
-                    @(_isEditMode ? "Save Changes" : "Add Question")
+                    Save Changes
                 </button>
             </div>
         </div>
@@ -64,25 +81,23 @@
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public EventCallback<QuestionDto> OnSaveSuccess { get; set; }
     [Parameter] public QuestionDto QuestionToEdit { get; set; }
-    [Parameter] public string PackageId { get; set; }
 
-    private bool _isEditMode => QuestionToEdit != null;
     private bool _isSubmitting = false;
     private string _errorMessage = string.Empty;
-
-    private UpdateQuestionRequest _editModel = new();
-    private CreateQuestionRequest _addModel = new();
+    private UpdateQuestionRequest _model = new();
 
     protected override void OnParametersSet()
     {
-        if (IsVisible)
+        if (IsVisible && QuestionToEdit != null)
         {
             _isSubmitting = false;
             _errorMessage = string.Empty;
 
-            // Initialize your form model here based on _isEditMode and QuestionToEdit
-            // if (_isEditMode) { /* Populate _editModel from QuestionToEdit */ }
-            // else { /* Initialize _addModel, possibly setting PackageId */ }
+            _model = new UpdateQuestionRequest
+            {
+                Id = QuestionToEdit.Id,
+                Text = QuestionToEdit.Text
+            };
         }
     }
 
@@ -94,55 +109,26 @@
 
         try
         {
-            // --- ACTUAL SAVE LOGIC WOULD GO HERE ---
-            // Example:
-            // if (_isEditMode)
-            // {
-            //     var request = new UpdateQuestionRequest { Id = QuestionToEdit.Id, Text = QuestionToEdit.Text };
-            //     var response = await QuestionService.UpdateQuestionAsync(request);
-            //     if (response.IsSuccess)
-            //     {
-            //         await OnSaveSuccess.InvokeAsync(response.QuestionDto); // Pass updated DTO back
-            //     }
-            //     else
-            //     {
-            //         _errorMessage = response.Message ?? "Failed to update.";
-            //     }
-            // }
-            // else
-            // {
-            //     var request = new CreateQuestionRequest { QuestionPackageId = Guid.Parse(this.PackageId) };
-            //     var response = await QuestionService.CreateQuestionAsync(request);
-            //     if (response.IsSuccess)
-            //     {
-            //         await OnSaveSuccess.InvokeAsync(response.QuestionDto);
-            //     }
-            //     else
-            //     {
-            //         _errorMessage = response.Message ?? "Failed to add.";
-            //     }
-            // }
-
-            // --- Placeholder ---
-            Console.WriteLine($"Simulating save for {(_isEditMode ? "Edit" : "Add")}");
-            await Task.Delay(1000); // Simulate async work
-            // Assuming success for placeholder:
-            // QuestionDto savedQuestion = _isEditMode ? QuestionToEdit : new QuestionDto { Id = Guid.NewGuid(), Text = "New Placeholder", PackageId = Guid.Parse(PackageId), CreatedAt = DateTime.UtcNow };
-            // await OnSaveSuccess.InvokeAsync(savedQuestion);
-            // --- End Placeholder ---
+            var response = await QuestionService.UpdateQuestionAsync(_model);
+            if (response is null)
+            {
+                _errorMessage = "Failed to update question.";
+            }
+            else
+            {
+                await OnSaveSuccess.InvokeAsync(response.QuestionDto);
+                await Close();
+            }
         }
         catch (Exception ex)
         {
             _errorMessage = $"An error occurred: {ex.Message}";
-            Console.WriteLine($"Error saving question: {ex}");
+            Console.WriteLine($"Error updating question: {ex}");
         }
         finally
         {
-            if (!string.IsNullOrEmpty(_errorMessage))
-            {
-                _isSubmitting = false;
-                StateHasChanged();
-            }
+            _isSubmitting = false;
+            StateHasChanged();
         }
     }
 

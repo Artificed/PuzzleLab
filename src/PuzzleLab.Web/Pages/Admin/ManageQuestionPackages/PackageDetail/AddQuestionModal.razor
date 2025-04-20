@@ -1,0 +1,222 @@
+@using PuzzleLab.Shared.DTOs.Question
+@using PuzzleLab.Shared.DTOs.Question.Requests
+@using PuzzleLab.Web.Services.Api.Interfaces
+@using System.IO
+
+@inject IQuestionService QuestionService
+
+@if (IsVisible)
+{
+    <div class="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
+         @onclick="HandleOverlayClick">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-xl mx-4" @onclick:stopPropagation>
+            <div class="flex justify-between items-center px-6 py-4 border-b">
+                <h3 class="text-lg font-medium">Add New Question</h3>
+                <button @onclick="Close" class="text-gray-400 hover:text-gray-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                         stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6">
+                <EditForm Model="@_model" OnValidSubmit="HandleSave">
+                    <DataAnnotationsValidator/>
+                    <ValidationSummary class="text-red-600 text-sm mb-4"/>
+
+                    <div class="mb-4">
+                        <label for="questionText" class="block text-sm font-medium text-gray-700 mb-1">Question
+                            Text</label>
+                        <InputTextArea id="questionText"
+                                       @bind-Value="_model.Text"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                       rows="3"/>
+                        <ValidationMessage For="@(() => _model.Text)" class="text-red-500 text-sm"/>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="imageUpload" class="block text-sm font-medium text-gray-700 mb-1">
+                            Question Image (Optional)
+                        </label>
+                        <div class="flex items-center">
+                            <InputFile OnChange="OnFileChange" id="imageUpload" class="hidden" accept="image/*"/>
+                            <label for="imageUpload"
+                                   class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer">
+                                @(_imagePreviewUrl != null ? "Change Image" : "Upload Image")
+                            </label>
+                            @if (_imagePreviewUrl != null)
+                            {
+                                <button @onclick="ClearSelectedImage" type="button"
+                                        class="ml-2 text-red-600 hover:text-red-800 text-sm">
+                                    Remove
+                                </button>
+                            }
+                        </div>
+
+                        @if (_imagePreviewUrl != null)
+                        {
+                            <div class="mt-2">
+                                <img src="@_imagePreviewUrl" alt="Question image preview"
+                                     class="mt-2 max-h-48 rounded-md"/>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(_imageError))
+                        {
+                            <p class="text-red-500 text-sm mt-1">@_imageError</p>
+                        }
+                    </div>
+                </EditForm>
+
+                @if (!string.IsNullOrEmpty(_errorMessage))
+                {
+                    <p class="text-red-600 text-sm mt-2">@_errorMessage</p>
+                }
+            </div>
+            <div class="px-6 py-4 bg-gray-50 flex justify-end space-x-4 rounded-b-lg">
+                <button @onclick="Close"
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        disabled="@_isSubmitting">
+                    Cancel
+                </button>
+                <button @onclick="HandleSave"
+                        class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        disabled="@_isSubmitting">
+                    @if (_isSubmitting)
+                    {
+                        <span
+                            class="inline-block h-4 w-4 mr-2 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
+                    }
+                    Add Question
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<QuestionDto> OnSaveSuccess { get; set; }
+    [Parameter] public string PackageId { get; set; }
+
+    private bool _isSubmitting = false;
+    private string _errorMessage = string.Empty;
+    private string _imageError = string.Empty;
+    private string _imagePreviewUrl = null;
+
+    private CreateQuestionRequest _model = new();
+
+    protected override void OnParametersSet()
+    {
+        if (IsVisible)
+        {
+            _isSubmitting = false;
+            _errorMessage = string.Empty;
+            _imageError = string.Empty;
+            _imagePreviewUrl = null;
+
+            // Initialize add form with default values
+            _model = new CreateQuestionRequest
+            {
+                QuestionPackageId = Guid.Parse(PackageId),
+                Text = string.Empty,
+                ImageData = null,
+                ImageMimeType = null
+            };
+        }
+    }
+
+    private async Task OnFileChange(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            var file = e.File;
+            if (file == null)
+            {
+                return;
+            }
+
+            if (!file.ContentType.StartsWith("image/"))
+            {
+                _imageError = "Please select an image file.";
+                return;
+            }
+
+            if (file.Size > 5 * 1024 * 1024)
+            {
+                _imageError = "Image must be less than 5MB.";
+                return;
+            }
+
+            _imageError = string.Empty;
+
+            using var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+            using var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream);
+
+            _model.ImageData = memoryStream.ToArray();
+            _model.ImageMimeType = file.ContentType;
+
+            var base64 = Convert.ToBase64String(_model.ImageData);
+            _imagePreviewUrl = $"data:{file.ContentType};base64,{base64}";
+        }
+        catch (Exception ex)
+        {
+            _imageError = $"Error uploading image: {ex.Message}";
+        }
+    }
+
+    private void ClearSelectedImage()
+    {
+        _model.ImageData = null;
+        _model.ImageMimeType = null;
+        _imagePreviewUrl = null;
+        _imageError = string.Empty;
+    }
+
+    private async Task HandleSave()
+    {
+        _isSubmitting = true;
+        _errorMessage = string.Empty;
+        StateHasChanged();
+
+        try
+        {
+            var response = await QuestionService.CreateQuestionAsync(_model);
+            if (response is null)
+            {
+                _errorMessage = "Failed to create question.";
+            }
+            else
+            {
+                await OnSaveSuccess.InvokeAsync(response.QuestionDto);
+                await Close();
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"An error occurred: {ex.Message}";
+            Console.WriteLine($"Error saving question: {ex}");
+        }
+        finally
+        {
+            _isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task Close()
+    {
+        if (!_isSubmitting && OnClose.HasDelegate)
+        {
+            await OnClose.InvokeAsync();
+        }
+    }
+
+    private async Task HandleOverlayClick()
+    {
+        await Close();
+    }
+
+}
