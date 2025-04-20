@@ -3,6 +3,7 @@
 @implements IDisposable
 
 @using System.Timers
+@using PuzzleLab.Shared.DTOs.Answer
 @using PuzzleLab.Shared.DTOs.Question
 @using PuzzleLab.Shared.DTOs.Question.Requests
 @using PuzzleLab.Shared.DTOs.QuestionPackage
@@ -138,21 +139,36 @@
             @foreach (var question in _filteredQuestions.Skip((_currentPage - 1) * _pageSize).Take(_pageSize))
             {
                 <div
-                    class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200 cursor-pointer"
-                    @onclick="() => NavigateToQuestionDetails(question.Id.ToString())">
-                    @if (question.ImageData != null && !string.IsNullOrEmpty(question.ImageMimeType))
-                    {
-                        <div class="w-full h-96 bg-gray-100 overflow-hidden">
-                            <img src="data:@question.ImageMimeType;base64,@Convert.ToBase64String(question.ImageData)"
-                                 alt="Question image" class="w-full h-full object-cover"/>
+                    class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200">
+                    <div class="cursor-pointer">
+                        @if (question.ImageData != null && !string.IsNullOrEmpty(question.ImageMimeType))
+                        {
+                            <div class="w-full h-96 bg-gray-100 overflow-hidden">
+                                <img
+                                    src="data:@question.ImageMimeType;base64,@Convert.ToBase64String(question.ImageData)"
+                                    alt="Question image" class="w-full h-full object-cover"/>
+                            </div>
+                        }
+                        <div class="p-4">
+                            <p class="text-gray-900 font-medium line-clamp-3">@question.Text</p>
                         </div>
-                    }
-                    <div class="p-4">
-                        <p class="text-gray-900 font-medium line-clamp-3">@question.Text</p>
+                    </div>
+                    <div class="p-4 pt-0">
                         <div class="mt-4 flex items-center justify-between">
                             <span class="text-xs text-gray-500">@question.CreatedAt.ToString("MMM dd, yyyy")</span>
                             <div class="flex space-x-2" @onclick:stopPropagation="true">
+                                <button @onclick="() => ShowManageAnswersModal(question)"
+                                        title="Manage Answers"
+                                        class="p-1.5 text-green-600 hover:bg-green-50 rounded-full">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                         viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                                    </svg>
+                                </button>
+
                                 <button @onclick="() => ShowEditQuestionModal(question)"
+                                        title="Edit Question"
                                         class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-full">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
                                          viewBox="0 0 24 24" stroke="currentColor">
@@ -161,6 +177,7 @@
                                     </svg>
                                 </button>
                                 <button @onclick="() => ShowDeleteConfirmation(question)"
+                                        title="Delete Question"
                                         class="p-1.5 text-red-600 hover:bg-red-50 rounded-full">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
                                          viewBox="0 0 24 24" stroke="currentColor">
@@ -177,31 +194,33 @@
 
         @if (_totalPages > 1)
         {
-            <div class="flex flex-col sm:flex-row justify-between items-center mt-6">
-                <div class="text-sm text-gray-500 mb-4 sm:mb-0">
-                    Showing @(((_currentPage - 1) * _pageSize) + 1)
-                    to @(Math.Min(_currentPage * _pageSize, _filteredQuestions.Count))
-                    of @_filteredQuestions.Count questions
-                </div>
-                <div class="flex items-center space-x-2">
-                    <button @onclick="PreviousPage" disabled="@(_currentPage <= 1)"
-                            class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24"
-                             stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                        </svg>
-                        Previous
-                    </button>
-                    <span class="px-4 py-2 text-sm text-gray-700">Page @_currentPage of @_totalPages</span>
-                    <button @onclick="NextPage" disabled="@(_currentPage >= _totalPages)"
-                            class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                        Next
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" fill="none" viewBox="0 0 24 24"
-                             stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                        </svg>
-                    </button>
-                </div>
+            <div class="flex justify-center mt-6">
+                <nav aria-label="Questions Pagination">
+                    <ul class="inline-flex items-center space-x-2">
+                        <li>
+                            <button @onclick="PreviousPage"
+                                    class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 rounded-l">
+                                Previous
+                            </button>
+                        </li>
+                        @for (var i = 1; i <= _totalPages; i++)
+                        {
+                            var pageNumber = i;
+                            <li>
+                                <button @onclick="() => _currentPage = pageNumber"
+                                        class="@(pageNumber == _currentPage ? "bg-blue-500 text-white" : "bg-white hover:bg-gray-100 text-gray-800") font-semibold py-2 px-4 rounded @(pageNumber == 1 ? "" : "") @(pageNumber == _totalPages ? "" : "")">
+                                    @pageNumber
+                                </button>
+                            </li>
+                        }
+                        <li>
+                            <button @onclick="NextPage"
+                                    class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 rounded-r">
+                                Next
+                            </button>
+                        </li>
+                    </ul>
+                </nav>
             </div>
         }
     }
@@ -222,6 +241,11 @@
                          OnClose="CloseModals"
                          OnConfirm="HandleDeleteConfirmed"/>
 
+<ManageAnswersModal IsVisible="_showManageAnswersModal"
+                    Question="_selectedQuestion"
+                    OnClose="CloseModals"
+                    OnSaveSuccess="HandleAnswersSaveSuccess"/>
+
 @code {
     [Parameter] public string PackageId { get; set; }
 
@@ -236,6 +260,7 @@
     private int _totalPages => (_filteredQuestions == null || _filteredQuestions.Count == 0) ? 1 : (int)Math.Ceiling(_filteredQuestions.Count / (double)_pageSize);
 
     // Modal visibility flags
+    private bool _showManageAnswersModal = false;
     private bool _showAddQuestionModal = false;
     private bool _showEditQuestionModal = false;
     private bool _showDeleteConfirmation = false;
@@ -350,11 +375,6 @@
         NavigationManager.NavigateTo("/admin/question-packages");
     }
 
-    private void NavigateToQuestionDetails(string questionId)
-    {
-        NavigationManager.NavigateTo($"/admin/questions/{questionId}");
-    }
-
     private void NextPage()
     {
         if (_currentPage < _totalPages)
@@ -379,7 +399,18 @@
         _showAddQuestionModal = true;
         _showEditQuestionModal = false;
         _showDeleteConfirmation = false;
+        _showManageAnswersModal = false;
         _selectedQuestion = null;
+        StateHasChanged();
+    }
+
+    private void ShowManageAnswersModal(QuestionDto question)
+    {
+        _selectedQuestion = question;
+        _showAddQuestionModal = false;
+        _showEditQuestionModal = false;
+        _showDeleteConfirmation = false;
+        _showManageAnswersModal = true;
         StateHasChanged();
     }
 
@@ -389,6 +420,7 @@
         _showAddQuestionModal = false;
         _showEditQuestionModal = true;
         _showDeleteConfirmation = false;
+        _showManageAnswersModal = false;
         StateHasChanged();
     }
 
@@ -398,6 +430,7 @@
         _showAddQuestionModal = false;
         _showEditQuestionModal = false;
         _showDeleteConfirmation = true;
+        _showManageAnswersModal = false;
         StateHasChanged();
     }
 
@@ -406,7 +439,14 @@
         _showAddQuestionModal = false;
         _showEditQuestionModal = false;
         _showDeleteConfirmation = false;
+        _showManageAnswersModal = false;
         _selectedQuestion = null;
+        StateHasChanged();
+    }
+
+    private async Task HandleAnswersSaveSuccess(List<AnswerDto> savedAnswers)
+    {
+        CloseModals();
         StateHasChanged();
     }
 
