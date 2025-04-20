@@ -62,21 +62,19 @@
 @code {
     [Parameter] public bool IsVisible { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
-    [Parameter] public EventCallback<QuestionDto> OnSaveSuccess { get; set; } // Event to notify parent on success
+    [Parameter] public EventCallback<QuestionDto> OnSaveSuccess { get; set; }
     [Parameter] public QuestionDto QuestionToEdit { get; set; }
-    [Parameter] public string PackageId { get; set; } // Needed for adding
+    [Parameter] public string PackageId { get; set; }
 
     private bool _isEditMode => QuestionToEdit != null;
     private bool _isSubmitting = false;
     private string _errorMessage = string.Empty;
 
-    // Placeholder for the model bound to the EditForm
-    // Example: private EditQuestionRequest _editModel = new();
-    // Example: private AddQuestionRequest _addModel = new();
+    private UpdateQuestionRequest _editModel = new();
+    private CreateQuestionRequest _addModel = new();
 
     protected override void OnParametersSet()
     {
-        // Reset state when parameters change (e.g., opening the modal)
         if (IsVisible)
         {
             _isSubmitting = false;
@@ -92,7 +90,7 @@
     {
         _isSubmitting = true;
         _errorMessage = string.Empty;
-        StateHasChanged(); // Update UI to show spinner
+        StateHasChanged();
 
         try
         {
@@ -100,19 +98,29 @@
             // Example:
             // if (_isEditMode)
             // {
-            //     var request = new UpdateQuestionRequest { Id = QuestionToEdit.Id, /* other fields from _editModel */ };
+            //     var request = new UpdateQuestionRequest { Id = QuestionToEdit.Id, Text = QuestionToEdit.Text };
             //     var response = await QuestionService.UpdateQuestionAsync(request);
-            //     if(response.IsSuccess) {
-            //          await OnSaveSuccess.InvokeAsync(response.QuestionDto); // Pass updated DTO back
-            //     } else { _errorMessage = response.Message ?? "Failed to update."; }
+            //     if (response.IsSuccess)
+            //     {
+            //         await OnSaveSuccess.InvokeAsync(response.QuestionDto); // Pass updated DTO back
+            //     }
+            //     else
+            //     {
+            //         _errorMessage = response.Message ?? "Failed to update.";
+            //     }
             // }
             // else
             // {
-            //     var request = new AddQuestionRequest { PackageId = this.PackageId, /* other fields from _addModel */ };
-            //     var response = await QuestionService.AddQuestionAsync(request);
-            //      if(response.IsSuccess) {
-            //          await OnSaveSuccess.InvokeAsync(response.QuestionDto); // Pass new DTO back
-            //     } else { _errorMessage = response.Message ?? "Failed to add."; }
+            //     var request = new CreateQuestionRequest { QuestionPackageId = Guid.Parse(this.PackageId) };
+            //     var response = await QuestionService.CreateQuestionAsync(request);
+            //     if (response.IsSuccess)
+            //     {
+            //         await OnSaveSuccess.InvokeAsync(response.QuestionDto);
+            //     }
+            //     else
+            //     {
+            //         _errorMessage = response.Message ?? "Failed to add.";
+            //     }
             // }
 
             // --- Placeholder ---
@@ -130,8 +138,6 @@
         }
         finally
         {
-            // Only set submitting to false if there was an error,
-            // otherwise the parent closing the modal handles it.
             if (!string.IsNullOrEmpty(_errorMessage))
             {
                 _isSubmitting = false;
@@ -148,7 +154,6 @@
         }
     }
 
-    // Optional: Close modal if clicking outside the content area
     private async Task HandleOverlayClick()
     {
         await Close();

@@ -1,5 +1,7 @@
 @using PuzzleLab.Shared.DTOs.Question
+@using PuzzleLab.Shared.DTOs.Question.Requests
 @using PuzzleLab.Web.Services.Api.Interfaces
+@using PuzzleLab.Web.Services.Ui
 
 @inject IQuestionService QuestionService
 
@@ -51,7 +53,7 @@
     [Parameter] public bool IsVisible { get; set; }
     [Parameter] public QuestionDto QuestionToDelete { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
-    [Parameter] public EventCallback<Guid> OnConfirm { get; set; } // Pass back the ID to delete
+    [Parameter] public EventCallback<Guid> OnConfirm { get; set; }
 
     private bool _isSubmitting = false;
     private string _errorMessage = string.Empty;
@@ -72,25 +74,21 @@
 
         _isSubmitting = true;
         _errorMessage = string.Empty;
-        StateHasChanged(); // Update UI to show spinner
+        StateHasChanged();
 
         try
         {
-            // --- ACTUAL DELETE LOGIC WOULD GO HERE ---
-            // Example:
-            // var request = new DeleteQuestionRequest { Id = QuestionToDelete.Id };
-            // var response = await QuestionService.DeleteQuestionAsync(request);
-            // if (response.IsSuccess) {
-            //     await OnConfirm.InvokeAsync(QuestionToDelete.Id);
-            // } else {
-            //     _errorMessage = response.Message ?? "Failed to delete.";
-            // }
-            // --- Placeholder ---
-            Console.WriteLine($"Simulating delete for Question ID: {QuestionToDelete.Id}");
-            await Task.Delay(1000); // Simulate async work
-            // Assuming success for placeholder:
-            await OnConfirm.InvokeAsync(QuestionToDelete.Id);
-            // --- End Placeholder ---
+            var request = new DeleteQuestionRequest() { Id = QuestionToDelete.Id };
+            var response = await QuestionService.DeleteQuestionAsync(request);
+
+            if (response is not null)
+            {
+                await OnConfirm.InvokeAsync(QuestionToDelete.Id);
+            }
+            else
+            {
+                throw new Exception("Error Deleting Question!");
+            }
         }
         catch (Exception ex)
         {
@@ -99,8 +97,6 @@
         }
         finally
         {
-            // Only set submitting to false if there was an error,
-            // otherwise the parent closing the modal handles it.
             if (!string.IsNullOrEmpty(_errorMessage))
             {
                 _isSubmitting = false;
@@ -117,7 +113,6 @@
         }
     }
 
-    // Optional: Close modal if clicking outside the content area
     private async Task HandleOverlayClick()
     {
         await Close();
