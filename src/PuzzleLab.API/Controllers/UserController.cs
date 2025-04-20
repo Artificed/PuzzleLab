@@ -67,6 +67,6 @@ public class UserController(ISender sender) : ControllerBase
             return this.MapErrorToAction(result.Error);
         }
 
-        return Ok();
+        return Ok(result.Value);
     }
 }

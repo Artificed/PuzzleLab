@@ -281,7 +281,6 @@
 
     private void CloseDeleteConfirmation() => _showDeleteConfirmation = false;
 
-    // --- Modal Action Handlers ---
     private async Task HandleAddUser(CreateUserRequest model)
     {
         _isSubmitting = true;
@@ -297,12 +296,11 @@
             await LoadUsersAsync();
             CloseAddUserModal();
 
-            ToastService.ShowSuccess($"User with name ${response.userDto.Username} created successfully!", "Insert Success!");
+            ToastService.ShowSuccess($"User with name {response.userDto.Username} created successfully!", "Insert Success!");
         }
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Error creating user: {ex.Message}");
-            // TODO: Show error notification
         }
         finally
         {
@@ -315,28 +313,21 @@
         _isSubmitting = true;
         try
         {
-            Console.WriteLine($"Attempting to edit user: {model.Username}"); // Logging
-            // TODO: API call to update user using 'model'
-            // await ApiClient.UpdateUserAsync(model.Id, model);
+            var response = await UserService.UpdateUserAsync(model);
 
-            // Mock: Update in local list
-            var userToUpdate = _users.FirstOrDefault(u => u.Id == model.Id);
-            if (userToUpdate != null)
+            if (response is null)
             {
-                userToUpdate.Username = model.Username;
-                userToUpdate.Email = model.Email;
+                return;
             }
 
-            await LoadUsersAsync(); // Reloading might be simpler
-            // OR FilterUsers(); // Just re-apply filters if only updating locally
+            ToastService.ShowSuccess($"User with name {response.userDto.Username} updated successfully!", "Insert Success!");
 
+            await LoadUsersAsync();
             CloseEditUserModal();
-            // TODO: Show success notification
         }
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Error updating user: {ex.Message}");
-            // TODO: Show error notification
         }
         finally
         {
@@ -344,30 +335,33 @@
         }
     }
 
-    private async Task HandleDeleteUser() // Uses _selectedUser from state
+    private async Task HandleDeleteUser()
     {
         _isSubmitting = true;
         try
         {
-            Console.WriteLine($"Attempting to delete user: {_selectedUser?.Username}"); // Logging
-            if (_selectedUser == null) return; // Safety check
+            Console.WriteLine(_selectedUser.Id);
+            var request = new DeleteUserRequest()
+            {
+                Id = _selectedUser.Id
+            };
+            var response = await UserService.DeleteUserAsync(request);
 
-            // TODO: API call to delete user using '_selectedUser.Id'
-            // await ApiClient.DeleteUserAsync(_selectedUser.Id);
+            if (response is null)
+            {
+                return;
+            }
 
-            // Mock: Remove from local list
-            _users.RemoveAll(u => u.Id == _selectedUser.Id);
+            ToastService.ShowSuccess($"User with name {response.Name} deleted successfully!", "Delete Success!");
 
-            await LoadUsersAsync(); // Reloading might be simpler
-            // OR FilterUsers(); // Just re-apply filters if only removing locally
+
+            await LoadUsersAsync();
 
             CloseDeleteConfirmation();
-            // TODO: Show success notification
         }
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Error deleting user: {ex.Message}");
-            // TODO: Show error notification
         }
         finally
         {
