@@ -1,0 +1,492 @@
+@using PuzzleLab.Shared.DTOs.QuizSchedule
+@using System.Collections.Generic
+@using System.Linq
+@using Microsoft.AspNetCore.Components.Web
+@using PuzzleLab.Shared.DTOs.User
+@using PuzzleLab.Web.Services.Api.Interfaces
+
+@inject IUserService UserService
+@* @inject IScheduleService ScheduleService *@
+
+<div class="@(_isVisible ? "fixed inset-0 bg-black/80 flex items-center justify-center z-50" : "hidden")">
+    <div class="bg-white rounded-lg shadow-lg max-w-7xl w-full px-8 py-4 overflow-hidden" @onclick:stopPropagation="true">
+        <div class="flex items-center justify-between p-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">Manage Participants
+                - @(Schedule?.Title ?? "Loading...")</h3>
+            <button @onclick="OnClose" class="text-gray-400 hover:text-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                     stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        @if (_isLoading)
+        {
+            <div class="flex justify-center p-8">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            </div>
+        }
+        else
+        {
+            <div class="p-4">
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+                    <div class="relative w-full sm:w-64">
+                        <input type="text"
+                               @bind-value="_searchTerm"
+                               @bind-value:event="oninput"
+                               @onkeyup="SearchUsers"
+                               placeholder="Search users..."
+                               class="h-10 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1"/>
+                    </div>
+                    <div class="relative w-full sm:w-auto">
+                        <button @onclick="ShowAddParticipantModal"
+                                class="w-full sm:w-auto inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-gray-900 text-gray-50 hover:bg-gray-900/90 h-10 px-4 py-2">
+                            Add Participant
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 border border-gray-200 rounded-md overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-100">
+                            <tr>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Username
+                                </th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Email
+                                </th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Date Added
+                                </th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Last Login
+                                </th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Actions
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                            @if (_participants.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
+                                        No participants have been added to this schedule yet.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var participant in _participants)
+                                {
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            @participant.Username
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            @participant.Email
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            @participant.CreatedAt.ToString("MMM dd, yyyy")
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            @(participant.LastLoginAt?.ToString("MMM dd, yyyy") ?? "Never")
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <button @onclick="() => RemoveParticipant(participant)"
+                                                    class="text-red-600 hover:text-red-900"
+                                                    title="Remove Participant">
+                                                Remove
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                @if (_participants.Count > 0)
+                {
+                    <div class="mt-4 text-sm text-gray-500">
+                        Showing @_participants.Count participant@(_participants.Count != 1 ? "s" : "")
+                    </div>
+                }
+            </div>
+        }
+
+        <div class="flex justify-end gap-3 p-4 border-t border-gray-200">
+            <button @onclick="OnClose"
+                    class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 border border-gray-200 bg-white hover:bg-gray-100 h-9 px-4 py-2">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+@if (_showAddParticipantModal)
+{
+    <div class="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 overflow-hidden" @onclick:stopPropagation="true">
+            <div class="flex items-center justify-between p-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Add Participant</h3>
+                <button @onclick="CloseAddParticipantModal" class="text-gray-400 hover:text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                         stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="p-4">
+                <div class="mb-4">
+                    <div class="relative">
+                        <input type="text"
+                               @bind-value="_availableUserSearchTerm"
+                               @bind-value:event="oninput"
+                               @onkeyup="SearchAvailableUsers"
+                               placeholder="Search users to add..."
+                               class="h-10 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1"/>
+                    </div>
+                </div>
+
+                <div class="max-h-64 overflow-y-auto border border-gray-200 rounded-md">
+                    @if (_isLoadingAvailableUsers)
+                    {
+                        <div class="flex justify-center p-4">
+                            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+                        </div>
+                    }
+                    else if (_filteredAvailableUsers.Count == 0)
+                    {
+                        <p class="p-4 text-sm text-gray-500 text-center">No matching users found</p>
+                    }
+                    else
+                    {
+                        <ul class="divide-y divide-gray-200">
+                            @foreach (var user in _filteredAvailableUsers)
+                            {
+                                <li class="p-3 hover:bg-gray-50 flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-900">@user.Username</p>
+                                        <p class="text-xs text-gray-500">@user.Email</p>
+                                    </div>
+                                    <button @onclick="() => AddParticipant(user)"
+                                            class="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 border border-gray-200 bg-white hover:bg-gray-100 h-8 px-3 py-1">
+                                        Add
+                                    </button>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 p-4 border-t border-gray-200">
+                <button @onclick="CloseAddParticipantModal"
+                        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 border border-gray-200 bg-white hover:bg-gray-100 h-9 px-4 py-2">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (_showRemoveConfirmation)
+{
+    <div class="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 overflow-hidden" @onclick:stopPropagation="true">
+            <div class="flex items-center justify-between p-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Remove Participant</h3>
+                <button @onclick="CloseRemoveConfirmation" class="text-gray-400 hover:text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                         stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="p-6">
+                <div class="text-center mb-4">
+                    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600" fill="none"
+                             viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">Confirm Removal</h3>
+                    <p class="text-sm text-gray-500">
+                        Are you sure you want to remove <span
+                            class="font-medium text-gray-700">@(_userToRemove?.Username ?? "")</span>
+                        from this quiz schedule?
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 p-4 border-t border-gray-200">
+                <button @onclick="CloseRemoveConfirmation"
+                        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 border border-gray-200 bg-white hover:bg-gray-100 h-9 px-4 py-2">
+                    Cancel
+                </button>
+                <button @onclick="ConfirmRemoveParticipant"
+                        disabled="@IsSubmitting"
+                        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-red-600 text-white hover:bg-red-700 h-9 px-4 py-2">
+                    @if (IsSubmitting)
+                    {
+                        <div
+                            class="animate-spin h-4 w-4 border-2 border-gray-300 border-t-white rounded-full mr-2"></div>
+                        <span>Removing...</span>
+                    }
+                    else
+                    {
+                        <span>Remove Participant</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public bool IsSubmitting { get; set; }
+    [Parameter] public QuizScheduleDto? Schedule { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback OnSaveSuccess { get; set; }
+
+    private bool _isVisible => IsVisible;
+    private bool _isLoading = true;
+    private string _searchTerm = "";
+    private List<UserDto> _participants = new();
+    private List<UserDto> _filteredParticipants = new();
+
+    // For adding participants
+    private bool _showAddParticipantModal = false;
+    private bool _isLoadingAvailableUsers = false;
+    private string _availableUserSearchTerm = "";
+    private List<UserDto> _availableUsers = new();
+    private List<UserDto> _filteredAvailableUsers = new();
+
+    // For removing participants
+    private bool _showRemoveConfirmation = false;
+    private UserDto? _userToRemove;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsVisible && Schedule != null)
+        {
+            await LoadParticipants();
+        }
+    }
+
+    private async Task LoadParticipants()
+    {
+        if (Schedule == null)
+            return;
+
+        _isLoading = true;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            // Here you would call your actual API service to get participants for this schedule
+            // This is a placeholder - replace with your actual implementation
+            // var response = await ScheduleService.GetParticipantsAsync(Schedule.Id);
+            // if (response?.Users != null)
+            // {
+            //     _participants = response.Users;
+            //     _filteredParticipants = _participants;
+            // }
+            // else
+            // {
+            //     _participants = new List<UserDto>();
+            //     _filteredParticipants = new List<UserDto>();
+            // }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error loading participants: {ex.Message}");
+            // You might want to show an error message here
+        }
+        finally
+        {
+            _isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void SearchUsers()
+    {
+        if (string.IsNullOrWhiteSpace(_searchTerm))
+        {
+            _filteredParticipants = _participants;
+        }
+        else
+        {
+            _filteredParticipants = _participants
+                .Where(u => u.Username.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                            u.Email.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+    }
+
+    private void ShowAddParticipantModal()
+    {
+        _showAddParticipantModal = true;
+        _availableUserSearchTerm = "";
+        LoadAvailableUsers();
+    }
+
+    private void CloseAddParticipantModal()
+    {
+        _showAddParticipantModal = false;
+        _filteredAvailableUsers = new List<UserDto>();
+    }
+
+    private async Task LoadAvailableUsers()
+    {
+        if (Schedule == null)
+            return;
+
+        _isLoadingAvailableUsers = true;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            // Here you would call your API to get users who are not already participants
+            // This is a placeholder - replace with your actual implementation
+            // var response = await UserService.GetNonParticipantsAsync(Schedule.Id);
+            // if (response?.Users != null)
+            // {
+            //     _availableUsers = response.Users;
+            //     _filteredAvailableUsers = _availableUsers;
+            // }
+            // else
+            // {
+            //     _availableUsers = new List<UserDto>();
+            //     _filteredAvailableUsers = new List<UserDto>();
+            // }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error loading available users: {ex.Message}");
+            // You might want to show an error message here
+        }
+        finally
+        {
+            _isLoadingAvailableUsers = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void SearchAvailableUsers()
+    {
+        if (string.IsNullOrWhiteSpace(_availableUserSearchTerm))
+        {
+            _filteredAvailableUsers = _availableUsers;
+        }
+        else
+        {
+            _filteredAvailableUsers = _availableUsers
+                .Where(u => u.Username.Contains(_availableUserSearchTerm, StringComparison.OrdinalIgnoreCase) ||
+                            u.Email.Contains(_availableUserSearchTerm, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+    }
+
+    private async Task AddParticipant(UserDto user)
+    {
+        if (Schedule == null)
+            return;
+
+        try
+        {
+            // Here you would call your API to add a participant
+            // This is a placeholder - replace with your actual implementation
+            // var success = await ScheduleService.AddParticipantAsync(Schedule.Id, user.Id);
+            //
+            // if (success)
+            // {
+            //     // If successful, refresh the list
+            //     _participants.Add(user);
+            //     _availableUsers.Remove(user);
+            //     _filteredAvailableUsers.Remove(user);
+            //
+            //     // If no more users to add, close the modal
+            //     if (_filteredAvailableUsers.Count == 0)
+            //     {
+            //         CloseAddParticipantModal();
+            //     }
+            // }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error adding participant: {ex.Message}");
+            // You might want to show an error message here
+        }
+    }
+
+    private void RemoveParticipant(UserDto user)
+    {
+        _userToRemove = user;
+        _showRemoveConfirmation = true;
+    }
+
+    private void CloseRemoveConfirmation()
+    {
+        _showRemoveConfirmation = false;
+        _userToRemove = null;
+    }
+
+    private async Task ConfirmRemoveParticipant()
+    {
+        if (Schedule == null || _userToRemove == null)
+            return;
+
+        try
+        {
+            // Here you would call your API to remove a participant
+            // This is a placeholder - replace with your actual implementation
+            /*var success = await ScheduleService.RemoveParticipantAsync(Schedule.Id, _userToRemove.Id);
+
+            if (success)
+            {
+                // If successful, refresh the list
+                _participants.Remove(_userToRemove);
+                _filteredParticipants = _participants;
+
+                // Add back to available users if needed
+                if (!_availableUsers.Any(u => u.Id == _userToRemove.Id))
+                {
+                    _availableUsers.Add(_userToRemove);
+                    if (!string.IsNullOrWhiteSpace(_availableUserSearchTerm))
+                    {
+                        SearchAvailableUsers();
+                    }
+                    else
+                    {
+                        _filteredAvailableUsers = _availableUsers;
+                    }
+                }
+
+                CloseRemoveConfirmation();
+            }*/
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error removing participant: {ex.Message}");
+            // You might want to show an error message here
+        }
+    }
+
+}
