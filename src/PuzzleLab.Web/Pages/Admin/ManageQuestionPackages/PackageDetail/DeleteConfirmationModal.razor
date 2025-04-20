@@ -1,0 +1,127 @@
+@using PuzzleLab.Shared.DTOs.Question
+@using PuzzleLab.Web.Services.Api.Interfaces
+@using PuzzleLab.Web.Services.Ui
+
+@inject IQuestionService QuestionService
+
+@if (IsVisible && QuestionToDelete != null)
+{
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50"
+         @onclick="HandleOverlayClick">
+        <div class="bg-white rounded-lg shadow-xl max-w-md mx-4" @onclick:stopPropagation>
+            <div class="p-6">
+                <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24"
+                         stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-medium text-center mb-2">Delete Question</h3>
+                <p class="text-gray-500 text-center mb-6">
+                    Are you sure you want to delete the question: <br/>"<strong>@QuestionToDelete.Text</strong>"?<br/>
+                    This action cannot be undone.
+                </p>
+                @if (!string.IsNullOrEmpty(_errorMessage))
+                {
+                    <p class="text-red-600 text-sm mt-2 text-center">@_errorMessage</p>
+                }
+                <div class="flex justify-center space-x-4">
+                    <button @onclick="Close"
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            disabled="@_isSubmitting">
+                        Cancel
+                    </button>
+                    <button @onclick="ConfirmDelete"
+                            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                            disabled="@_isSubmitting">
+                        @if (_isSubmitting)
+                        {
+                            <span
+                                class="inline-block h-4 w-4 mr-2 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
+                        }
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public QuestionDto QuestionToDelete { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<Guid> OnConfirm { get; set; } // Pass back the ID to delete
+
+    private bool _isSubmitting = false;
+    private string _errorMessage = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        // Reset state when parameters change
+        if (IsVisible)
+        {
+            _isSubmitting = false;
+            _errorMessage = string.Empty;
+        }
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (QuestionToDelete == null) return;
+
+        _isSubmitting = true;
+        _errorMessage = string.Empty;
+        StateHasChanged(); // Update UI to show spinner
+
+        try
+        {
+            // --- ACTUAL DELETE LOGIC WOULD GO HERE ---
+            // Example:
+            // var request = new DeleteQuestionRequest { Id = QuestionToDelete.Id };
+            // var response = await QuestionService.DeleteQuestionAsync(request);
+            // if (response.IsSuccess) {
+            //     await OnConfirm.InvokeAsync(QuestionToDelete.Id);
+            // } else {
+            //     _errorMessage = response.Message ?? "Failed to delete.";
+            // }
+            // --- Placeholder ---
+            Console.WriteLine($"Simulating delete for Question ID: {QuestionToDelete.Id}");
+            await Task.Delay(1000); // Simulate async work
+            // Assuming success for placeholder:
+            await OnConfirm.InvokeAsync(QuestionToDelete.Id);
+            // --- End Placeholder ---
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"An error occurred: {ex.Message}";
+            Console.WriteLine($"Error deleting question: {ex}");
+        }
+        finally
+        {
+            // Only set submitting to false if there was an error,
+            // otherwise the parent closing the modal handles it.
+            if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                _isSubmitting = false;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task Close()
+    {
+        if (!_isSubmitting && OnClose.HasDelegate)
+        {
+            await OnClose.InvokeAsync();
+        }
+    }
+
+    // Optional: Close modal if clicking outside the content area
+    private async Task HandleOverlayClick()
+    {
+        await Close();
+    }
+
+}

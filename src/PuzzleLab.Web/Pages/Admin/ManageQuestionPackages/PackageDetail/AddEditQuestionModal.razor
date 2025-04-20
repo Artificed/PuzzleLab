@@ -1,0 +1,157 @@
+@using PuzzleLab.Shared.DTOs.Question
+@using PuzzleLab.Shared.DTOs.Question.Requests
+@using PuzzleLab.Web.Services.Api.Interfaces
+@using PuzzleLab.Web.Services.Ui
+
+@inject IQuestionService QuestionService
+
+@if (IsVisible)
+{
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50"
+         @onclick="HandleOverlayClick">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-xl mx-4" @onclick:stopPropagation>
+            <div class="flex justify-between items-center px-6 py-4 border-b">
+                <h3 class="text-lg font-medium">@(_isEditMode ? "Edit Question" : "Add New Question")</h3>
+                <button @onclick="Close" class="text-gray-400 hover:text-gray-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                         stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6">
+                @* --- FORM CONTENT WILL GO HERE --- *@
+                @* Example: You'd typically have an EditForm here *@
+                @if (_isEditMode && QuestionToEdit != null)
+                {
+                    <p>Editing Question: @QuestionToEdit.Text (ID: @QuestionToEdit.Id)</p>
+                }
+                else
+                {
+                    <p>Adding new question to Package ID: @PackageId</p>
+                }
+                <p class="text-gray-700 mt-4 italic">Question form implementation will go here.</p>
+                @* --- END FORM CONTENT --- *@
+
+                @if (!string.IsNullOrEmpty(_errorMessage))
+                {
+                    <p class="text-red-600 text-sm mt-2">@_errorMessage</p>
+                }
+            </div>
+            <div class="px-6 py-4 bg-gray-50 flex justify-end space-x-4 rounded-b-lg">
+                <button @onclick="Close"
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        disabled="@_isSubmitting">
+                    Cancel
+                </button>
+                <button @onclick="HandleSave"
+                        class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        disabled="@_isSubmitting">
+                    @if (_isSubmitting)
+                    {
+                        <span
+                            class="inline-block h-4 w-4 mr-2 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
+                    }
+                    @(_isEditMode ? "Save Changes" : "Add Question")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<QuestionDto> OnSaveSuccess { get; set; } // Event to notify parent on success
+    [Parameter] public QuestionDto QuestionToEdit { get; set; }
+    [Parameter] public string PackageId { get; set; } // Needed for adding
+
+    private bool _isEditMode => QuestionToEdit != null;
+    private bool _isSubmitting = false;
+    private string _errorMessage = string.Empty;
+
+    // Placeholder for the model bound to the EditForm
+    // Example: private EditQuestionRequest _editModel = new();
+    // Example: private AddQuestionRequest _addModel = new();
+
+    protected override void OnParametersSet()
+    {
+        // Reset state when parameters change (e.g., opening the modal)
+        if (IsVisible)
+        {
+            _isSubmitting = false;
+            _errorMessage = string.Empty;
+
+            // Initialize your form model here based on _isEditMode and QuestionToEdit
+            // if (_isEditMode) { /* Populate _editModel from QuestionToEdit */ }
+            // else { /* Initialize _addModel, possibly setting PackageId */ }
+        }
+    }
+
+    private async Task HandleSave()
+    {
+        _isSubmitting = true;
+        _errorMessage = string.Empty;
+        StateHasChanged(); // Update UI to show spinner
+
+        try
+        {
+            // --- ACTUAL SAVE LOGIC WOULD GO HERE ---
+            // Example:
+            // if (_isEditMode)
+            // {
+            //     var request = new UpdateQuestionRequest { Id = QuestionToEdit.Id, /* other fields from _editModel */ };
+            //     var response = await QuestionService.UpdateQuestionAsync(request);
+            //     if(response.IsSuccess) {
+            //          await OnSaveSuccess.InvokeAsync(response.QuestionDto); // Pass updated DTO back
+            //     } else { _errorMessage = response.Message ?? "Failed to update."; }
+            // }
+            // else
+            // {
+            //     var request = new AddQuestionRequest { PackageId = this.PackageId, /* other fields from _addModel */ };
+            //     var response = await QuestionService.AddQuestionAsync(request);
+            //      if(response.IsSuccess) {
+            //          await OnSaveSuccess.InvokeAsync(response.QuestionDto); // Pass new DTO back
+            //     } else { _errorMessage = response.Message ?? "Failed to add."; }
+            // }
+
+            // --- Placeholder ---
+            Console.WriteLine($"Simulating save for {(_isEditMode ? "Edit" : "Add")}");
+            await Task.Delay(1000); // Simulate async work
+            // Assuming success for placeholder:
+            // QuestionDto savedQuestion = _isEditMode ? QuestionToEdit : new QuestionDto { Id = Guid.NewGuid(), Text = "New Placeholder", PackageId = Guid.Parse(PackageId), CreatedAt = DateTime.UtcNow };
+            // await OnSaveSuccess.InvokeAsync(savedQuestion);
+            // --- End Placeholder ---
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"An error occurred: {ex.Message}";
+            Console.WriteLine($"Error saving question: {ex}");
+        }
+        finally
+        {
+            // Only set submitting to false if there was an error,
+            // otherwise the parent closing the modal handles it.
+            if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                _isSubmitting = false;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task Close()
+    {
+        if (!_isSubmitting && OnClose.HasDelegate)
+        {
+            await OnClose.InvokeAsync();
+        }
+    }
+
+    // Optional: Close modal if clicking outside the content area
+    private async Task HandleOverlayClick()
+    {
+        await Close();
+    }
+
+}

@@ -1,0 +1,450 @@
+@page "/admin/question-packages/{PackageId}"
+@layout Components.Layout.AdminLayout
+@implements IDisposable
+
+@using System.Timers
+@using PuzzleLab.Shared.DTOs.Question
+@using PuzzleLab.Shared.DTOs.Question.Requests
+@using PuzzleLab.Shared.DTOs.QuestionPackage
+@using PuzzleLab.Shared.DTOs.QuestionPackage.Requests
+@using PuzzleLab.Web.Services.Api.Interfaces
+@using PuzzleLab.Web.Services.Ui
+
+@inject NavigationManager NavigationManager
+@inject IQuestionPackageService QuestionPackageService
+@inject IQuestionService QuestionService
+
+<div class="container mx-auto py-6 space-y-6">
+    <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <button @onclick="NavigateBack" class="text-gray-600 hover:text-gray-900 focus:outline-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                     stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+            </button>
+            <h1 class="text-2xl font-bold">@(_package?.Name ?? "Package Details")</h1>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none"
+                         viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                <input type="text"
+                       @bind="_searchTerm"
+                       @bind:event="oninput"
+                       placeholder="Search questions..."
+                       class="h-10 pl-10 pr-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-64"/>
+            </div>
+            <button @onclick="ShowAddQuestionModal"
+                    class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24"
+                     stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Add Question
+            </button>
+        </div>
+    </div>
+
+    @if (_package != null)
+    {
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex flex-col md:flex-row justify-between">
+                <div class="space-y-2">
+                    <h2 class="text-xl font-semibold">@_package.Name</h2>
+                    <p class="text-gray-600">@_package.Description</p>
+                </div>
+                <div class="mt-4 md:mt-0 flex flex-col text-right">
+                    <div class="flex items-center justify-end text-sm text-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
+                             stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <span>Created: @_package.CreatedAt.ToString("MMM dd, yyyy")</span>
+                    </div>
+                    <div class="flex items-center justify-end text-sm text-gray-500 mt-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
+                             stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span>Last Modified: @_package.LastModifiedAt?.ToString("MMM dd, yyyy HH:mm") ?? "N/A"</span>
+                    </div>
+                    <div class="flex items-center justify-end text-sm text-gray-500 mt-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
+                             stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        <span>Total Questions: @_questions.Count</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (_isLoading)
+    {
+        <div class="flex justify-center p-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        </div>
+    }
+    else if (_questions.Count == 0)
+    {
+        <div
+            class="flex flex-col items-center justify-center p-12 bg-white rounded-lg shadow-sm border border-gray-200">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24"
+                 stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+            </svg>
+            <p class="mt-4 text-gray-600">No questions have been added to this package yet.</p>
+            <button @onclick="ShowAddQuestionModal"
+                    class="mt-6 inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24"
+                     stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Add First Question
+            </button>
+        </div>
+    }
+    else if (_filteredQuestions.Count == 0)
+    {
+        <div
+            class="flex flex-col items-center justify-center p-12 bg-white rounded-lg shadow-sm border border-gray-200">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24"
+                 stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <p class="mt-4 text-gray-600">No questions found matching your search criteria.</p>
+            <button @onclick="ClearSearch"
+                    class="mt-6 inline-flex items-center px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                Clear Search
+            </button>
+        </div>
+    }
+    else
+    {
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            @foreach (var question in _filteredQuestions.Skip((_currentPage - 1) * _pageSize).Take(_pageSize))
+            {
+                <div
+                    class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200 cursor-pointer"
+                    @onclick="() => NavigateToQuestionDetails(question.Id.ToString())">
+                    @if (question.ImageData != null && !string.IsNullOrEmpty(question.ImageMimeType))
+                    {
+                        <div class="w-full h-60 bg-gray-100 overflow-hidden">
+                            <img src="data:@question.ImageMimeType;base64,@Convert.ToBase64String(question.ImageData)"
+                                 alt="Question image" class="w-full h-full object-cover"/>
+                        </div>
+                    }
+                    <div class="p-4">
+                        <p class="text-gray-900 font-medium line-clamp-3">@question.Text</p>
+                        <div class="mt-4 flex items-center justify-between">
+                            <span class="text-xs text-gray-500">@question.CreatedAt.ToString("MMM dd, yyyy")</span>
+                            <div class="flex space-x-2" @onclick:stopPropagation="true">
+                                <button @onclick="() => ShowEditQuestionModal(question)"
+                                        class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-full">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                         viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                </button>
+                                <button @onclick="() => ShowDeleteConfirmation(question)"
+                                        class="p-1.5 text-red-600 hover:bg-red-50 rounded-full">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                         viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (_totalPages > 1)
+        {
+            <div class="flex flex-col sm:flex-row justify-between items-center mt-6">
+                <div class="text-sm text-gray-500 mb-4 sm:mb-0">
+                    Showing @(((_currentPage - 1) * _pageSize) + 1)
+                    to @(Math.Min(_currentPage * _pageSize, _filteredQuestions.Count))
+                    of @_filteredQuestions.Count questions
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button @onclick="PreviousPage" disabled="@(_currentPage <= 1)"
+                            class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24"
+                             stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                        Previous
+                    </button>
+                    <span class="px-4 py-2 text-sm text-gray-700">Page @_currentPage of @_totalPages</span>
+                    <button @onclick="NextPage" disabled="@(_currentPage >= _totalPages)"
+                            class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Next
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" fill="none" viewBox="0 0 24 24"
+                             stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+<AddEditQuestionModal IsVisible="_showAddEditModal"
+                      QuestionToEdit="_selectedQuestion"
+                      PackageId="@PackageId"
+                      OnClose="CloseModals"
+                      OnSaveSuccess="HandleSaveSuccess"/>
+
+<DeleteConfirmationModal IsVisible="_showDeleteConfirmation"
+                         QuestionToDelete="_selectedQuestion"
+                         OnClose="CloseModals"
+                         OnConfirm="HandleDeleteConfirmed"/>
+
+
+@code {
+    [Parameter] public string PackageId { get; set; }
+
+    private QuestionPackageDto _package;
+    private List<QuestionDto> _questions = new();
+    private List<QuestionDto> _filteredQuestions = new();
+    private bool _isLoading = true;
+    private Timer _debounceTimer;
+
+    private int _pageSize = 9;
+    private int _currentPage = 1;
+    private int _totalPages => (_filteredQuestions == null || _filteredQuestions.Count == 0) ? 1 : (int)Math.Ceiling(_filteredQuestions.Count / (double)_pageSize);
+
+    private bool _showAddEditModal = false;
+    private bool _showDeleteConfirmation = false;
+    private QuestionDto _selectedQuestion;
+
+    private string _searchTermValue = "";
+
+    private string _searchTerm
+    {
+        get => _searchTermValue;
+        set
+        {
+            if (_searchTermValue != value)
+            {
+                _searchTermValue = value;
+                _debounceTimer?.Stop();
+                _debounceTimer?.Start();
+            }
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _debounceTimer = new Timer(300);
+        _debounceTimer.Elapsed += HandleDebouncedSearch;
+        _debounceTimer.AutoReset = false;
+
+        _isLoading = true;
+        await Task.WhenAll(LoadPackageDetails(), LoadQuestions());
+        _isLoading = false;
+        FilterQuestions();
+        StateHasChanged();
+    }
+
+    private async Task LoadPackageDetails()
+    {
+        try
+        {
+            var request = new GetQuestionPackageByIdRequest() { Id = PackageId };
+            var response = await QuestionPackageService.GetQuestionPackageByIdAsync(request);
+            if (response?.QuestionPackageDto != null)
+            {
+                _package = response.QuestionPackageDto;
+            }
+            else
+            {
+                ToastService.ShowError("Package details not found.");
+                _package = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("Failed to load package details.");
+            Console.WriteLine($"Error loading package details: {ex.Message}");
+            _package = null;
+        }
+    }
+
+    private async Task LoadQuestions()
+    {
+        try
+        {
+            var request = new GetQuestionsByPackageRequest() { PackageId = PackageId };
+            var response = await QuestionService.GetQuestionsByPackageIdAsync(request);
+            _questions = response?.QuestionDtos ?? new List<QuestionDto>();
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("Failed to load questions.");
+            Console.WriteLine($"Error loading questions: {ex.Message}");
+            _questions = new List<QuestionDto>();
+        }
+
+        FilterQuestions();
+    }
+
+    private void HandleDebouncedSearch(object sender, ElapsedEventArgs e)
+    {
+        InvokeAsync(() =>
+        {
+            FilterQuestions();
+            StateHasChanged();
+        });
+    }
+
+    private void ClearSearch()
+    {
+        _searchTerm = string.Empty;
+    }
+
+    private void FilterQuestions()
+    {
+        if (string.IsNullOrWhiteSpace(_searchTerm))
+        {
+            _filteredQuestions = _questions.ToList();
+        }
+        else
+        {
+            _filteredQuestions = _questions
+                .Where(q => q.Text != null && q.Text.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
+        if (_currentPage != 1)
+        {
+            _currentPage = 1;
+        }
+    }
+
+    private void NavigateBack()
+    {
+        NavigationManager.NavigateTo("/admin/question-packages");
+    }
+
+    private void NavigateToQuestionDetails(string questionId)
+    {
+        NavigationManager.NavigateTo($"/admin/questions/{questionId}");
+    }
+
+    private void NextPage()
+    {
+        if (_currentPage < _totalPages)
+        {
+            _currentPage++;
+            StateHasChanged();
+        }
+    }
+
+    private void PreviousPage()
+    {
+        if (_currentPage > 1)
+        {
+            _currentPage--;
+            StateHasChanged();
+        }
+    }
+
+    private void ShowAddQuestionModal()
+    {
+        _selectedQuestion = null;
+        _showDeleteConfirmation = false;
+        _showAddEditModal = true;
+        StateHasChanged();
+    }
+
+    private void ShowEditQuestionModal(QuestionDto question)
+    {
+        _selectedQuestion = question;
+        _showDeleteConfirmation = false;
+        _showAddEditModal = true;
+        StateHasChanged();
+    }
+
+    private void ShowDeleteConfirmation(QuestionDto question)
+    {
+        _selectedQuestion = question;
+        _showAddEditModal = false;
+        _showDeleteConfirmation = true;
+        StateHasChanged();
+    }
+
+    private void CloseModals()
+    {
+        _showAddEditModal = false;
+        _showDeleteConfirmation = false;
+        _selectedQuestion = null;
+        StateHasChanged();
+    }
+
+    private async Task HandleSaveSuccess(QuestionDto savedQuestion)
+    {
+        if (savedQuestion == null) return;
+
+        bool isEdit = _questions.Any(q => q.Id == savedQuestion.Id);
+
+        if (isEdit)
+        {
+            var index = _questions.FindIndex(q => q.Id == savedQuestion.Id);
+            if (index != -1) _questions[index] = savedQuestion;
+        }
+        else
+        {
+            _questions.Insert(0, savedQuestion);
+        }
+
+        FilterQuestions();
+        CloseModals();
+        ToastService.ShowSuccess($"Question {(isEdit ? "updated" : "added")} successfully.");
+        StateHasChanged();
+    }
+
+    private async Task HandleDeleteConfirmed(Guid questionIdToDelete)
+    {
+        try
+        {
+            _questions.RemoveAll(q => q.Id == questionIdToDelete);
+            FilterQuestions();
+            ToastService.ShowSuccess("Question deleted successfully.");
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("Failed to delete question.");
+            Console.WriteLine($"Error deleting question: {ex.Message}");
+        }
+        finally
+        {
+            CloseModals();
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        _debounceTimer?.Dispose();
+    }
+
+}
