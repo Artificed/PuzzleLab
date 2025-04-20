@@ -16,7 +16,7 @@ public class DeleteUserCommandHandler(IUserRepository userRepository)
             return Result<DeleteUserResponse>.Failure(Error.NotFound("User not found"));
         }
 
-        await userRepository.DeleteUserAsync(user);
+        await userRepository.DeleteUserAsync(user, cancellationToken);
 
         return Result<DeleteUserResponse>.Success(new DeleteUserResponse(user.Username));
     }

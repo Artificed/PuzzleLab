@@ -16,7 +16,7 @@ public class CreateUserCommandHandler(IUserRepository userRepository)
     {
         var newUser = _userFactory.CreateUser(request.Username, request.Email, request.Password, "User");
 
-        await userRepository.InsertUserAsync(newUser);
+        await userRepository.InsertUserAsync(newUser, cancellationToken);
 
         var userDto = new UserDto(
             newUser.Id,
