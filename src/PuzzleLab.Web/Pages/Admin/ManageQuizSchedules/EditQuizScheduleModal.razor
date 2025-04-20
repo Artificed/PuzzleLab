@@ -1,0 +1,115 @@
+@using PuzzleLab.Shared.DTOs.QuestionPackage
+@using PuzzleLab.Shared.DTOs.QuizSchedule.Requests
+
+<div class="@(_isVisible ? "fixed inset-0 bg-black/80 flex items-center justify-center z-50" : "hidden")">
+    <div class="bg-white rounded-lg shadow-lg max-w-2xl w-full mx-4 overflow-hidden" @onclick:stopPropagation="true">
+        <div class="flex items-center justify-between p-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">Edit Schedule</h3>
+            <button @onclick="OnClose" class="text-gray-400 hover:text-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                     stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="p-4">
+            <div class="space-y-4">
+                <div>
+                    <label for="questionPackage" class="block text-sm font-medium text-gray-700 mb-1">Question
+                        Package</label>
+                    <select id="questionPackage"
+                            @bind="ScheduleModel.QuestionPackageId"
+                            class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1">
+                        <option value="">Select a Question Package</option>
+                        @foreach (var package in QuestionPackages)
+                        {
+                            <option value="@package.Id">@package.Name</option>
+                        }
+                    </select>
+                    @if (string.IsNullOrEmpty(ScheduleModel.QuestionPackageId.ToString()) && _showValidationErrors)
+                    {
+                        <p class="text-red-500 text-xs mt-1">Please select a question package</p>
+                    }
+                </div>
+
+                <div>
+                    <label for="startDate" class="block text-sm font-medium text-gray-700 mb-1">Start Date &
+                        Time</label>
+                    <input type="datetime-local"
+                           id="startDate"
+                           @bind="ScheduleModel.StartTime"
+                           class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1"/>
+                    @if (_showValidationErrors && ScheduleModel.StartTime == default)
+                    {
+                        <p class="text-red-500 text-xs mt-1">Start date is required</p>
+                    }
+                </div>
+
+                <div>
+                    <label for="endDate" class="block text-sm font-medium text-gray-700 mb-1">End Date & Time</label>
+                    <input type="datetime-local"
+                           id="endDate"
+                           @bind="ScheduleModel.EndTime"
+                           class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1"/>
+                    @if (_showValidationErrors && ScheduleModel.EndTime == default)
+                    {
+                        <p class="text-red-500 text-xs mt-1">End date is required</p>
+                    }
+                    @if (_showValidationErrors && ScheduleModel.EndTime <= ScheduleModel.StartTime)
+                    {
+                        <p class="text-red-500 text-xs mt-1">End date must be after start date</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-3 p-4 border-t border-gray-200">
+            <button @onclick="OnClose"
+                    class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 border border-gray-200 bg-white hover:bg-gray-100 h-9 px-4 py-2">
+                Cancel
+            </button>
+            <button @onclick="HandleSubmit"
+                    disabled="@IsSubmitting"
+                    class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-gray-900 text-gray-50 hover:bg-gray-900/90 h-9 px-4 py-2">
+                @if (IsSubmitting)
+                {
+                    <div class="animate-spin h-4 w-4 border-2 border-gray-300 border-t-white rounded-full mr-2"></div>
+                    <span>Updating...</span>
+                }
+                else
+                {
+                    <span>Update Schedule</span>
+                }
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public bool IsSubmitting { get; set; }
+    [Parameter] public UpdateQuizScheduleRequest ScheduleModel { get; set; } = new();
+    [Parameter] public List<QuestionPackageDto> QuestionPackages { get; set; } = new();
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<UpdateQuizScheduleRequest> OnSubmit { get; set; }
+
+    private bool _showValidationErrors = false;
+    private bool _isVisible => IsVisible;
+
+    private async Task HandleSubmit()
+    {
+        _showValidationErrors = true;
+
+        if (string.IsNullOrEmpty(ScheduleModel.QuestionPackageId.ToString()) ||
+            ScheduleModel.StartTime == default ||
+            ScheduleModel.EndTime == default ||
+            ScheduleModel.EndTime <= ScheduleModel.StartTime)
+        {
+            return;
+        }
+
+        await OnSubmit.InvokeAsync(ScheduleModel);
+    }
+
+}

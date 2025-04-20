@@ -1,0 +1,86 @@
+@using PuzzleLab.Shared.DTOs.QuizSchedule
+
+<div class="@(_isVisible ? "fixed inset-0 bg-black/80 flex items-center justify-center z-50" : "hidden")">
+    <div class="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 overflow-hidden" @onclick:stopPropagation="true">
+        <div class="flex items-center justify-between p-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">Delete Schedule</h3>
+            <button @onclick="OnClose" class="text-gray-400 hover:text-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="p-6">
+            <div class="text-center mb-6">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Confirm Deletion</h3>
+                <p class="text-sm text-gray-500">
+                    Are you sure you want to delete the schedule for <span class="font-medium text-gray-700">@(ScheduleToDelete?.Title ?? "this quiz")</span>?
+                    This action cannot be undone.
+                </p>
+            </div>
+
+            @if (ScheduleToDelete?.ParticipantCount > 0)
+            {
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-yellow-700">
+                                This schedule has @ScheduleToDelete.ParticipantCount participant@(ScheduleToDelete.ParticipantCount > 1 ? "s" : "") registered.
+                                Deleting it will remove all participants from this quiz session.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="flex justify-end gap-3 p-4 border-t border-gray-200">
+            <button @onclick="OnClose"
+                    class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 border border-gray-200 bg-white hover:bg-gray-100 h-9 px-4 py-2">
+                Cancel
+            </button>
+            <button @onclick="HandleConfirm"
+                    disabled="@IsSubmitting"
+                    class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-red-600 text-white hover:bg-red-700 h-9 px-4 py-2">
+                @if (IsSubmitting)
+                {
+                    <div class="animate-spin h-4 w-4 border-2 border-gray-300 border-t-white rounded-full mr-2"></div>
+                    <span>Deleting...</span>
+                }
+                else
+                {
+                    <span>Delete Schedule</span>
+                }
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public bool IsSubmitting { get; set; }
+    [Parameter] public QuizScheduleDto? ScheduleToDelete { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback OnConfirm { get; set; }
+
+    private bool _isVisible => IsVisible;
+
+    private async Task HandleConfirm()
+    {
+        if (ScheduleToDelete != null)
+        {
+            await OnConfirm.InvokeAsync();
+        }
+    }
+}
