@@ -1,11 +1,18 @@
 @page "/admin/question-packages/{PackageId}"
 @layout Components.Layout.AdminLayout
 @using System.Timers
+@using PuzzleLab.Shared.DTOs.Question
+@using PuzzleLab.Shared.DTOs.Question.Requests
 @using PuzzleLab.Shared.DTOs.QuestionPackage
+@using PuzzleLab.Shared.DTOs.QuestionPackage.Requests
 @using PuzzleLab.Web.Models
 @using PuzzleLab.Web.Services
+@using PuzzleLab.Web.Services.Api
+@using PuzzleLab.Web.Services.Api.Interfaces
 @using PuzzleLab.Web.Services.Ui
 @inject NavigationManager NavigationManager
+@inject IQuestionPackageService QuestionPackageService
+@inject IQuestionService QuestionService
 
 <div class="space-y-6">
     <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
@@ -93,14 +100,6 @@
                         </th>
                         <th scope="col"
                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Has Image
-                        </th>
-                        <th scope="col"
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Answers
-                        </th>
-                        <th scope="col"
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Created At
                         </th>
                         <th scope="col"
@@ -113,25 +112,8 @@
                     @foreach (var question in _filteredQuestions.Skip((_currentPage - 1) * _pageSize).Take(_pageSize))
                     {
                         <tr class="hover:bg-gray-50 cursor-pointer"
-                            @onclick="() => NavigateToQuestionDetails(question.Id)">
+                            @onclick="() => NavigateToQuestionDetails(question.Id.ToString())">
                             <td class="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">@question.Text</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                @if (question.HasImage)
-                                {
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        Yes
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                        No
-                                    </span>
-                                }
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@question.AnswersCount answers</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@question.CreatedAt.ToString("MMM dd, yyyy")</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium" @onclick:stopPropagation="true">
                                 <div class="flex space-x-4">
@@ -185,27 +167,20 @@
     [Parameter] public string PackageId { get; set; }
 
     private QuestionPackageDto _package;
-    private List<Question> _questions = new();
-    private List<Question> _filteredQuestions = new();
+    private List<QuestionDto> _questions = new();
+    private List<QuestionDto> _filteredQuestions = new();
     private bool _isLoading = true;
     private bool _isSubmitting = false;
     private string _searchTerm = "";
     private Timer _debounceTimer;
 
-    // Pagination
     private int _pageSize = 10;
     private int _currentPage = 1;
     private int _totalPages => (int)Math.Ceiling(_filteredQuestions.Count / (double)_pageSize);
 
-    // Modal states
     private bool _showAddQuestionModal = false;
     private bool _showEditQuestionModal = false;
     private bool _showDeleteConfirmation = false;
-
-    // Modal models
-    private Question _newQuestion = new();
-    private Question _editQuestion = new();
-    private Question _selectedQuestion = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -217,38 +192,28 @@
         await LoadQuestions();
     }
 
-    protected override async Task OnParametersSetAsync()
-    {
-        // if (!string.IsNullOrEmpty(PackageId) && (_package == null || _package.Id != PackageId))
-        {
-            await LoadPackageDetails();
-            await LoadQuestions();
-        }
-    }
-
     private async Task LoadPackageDetails()
     {
         _isLoading = true;
         try
         {
-            // This will be replaced with actual API call
-            await Task.Delay(300); // Simulate API delay
-
-            // Mock implementation
-            // _package = new QuestionPackagesPage.QuestionPackage/*
-            // {
-            //     Id = PackageId,
-            //     Name = "Sample Package",
-            //     Description = "This is a sample question package for demonstration purposes.",
-            //     QuestionsCount = 0,
-            //     CreatedAt = DateTime.Now.AddDays(-10),
-            //     LastModifiedAt = DateTime.Now.AddDays(-2)
-            // };*/
+            var request = new GetQuestionPackageByIdRequest() { Id = PackageId };
+            var response = await QuestionPackageService.GetQuestionPackageByIdAsync(request);
+            if (response?.QuestionPackageDto != null)
+            {
+                _package = response.QuestionPackageDto;
+            }
+            else
+            {
+                ToastService.ShowError("Package details not found.");
+                _package = null;
+            }
         }
         catch (Exception ex)
         {
             ToastService.ShowError("Failed to load package details.");
             Console.WriteLine($"Error loading package details: {ex.Message}");
+            _package = null;
         }
         finally
         {
@@ -262,17 +227,19 @@
         _isLoading = true;
         try
         {
-            // This will be replaced with actual API call
-            await Task.Delay(500); // Simulate API delay
-
-            // Mock implementation
-            _questions = GenerateMockQuestions();
-            _filteredQuestions = _questions;
-
-            if (_package != null)
+            var request = new GetQuestionsByPackageRequest() { PackageId = PackageId };
+            var response = await QuestionService.GetQuestionsByPackageIdAsync(request);
+            if (response?.QuestionDtos != null)
             {
-                // _package.QuestionsCount = _questions.Count;
+                _questions = response.QuestionDtos;
             }
+            else
+            {
+                ToastService.ShowError("Package details not found.");
+                _package = null;
+            }
+
+            _filteredQuestions = _questions;
         }
         catch (Exception ex)
         {
@@ -284,19 +251,6 @@
             _isLoading = false;
             StateHasChanged();
         }
-    }
-
-    private List<Question> GenerateMockQuestions()
-    {
-        // Mock data for development - will be replaced with API call
-        return new List<Question>
-        {
-            new Question { Id = Guid.NewGuid().ToString(), Text = "What is the capital of France?", HasImage = false, AnswersCount = 4, CreatedAt = DateTime.Now.AddDays(-9), LastModifiedAt = DateTime.Now.AddDays(-9) },
-            new Question { Id = Guid.NewGuid().ToString(), Text = "Which of the following is a prime number?", HasImage = false, AnswersCount = 4, CreatedAt = DateTime.Now.AddDays(-8), LastModifiedAt = DateTime.Now.AddDays(-8) },
-            new Question { Id = Guid.NewGuid().ToString(), Text = "Identify the correct chemical formula for water:", HasImage = false, AnswersCount = 4, CreatedAt = DateTime.Now.AddDays(-7), LastModifiedAt = DateTime.Now.AddDays(-7) },
-            new Question { Id = Guid.NewGuid().ToString(), Text = "Which data structure operates on a LIFO principle?", HasImage = false, AnswersCount = 4, CreatedAt = DateTime.Now.AddDays(-6), LastModifiedAt = DateTime.Now.AddDays(-6) },
-            new Question { Id = Guid.NewGuid().ToString(), Text = "Identify the object in this image:", HasImage = true, AnswersCount = 4, CreatedAt = DateTime.Now.AddDays(-5), LastModifiedAt = DateTime.Now.AddDays(-5) },
-        };
     }
 
     private void SearchQuestions(KeyboardEventArgs e)
@@ -351,41 +305,27 @@
         }
     }
 
-    #region Modal Handlers
-
     private void ShowAddQuestionModal()
     {
         // Implementation would go here
         ToastService.ShowInfo("Add question functionality would be implemented here");
     }
 
-    private void ShowEditQuestionModal(Question question)
+    private void ShowEditQuestionModal(QuestionDto question)
     {
         // Implementation would go here
         ToastService.ShowInfo("Edit question functionality would be implemented here");
     }
 
-    private void ShowDeleteConfirmation(Question question)
+    private void ShowDeleteConfirmation(QuestionDto question)
     {
         // Implementation would go here
         ToastService.ShowInfo("Delete question functionality would be implemented here");
     }
 
-    #endregion
-
     public void Dispose()
     {
         _debounceTimer?.Dispose();
-    }
-
-    public class Question
-    {
-        public string Id { get; set; }
-        public string Text { get; set; }
-        public bool HasImage { get; set; }
-        public int AnswersCount { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime LastModifiedAt { get; set; }
     }
 
 }

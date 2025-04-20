@@ -12,6 +12,14 @@ public class QuestionPackageService(IApiClient apiClient) : IQuestionPackageServ
         return questionPackageDtos;
     }
 
+    public async Task<GetQuestionPackageByIdResponse?> GetQuestionPackageByIdAsync(
+        GetQuestionPackageByIdRequest request)
+    {
+        var questionPackage =
+            await apiClient.GetAsync<GetQuestionPackageByIdResponse>($"/api/question-package/{request.Id}");
+        return questionPackage;
+    }
+
     public async Task<CreateQuestionPackageResponse?> CreateQuestionPackageAsync(
         CreateQuestionPackageRequest createQuestionPackageRequest)
     {

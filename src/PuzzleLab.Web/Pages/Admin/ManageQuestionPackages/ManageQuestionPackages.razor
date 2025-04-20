@@ -8,8 +8,6 @@
 @inject NavigationManager NavigationManager
 @inject IQuestionPackageService QuestionPackageService
 
-@* @inject IQuestionPackageService QuestionPackageService *@
-
 <div class="space-y-6">
     <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
         <h1 class="text-2xl font-bold">Manage Question Packages</h1>
@@ -255,8 +253,6 @@
         }
     }
 
-    #region Modal Handlers
-
     private void ShowAddPackageModal()
     {
         _newPackage = new CreateQuestionPackageRequest();
@@ -405,13 +401,6 @@
             _isSubmitting = false;
             StateHasChanged();
         }
-    }
-
-    #endregion
-
-    public void Dispose()
-    {
-        _debounceTimer?.Dispose();
     }
 
 }

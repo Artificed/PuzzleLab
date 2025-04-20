@@ -7,6 +7,9 @@ public interface IQuestionPackageService
 {
     Task<GetAllQuestionPackagesResponse?> GetAllQuestionPackagesAsync();
 
+    Task<GetQuestionPackageByIdResponse?> GetQuestionPackageByIdAsync(
+        GetQuestionPackageByIdRequest getQuestionPackageByIdRequest);
+
     Task<CreateQuestionPackageResponse?> CreateQuestionPackageAsync(
         CreateQuestionPackageRequest createQuestionPackageRequest);
 
