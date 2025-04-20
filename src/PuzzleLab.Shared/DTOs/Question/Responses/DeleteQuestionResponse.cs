@@ -1,3 +1,3 @@
 namespace PuzzleLab.Shared.DTOs.Question.Responses;
 
-public record DeleteQuestionResponse(Guid Id);
+public record DeleteQuestionResponse(string Name);
