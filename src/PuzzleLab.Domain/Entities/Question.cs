@@ -23,6 +23,7 @@ public class Question
 
     public virtual ICollection<Answer> Answers { get; private set; }
     public virtual ICollection<QuizAnswer> QuizAnswers { get; private set; }
+    public virtual ICollection<QuizSessionQuestion> QuizSessionQuestions { get; private set; }
 
     private Question()
     {
@@ -37,6 +38,7 @@ public class Question
         LastModifiedAt = CreatedAt;
         Answers = new List<Answer>();
         QuizAnswers = new List<QuizAnswer>();
+        QuizSessionQuestions = new List<QuizSessionQuestion>();
     }
 
     public void UpdateText(string newText)

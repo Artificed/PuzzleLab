@@ -17,6 +17,7 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
     public DbSet<QuizUser> QuizUsers { get; set; }
     public DbSet<QuizSession> QuizSessions { get; set; }
     public DbSet<QuizAnswer> QuizAnswers { get; set; }
+    public DbSet<QuizSessionQuestion> QuizSessionQuestions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

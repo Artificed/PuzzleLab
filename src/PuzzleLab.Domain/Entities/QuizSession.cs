@@ -18,7 +18,9 @@ public class QuizSession
 
     [ForeignKey("UserId")] public virtual User User { get; private set; }
     [ForeignKey("QuizId")] public virtual Quiz Quiz { get; private set; }
+
     public virtual ICollection<QuizAnswer> QuizAnswers { get; private set; }
+    public virtual ICollection<QuizSessionQuestion> QuizSessionQuestions { get; private set; }
 
     private QuizSession()
     {
@@ -36,6 +38,7 @@ public class QuizSession
         CreatedAt = DateTime.UtcNow;
         LastModifiedAt = CreatedAt;
         QuizAnswers = new List<QuizAnswer>();
+        QuizSessionQuestions = new List<QuizSessionQuestion>();
     }
 
     public void Finalize()
