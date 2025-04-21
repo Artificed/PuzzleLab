@@ -10,4 +10,5 @@ public interface IUserRepository
     Task<List<User>> GetAllUsersAsync(CancellationToken cancellationToken = default);
     Task<User?> GetUserByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<User?> GetUserByEmailAsync(string email, CancellationToken cancellationToken = default);
+    Task<List<User>> GetAvailableUserForQuizAsync(Guid quizId, CancellationToken cancellationToken = default);
 }

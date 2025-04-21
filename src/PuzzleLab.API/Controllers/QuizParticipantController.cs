@@ -11,14 +11,17 @@ namespace PuzzleLab.API.Controllers;
 [Route("api/quiz-participant")]
 public class QuizParticipantController(ISender sender) : ControllerBase
 {
-    [HttpGet("/quiz/{quizId}")]
+    [HttpGet("quiz/{quizId}")]
     public async Task<IActionResult> GetQuizParticipants(string quizId, CancellationToken cancellationToken)
     {
+        Console.WriteLine("backend: " + quizId);
         var query = new GetQuizParticipantsQuery(Guid.Parse(quizId));
         var result = await sender.Send(query, cancellationToken);
 
         if (result.IsFailure)
+        {
             return this.MapErrorToAction(result.Error);
+        }
 
         return Ok(result.Value);
     }

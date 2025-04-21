@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PuzzleLab.Domain.Entities;
 using PuzzleLab.Domain.Repositories;
+using PuzzleLab.Shared.DTOs.User;
 
 namespace PuzzleLab.Infrastructure.Persistence.Repositories;
 
@@ -38,5 +39,14 @@ public class UserRepository(DatabaseContext databaseContext) : IUserRepository
     {
         databaseContext.Users.Remove(user);
         await databaseContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<List<User>> GetAvailableUserForQuizAsync(Guid quizId,
+        CancellationToken cancellationToken = default)
+    {
+        return await databaseContext.Users
+            .Where(user => user.Role == "User")
+            .Where(user => !user.QuizUsers.Any(qu => qu.QuizId == quizId))
+            .ToListAsync(cancellationToken);
     }
 }

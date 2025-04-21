@@ -29,4 +29,13 @@ public class UserService(IApiClient apiClient) : IUserService
         var user = await apiClient.DeleteAsync<DeleteUserResponse?>("/api/user/delete", deleteUserRequest);
         return user;
     }
+
+    public async Task<GetAvailableUsersForQuizResponse?> GetAvailableUsersForQuizAsync(
+        GetAvailableUsersForQuizRequest getAvailableUsersForQuizRequest)
+    {
+        var userDtos =
+            await apiClient.GetAsync<GetAvailableUsersForQuizResponse>(
+                $"/api/user/all/available-for-quiz/{getAvailableUsersForQuizRequest.Id}");
+        return userDtos;
+    }
 }

@@ -18,6 +18,8 @@ public class CreateQuizParticipantCommandHandler(
     public async Task<Result<CreateQuizParticipantResponse>> Handle(CreateQuizParticipantCommand request,
         CancellationToken cancellationToken)
     {
+        Console.WriteLine(request.UserId + "---" + request.QuizId);
+
         var user = await userRepository.GetUserByIdAsync(request.UserId, cancellationToken);
         if (user is null)
         {

@@ -9,4 +9,7 @@ public interface IUserService
     Task<CreateUserResponse?> CreateUserAsync(CreateUserRequest createUserRequest);
     Task<UpdateUserResponse?> UpdateUserAsync(EditUserRequest updateUserRequest);
     Task<DeleteUserResponse?> DeleteUserAsync(DeleteUserRequest deleteUserRequest);
+
+    Task<GetAvailableUsersForQuizResponse?> GetAvailableUsersForQuizAsync(
+        GetAvailableUsersForQuizRequest getAvailableUsersForQuizRequest);
 }

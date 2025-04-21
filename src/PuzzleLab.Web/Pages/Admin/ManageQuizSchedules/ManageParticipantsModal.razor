@@ -3,9 +3,13 @@
 @using System.Linq
 @using Microsoft.AspNetCore.Components.Web
 @using PuzzleLab.Shared.DTOs.QuizUser
+@using PuzzleLab.Shared.DTOs.QuizUser.Requests
 @using PuzzleLab.Shared.DTOs.User
+@using PuzzleLab.Shared.DTOs.User.Requests
+@using PuzzleLab.Web.Components.Ui
 @using PuzzleLab.Web.Services.Api
 @using PuzzleLab.Web.Services.Api.Interfaces
+@using PuzzleLab.Web.Services.Ui
 
 @inject IUserService UserService
 @inject IQuizScheduleService QuizScheduleService
@@ -280,22 +284,17 @@
 
         try
         {
-            // Mock data for now
-            _participants = new List<QuizParticipantDto>
+            Console.WriteLine("schedule quiz id: " + Schedule.QuizId);
+            var response = await QuizParticipantService.GetParticipantsByQuizIdAsync(Schedule.QuizId);
+            if (response != null)
             {
-                new QuizParticipantDto(Guid.NewGuid(), Schedule.QuizId, Guid.NewGuid(), "user1"),
-                new QuizParticipantDto(Guid.NewGuid(), Schedule.QuizId, Guid.NewGuid(), "user2"),
-                new QuizParticipantDto(Guid.NewGuid(), Schedule.QuizId, Guid.NewGuid(), "admin_user")
-            };
-
-            _filteredParticipants = _participants.ToList();
-
-            // In a real implementation, you would use:
-            // var response = await QuizParticipantService.GetParticipantsByQuizIdAsync(Schedule.QuizId);
-            // if (response != null) {
-            //     _participants = response.QuizParticipantDtos;
-            //     _filteredParticipants = _participants.ToList();
-            // }
+                _participants = response.QuizParticipantDtos;
+                _filteredParticipants = _participants.ToList();
+            }
+            else
+            {
+                ToastService.ShowError("Failed to load participants!");
+            }
         }
         catch (Exception ex)
         {
@@ -322,11 +321,19 @@
         }
     }
 
-    private void ShowAddParticipantModal()
+    private async void ShowAddParticipantModal()
     {
-        _showAddParticipantModal = true;
-        _availableUserSearchTerm = "";
-        LoadAvailableUsers();
+        try
+        {
+            _showAddParticipantModal = true;
+            _availableUserSearchTerm = "";
+            await LoadAvailableUsers();
+        }
+        catch (Exception e)
+        {
+            ToastService.ShowError("Failed to load available users!");
+            Console.WriteLine(e);
+        }
     }
 
     private void CloseAddParticipantModal()
@@ -343,27 +350,23 @@
         _isLoadingAvailableUsers = true;
         await InvokeAsync(StateHasChanged);
 
+        Console.WriteLine(Schedule.QuizId);
         try
         {
-            // Mock data of users who aren't participants yet
-            var existingUserIds = _participants.Select(p => p.UserId).ToHashSet();
-
-            _availableUsers = new List<UserDto>
+            var request = new GetAvailableUsersForQuizRequest()
             {
-                new UserDto(Guid.NewGuid(), "available_user1", "user1@example.com", DateTime.Now, DateTime.Now),
-                new UserDto(Guid.NewGuid(), "available_user2", "user2@example.com", DateTime.Now, DateTime.Now),
-                new UserDto(Guid.NewGuid(), "available_user3", "user3@example.com", DateTime.Now, DateTime.Now),
-                new UserDto(Guid.NewGuid(), "available_user4", "user4@example.com", DateTime.Now, DateTime.Now)
+                Id = Schedule.QuizId.ToString()
             };
+            var response = await UserService.GetAvailableUsersForQuizAsync(request);
 
+            if (response is null)
+            {
+                ToastService.ShowError("Failed to load available users!");
+                return;
+            }
+
+            _availableUsers = response.UserDtos;
             _filteredAvailableUsers = _availableUsers.ToList();
-
-            // In a real implementation, you would use:
-            // var response = await UserService.GetUsersNotInQuizAsync(Schedule.QuizId);
-            // if (response != null) {
-            //     _availableUsers = response.Users;
-            //     _filteredAvailableUsers = _availableUsers.ToList();
-            // }
         }
         catch (Exception ex)
         {
@@ -397,28 +400,13 @@
 
         try
         {
-            // Mock implementation - just add to participants list
-            var newParticipant = new QuizParticipantDto(
-                Guid.NewGuid(), // Generate new ID for this participation
-                Schedule.QuizId,
-                user.Id,
-                user.Username
-            );
+            var request = new CreateQuizParticipantRequest() { QuizId = Schedule.QuizId, UserId = user.Id };
+            var response = await QuizParticipantService.CreateParticipantAsync(request);
 
-            _participants.Add(newParticipant);
-            _filteredParticipants = _participants.ToList();
-
-            // Remove from available users
-            _availableUsers.RemoveAll(u => u.Id == user.Id);
-            _filteredAvailableUsers.RemoveAll(u => u.Id == user.Id);
-
-            // In a real implementation:
-            // await QuizParticipantService.AddParticipantAsync(Schedule.QuizId, user.Id);
-
-            // If no more users to add, close the modal
-            if (_filteredAvailableUsers.Count == 0)
+            if (response is null)
             {
-                CloseAddParticipantModal();
+                ToastService.ShowError("Failed to add participant!");
+                return;
             }
 
             await OnSaveSuccess.InvokeAsync();
@@ -449,27 +437,33 @@
         try
         {
             // Mock implementation - just remove from list
-            _participants.RemoveAll(p => p.Id == _userToRemove.Id);
-            _filteredParticipants = _participants.ToList();
+            // _participants.RemoveAll(p => p.Id == _userToRemove.Id);
+            // _filteredParticipants = _participants.ToList();
+            //
+            // // Add back to available users
+            // var userToAdd = new UserDto(
+            //     _userToRemove.UserId,
+            //     _userToRemove.Username,
+            //     $"{_userToRemove.Username}@example.com", // Mock email
+            //     DateTime.Now,
+            //     DateTime.Now
+            // );
+            //
+            // _availableUsers.Add(userToAdd);
 
-            // Add back to available users
-            var userToAdd = new UserDto(
-                _userToRemove.UserId,
-                _userToRemove.Username,
-                $"{_userToRemove.Username}@example.com", // Mock email
-                DateTime.Now,
-                DateTime.Now
-            );
-
-            _availableUsers.Add(userToAdd);
-
-            if (_showAddParticipantModal)
+            var request = new DeleteQuizParticipantRequest()
             {
-                SearchAvailableUsers(); // Refresh the filtered list
-            }
+                QuizId = Schedule.QuizId,
+                UserId = _userToRemove.UserId
+            };
 
-            // In a real implementation:
-            // await QuizParticipantService.RemoveParticipantAsync(Schedule.QuizId, _userToRemove.UserId);
+            var response = await QuizParticipantService.DeleteParticipantAsync(request);
+
+            if (response is null)
+            {
+                ToastService.ShowError("Failed to remove participant!");
+                return;
+            }
 
             CloseRemoveConfirmation();
             await OnSaveSuccess.InvokeAsync();

@@ -26,6 +26,20 @@ public class UserController(ISender sender) : ControllerBase
         return Ok(result.Value);
     }
 
+    [HttpGet("all/available-for-quiz/{quizId}")]
+    public async Task<IActionResult> GetAvailableUsersForQuiz(string quizId, CancellationToken cancellationToken)
+    {
+        var command = new GetAvailableUsersForQuizQuery(Guid.Parse(quizId));
+        var result = await sender.Send(command, cancellationToken);
+
+        if (result.IsFailure)
+        {
+            return this.MapErrorToAction(result.Error);
+        }
+
+        return Ok(result.Value);
+    }
+
     [HttpPost("create")]
     public async Task<IActionResult> CreateNewUser([FromBody] CreateUserRequest request,
         CancellationToken cancellationToken)
