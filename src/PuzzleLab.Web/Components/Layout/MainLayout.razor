@@ -3,10 +3,17 @@
 @using PuzzleLab.Web.Services.State
 @inject UserStateService UserState
 
-<main class="min-h-screen flex items-center justify-center p-4 bg-gray-50">
-    @Body
-    <Toast/>
-</main>
+<div class="min-h-screen bg-gray-50 flex flex-col">
+
+    <main class="flex-1 flex items-center px-40">
+        <div class="w-full max-w-7xl mx-auto">
+            @Body
+        </div>
+    </main>
+
+</div>
+
+<Toast/>
 
 @code {
 

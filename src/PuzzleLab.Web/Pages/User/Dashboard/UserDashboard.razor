@@ -1,0 +1,387 @@
+﻿@page "/dashboard"
+@using PuzzleLab.Shared.DTOs.QuizSchedule
+@using PuzzleLab.Shared.DTOs.QuizSchedule.Responses
+@using PuzzleLab.Web.Services.Api.Interfaces
+@using PuzzleLab.Web.Services.State
+@using System.Collections.Generic
+@using PuzzleLab.Shared.DTOs.QuizSchedule.Requests
+@using PuzzleLab.Web.Services.Ui
+
+@inject IQuizScheduleService QuizScheduleService
+@inject UserStateService UserState
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<PageTitle>Dashboard - PuzzleLab</PageTitle>
+
+<div class="space-y-6 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+        <h1 class="text-2xl font-bold">My Quizzes</h1>
+        <div class="flex flex-wrap items-center gap-2">
+            <button
+                @onclick="() => FilterQuizzes(QuizFilter.All)"
+                class="@GetFilterButtonClass(QuizFilter.All)">
+                All
+            </button>
+            <button
+                @onclick="() => FilterQuizzes(QuizFilter.Current)"
+                class="@GetFilterButtonClass(QuizFilter.Current)">
+                Current
+            </button>
+            <button
+                @onclick="() => FilterQuizzes(QuizFilter.Upcoming)"
+                class="@GetFilterButtonClass(QuizFilter.Upcoming)">
+                Upcoming
+            </button>
+            <button
+                @onclick="() => FilterQuizzes(QuizFilter.Past)"
+                class="@GetFilterButtonClass(QuizFilter.Past)">
+                Past
+            </button>
+        </div>
+    </div>
+
+    @if (_isLoading)
+    {
+        <div class="flex justify-center p-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        </div>
+    }
+    else if (_filteredQuizzes.Count == 0)
+    {
+        <div class="h-72 p-8 flex items-center justify-center border border-gray-200 rounded-lg bg-white shadow-sm">
+            <p class="text-gray-500">No quizzes found for the selected filter.</p>
+        </div>
+    }
+    else
+    {
+        <div class="overflow-x-auto w-full">
+            <div class="min-w-full inline-block align-middle">
+                <div class="shadow overflow-hidden border border-gray-200 sm:rounded-lg">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col"
+                                class="px-12 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Quiz Name
+                            </th>
+                            <th scope="col"
+                                class="px-12 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Questions
+                            </th>
+                            <th scope="col"
+                                class="px-12 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Start Date
+                            </th>
+                            <th scope="col"
+                                class="px-12 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                End Date
+                            </th>
+                            <th scope="col"
+                                class="px-12 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Status
+                            </th>
+                            <th scope="col"
+                                class="px-12 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach (var quiz in _filteredQuizzes)
+                        {
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-12 py-4 text-center whitespace-nowrap text-sm font-medium text-gray-900">@quiz.Title</td>
+                                <td class="px-12 py-4 text-center whitespace-nowrap text-sm text-gray-500">@quiz.QuestionCount</td>
+                                <td class="px-12 py-4 text-center whitespace-nowrap text-sm text-gray-500">@quiz.StartTime.ToString("MMM dd, yyyy HH:mm")</td>
+                                <td class="px-12 py-4 text-center whitespace-nowrap text-sm text-gray-500">@quiz.EndTime.ToString("MMM dd, yyyy HH:mm")</td>
+                                <td class="px-12 py-4 text-center whitespace-nowrap text-sm">
+                                <span class="@GetStatusBadgeClass(quiz)">
+                                    @GetStatusText(quiz)
+                                </span>
+                                </td>
+                                <td class="px-12 py-4 text-center whitespace-nowrap text-sm font-medium">
+                                    <button @onclick="() => ShowQuizDetails(quiz)"
+                                            class="text-blue-600 hover:text-blue-900 hover:underline">
+                                        View Details
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@if (_showQuizDetailsModal)
+{
+    <div class="fixed inset-0 bg-black/80 z-40 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="p-6 space-y-6">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-2xl font-bold">Quiz Details</h2>
+                    <button @onclick="CloseQuizDetailsModal" class="text-gray-500 hover:text-gray-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                             stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                @if (_selectedQuiz != null)
+                {
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Quiz Name</p>
+                                <p class="text-base">@_selectedQuiz.Title</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Status</p>
+                                <span class="@GetStatusBadgeClass(_selectedQuiz)">
+                                    @GetStatusText(_selectedQuiz)
+                                </span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Description</p>
+                            <p class="text-base">@(_selectedQuiz.Description ?? "No description available")</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Start Time</p>
+                                <p class="text-base">@_selectedQuiz.StartTime.ToString("MMM dd, yyyy HH:mm")</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">End Time</p>
+                                <p class="text-base">@_selectedQuiz.EndTime.ToString("MMM dd, yyyy HH:mm")</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Question Count</p>
+                                <p class="text-base">@_selectedQuiz.QuestionCount questions</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Total Participants</p>
+                                <p class="text-base">@_selectedQuiz.ParticipantCount participants</p>
+                            </div>
+                        </div>
+
+                        @if (IsQuizInProgress(_selectedQuiz))
+                        {
+                            <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
+                                <p class="text-sm text-blue-800">
+                                    This quiz is currently active. Click the "Take Test" button to begin.
+                                </p>
+                            </div>
+                        }
+                        else if (IsQuizUpcoming(_selectedQuiz))
+                        {
+                            <div class="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+                                <p class="text-sm text-yellow-800">
+                                    This quiz will be available
+                                    on @_selectedQuiz.StartTime.ToString("MMM dd, yyyy") at @_selectedQuiz.StartTime.ToString("HH:mm").
+                                </p>
+                            </div>
+                        }
+                        else if (IsQuizExpired(_selectedQuiz))
+                        {
+                            <div class="bg-gray-50 border border-gray-200 rounded-md p-4">
+                                <p class="text-sm text-gray-800">
+                                    This quiz has ended. It was available
+                                    until @_selectedQuiz.EndTime.ToString("MMM dd, yyyy HH:mm").
+                                </p>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                        <button @onclick="CloseQuizDetailsModal"
+                                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Close
+                        </button>
+                        <button @onclick="() => TakeQuiz(_selectedQuiz)"
+                                disabled="@(!IsQuizInProgress(_selectedQuiz))"
+                                class="@(IsQuizInProgress(_selectedQuiz)
+                                           ? "inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                           : "inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-400 cursor-not-allowed")">
+                            Take Test
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<QuizScheduleDto> _quizzes = new();
+    private List<QuizScheduleDto> _filteredQuizzes = new();
+    private bool _isLoading = true;
+    private QuizFilter _currentFilter = QuizFilter.All;
+
+    private bool _showQuizDetailsModal = false;
+    private QuizScheduleDto? _selectedQuiz;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadQuizzesAsync();
+    }
+
+    private async Task LoadQuizzesAsync()
+    {
+        _isLoading = true;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            var userId = "a1b9456b-751b-4e36-ab6e-7d960f1dca52";
+            // var userId = UserState.CurrentUser?.Id.ToString();
+            if (string.IsNullOrEmpty(userId))
+            {
+                _quizzes = new List<QuizScheduleDto>();
+                return;
+            }
+
+            Console.WriteLine("User ID: " + userId);
+
+            var request = new GetUserQuizScheduleRequest() { UserId = Guid.Parse(userId) };
+            var response = await QuizScheduleService.GetUserQuizScheduleAsync(request);
+            if (response != null)
+            {
+                _quizzes = response.QuizScheduleDtos;
+                FilterQuizzes(_currentFilter);
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError($"Error loading quizzes: {ex}", "Error");
+        }
+        finally
+        {
+            _isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private enum QuizFilter
+    {
+        All,
+        Current,
+        Upcoming,
+        Past
+    }
+
+    private void FilterQuizzes(QuizFilter filter)
+    {
+        _currentFilter = filter;
+
+        switch (filter)
+        {
+            case QuizFilter.All:
+                _filteredQuizzes = _quizzes.ToList();
+                break;
+            case QuizFilter.Current:
+                _filteredQuizzes = _quizzes.Where(q => IsQuizInProgress(q)).ToList();
+                break;
+            case QuizFilter.Upcoming:
+                _filteredQuizzes = _quizzes.Where(q => IsQuizUpcoming(q)).ToList();
+                break;
+            case QuizFilter.Past:
+                _filteredQuizzes = _quizzes.Where(q => IsQuizExpired(q)).ToList();
+                break;
+        }
+    }
+
+    private string GetFilterButtonClass(QuizFilter filter)
+    {
+        string baseClass = "px-3 py-1 text-sm font-medium rounded-md";
+
+        if (filter == _currentFilter)
+        {
+            return $"{baseClass} bg-blue-600 text-white";
+        }
+
+        return $"{baseClass} bg-gray-100 text-gray-700 hover:bg-gray-200";
+    }
+
+    private bool IsQuizInProgress(QuizScheduleDto quiz)
+    {
+        var now = DateTime.Now;
+        return now >= quiz.StartTime && now <= quiz.EndTime;
+    }
+
+    private bool IsQuizUpcoming(QuizScheduleDto quiz)
+    {
+        return DateTime.Now < quiz.StartTime;
+    }
+
+    private bool IsQuizExpired(QuizScheduleDto quiz)
+    {
+        return DateTime.Now > quiz.EndTime;
+    }
+
+    private string GetStatusText(QuizScheduleDto quiz)
+    {
+        if (IsQuizInProgress(quiz))
+        {
+            return "Active";
+        }
+        else if (IsQuizUpcoming(quiz))
+        {
+            return "Upcoming";
+        }
+        else
+        {
+            return "Expired";
+        }
+    }
+
+    private string GetStatusBadgeClass(QuizScheduleDto quiz)
+    {
+        string baseClass = "px-2 py-1 text-xs font-medium rounded-full";
+
+        if (IsQuizInProgress(quiz))
+        {
+            return $"{baseClass} bg-green-100 text-green-800";
+        }
+        else if (IsQuizUpcoming(quiz))
+        {
+            return $"{baseClass} bg-blue-100 text-blue-800";
+        }
+        else
+        {
+            return $"{baseClass} bg-gray-100 text-gray-800";
+        }
+    }
+
+    private void ShowQuizDetails(QuizScheduleDto quiz)
+    {
+        _selectedQuiz = quiz;
+        _showQuizDetailsModal = true;
+    }
+
+    private void CloseQuizDetailsModal()
+    {
+        _showQuizDetailsModal = false;
+        _selectedQuiz = null;
+    }
+
+    private void TakeQuiz(QuizScheduleDto quiz)
+    {
+        if (IsQuizInProgress(quiz))
+        {
+            // Navigate to the quiz page
+            NavigationManager.NavigateTo($"/quiz/{quiz.QuizId}");
+        }
+    }
+
+}
