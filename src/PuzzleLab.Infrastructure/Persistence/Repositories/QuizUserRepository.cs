@@ -21,4 +21,21 @@ public class QuizUserRepository(DatabaseContext databaseContext) : IQuizUserRepo
         await databaseContext.QuizUsers.AddAsync(quizUser, cancellationToken);
         await databaseContext.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task<QuizUser?> GetByUserIdAndQuizIdAsync(Guid userId, Guid quizId,
+        CancellationToken cancellationToken = default)
+    {
+        return await databaseContext.QuizUsers
+            .FirstOrDefaultAsync(q => q.UserId == userId && q.QuizId == quizId, cancellationToken);
+    }
+
+    public async Task DeleteByIdAsync(Guid quizUserId, CancellationToken cancellationToken = default)
+    {
+        var quizUser = await databaseContext.QuizUsers.FindAsync([quizUserId], cancellationToken);
+        if (quizUser != null)
+        {
+            databaseContext.QuizUsers.Remove(quizUser);
+            await databaseContext.SaveChangesAsync(cancellationToken);
+        }
+    }
 }
