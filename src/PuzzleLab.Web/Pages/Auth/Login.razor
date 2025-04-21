@@ -94,7 +94,18 @@
                 await TokenProvider.SetTokenAsync(loginResponse.Token);
                 ToastService.ShowSuccess("Login successful!", "Welcome");
                 await UserState.UpdateUserAfterLoginAsync();
-                NavigationManager.NavigateTo("/", forceLoad: false);
+                if (UserState?.CurrentUser?.Role == "Admin")
+                {
+                    NavigationManager.NavigateTo("/admin/dashboard", forceLoad: false);
+                }
+                else if (UserState?.CurrentUser?.Role == "User")
+                {
+                    NavigationManager.NavigateTo("/user/dashboard", forceLoad: false);
+                }
+                else
+                {
+                    ToastService.ShowError("Invalid user role!", "Login Error");
+                }
             }
             else
             {
