@@ -14,6 +14,8 @@ public class CreateQuizSessionCommandHandler(
     IScheduleRepository scheduleRepository,
     QuizSessionFactory quizSessionFactory,
     IQuizSessionRepository quizSessionRepository,
+    QuizSessionQuestionFactory quizSessionQuestionFactory,
+    IQuizSessionQuestionRepository quizSessionQuestionRepository,
     IQuestionPackageRepository questionPackageRepository)
     : IRequestHandler<CreateQuizSessionCommand, Result<CreateQuizSessionResponse>>
 {
@@ -68,6 +70,30 @@ public class CreateQuizSessionCommandHandler(
             quizSessionFactory.CreateQuizSession(request.UserId, request.QuizId, questionPackage.Questions.Count);
 
         await quizSessionRepository.InsertQuizSessionAsync(newQuizSession, cancellationToken);
+
+
+        var totalQuestions = questionPackage.Questions.Count;
+        var random = new Random();
+
+        var questionList = questionPackage.Questions.ToList();
+        var indices = Enumerable.Range(0, totalQuestions).ToList();
+
+        // Shuffling
+        for (int i = indices.Count - 1; i > 0; i--)
+        {
+            int j = random.Next(i + 1);
+            (indices[i], indices[j]) = (indices[j], indices[i]);
+        }
+
+        for (int i = 0; i < totalQuestions; i++)
+        {
+            var questionIndex = indices[i];
+            var question = questionList[questionIndex];
+            var quizSessionQuestion = quizSessionQuestionFactory.CreateQuizSessionQuestion(newQuizSession.Id,
+                question.Id, i);
+            await quizSessionQuestionRepository.InsertQuizSessionQuestionAsync(quizSessionQuestion, cancellationToken);
+        }
+
 
         var quizSessionDto = new QuizSessionDto()
         {

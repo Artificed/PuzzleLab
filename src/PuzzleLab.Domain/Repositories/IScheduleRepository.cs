@@ -7,6 +7,6 @@ public interface IScheduleRepository
     Task InsertScheduleAsync(Schedule schedule, CancellationToken cancellationToken = default);
     Task<List<Schedule>> GetAllSchedulesAsync(CancellationToken cancellationToken = default);
     Task<Schedule?> GetScheduleByIdAsync(Guid scheduleId, CancellationToken cancellationToken = default);
-    Task UpdateScheduleAsync(Schedule schedule, CancellationToken cancellationToken = default); // 👈 Added
-    Task DeleteScheduleAsync(Schedule schedule, CancellationToken cancellationToken = default); // 👈 Added
+    Task UpdateScheduleAsync(Schedule schedule, CancellationToken cancellationToken = default);
+    Task DeleteScheduleAsync(Schedule schedule, CancellationToken cancellationToken = default);
 }
