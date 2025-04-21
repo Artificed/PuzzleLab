@@ -38,4 +38,10 @@ public class QuizScheduleService(IApiClient apiClient) : IQuizScheduleService
             deleteQuizScheduleRequest);
         return response;
     }
+
+    public async Task<GetUserQuizScheduleResponse?> GetUserQuizScheduleAsync(string userId)
+    {
+        var schedules = await apiClient.GetAsync<GetUserQuizScheduleResponse>($"/api/quiz-schedule/user/{userId}");
+        return schedules;
+    }
 }

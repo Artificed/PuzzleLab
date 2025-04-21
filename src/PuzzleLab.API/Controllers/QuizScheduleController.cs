@@ -74,4 +74,18 @@ public class QuizScheduleController(ISender sender) : ControllerBase
 
         return Ok(result.Value);
     }
+
+    [HttpGet("user/{userId}")]
+    public async Task<IActionResult> GetUserQuizSchedules(string userId, CancellationToken cancellationToken)
+    {
+        var query = new GetUserQuizScheduleQuery(Guid.Parse(userId));
+        var result = await sender.Send(query, cancellationToken);
+
+        if (result.IsFailure)
+        {
+            return this.MapErrorToAction(result.Error);
+        }
+
+        return Ok(result.Value);
+    }
 }
