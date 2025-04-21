@@ -11,6 +11,7 @@
 @inject NavigationManager NavigationManager
 @* @inject IScheduleService ScheduleService *@
 @inject IQuestionPackageService QuestionPackageService
+@inject IQuizScheduleService QuizScheduleService
 @rendermode InteractiveServer
 
 <PageTitle>Quiz Schedules - PuzzleLab</PageTitle>
@@ -167,11 +168,11 @@
                       OnSubmit="HandleAddSchedule"/>
 
 <EditQuizScheduleModal IsVisible="_showEditScheduleModal"
-                   IsSubmitting="_isSubmitting"
-                   ScheduleModel="_editSchedule"
-                   QuestionPackages="_questionPackages"
-                   OnClose="CloseEditScheduleModal"
-                   OnSubmit="HandleEditSchedule"/>
+                       IsSubmitting="_isSubmitting"
+                       ScheduleModel="_editSchedule"
+                       QuestionPackages="_questionPackages"
+                       OnClose="CloseEditScheduleModal"
+                       OnSubmit="HandleEditSchedule"/>
 
 <DeleteScheduleModal IsVisible="_showDeleteConfirmation"
                      IsSubmitting="_isSubmitting"
@@ -220,77 +221,25 @@
         try
         {
             // Mocked question packages
-            _questionPackages = new List<QuestionPackageDto>
+            var questionPackageResponse = await QuestionPackageService.GetAllQuestionPackagesAsync();
+
+            if (questionPackageResponse == null)
             {
-                new(
-                    Guid.NewGuid(),
-                    "General Knowledge",
-                    "A collection of trivia questions across various topics.",
-                    50,
-                    DateTime.Now.AddDays(-10),
-                    DateTime.Now.AddDays(-2)
-                ),
-                new(
-                    Guid.NewGuid(),
-                    "Math Quiz",
-                    "Mathematics-related problems and puzzles.",
-                    40,
-                    DateTime.Now.AddDays(-8),
-                    null
-                ),
-                new(
-                    Guid.NewGuid(),
-                    "Science Basics",
-                    "Covers basic science topics for beginners.",
-                    30,
-                    DateTime.Now.AddDays(-5),
-                    DateTime.Now.AddDays(-1)
-                )
-            };
+                ToastService.ShowError("Failed to load question packages.");
+                return;
+            }
 
-            // We'll assign these mock IDs for the schedule to reference
-            var package1 = _questionPackages[0];
-            var package2 = _questionPackages[1];
-            var package3 = _questionPackages[2];
+            _questionPackages = questionPackageResponse.QuestionPackageDtos;
 
-            // Mocked schedules
-            _schedules = new List<QuizScheduleDto>
+            var quizScheduleResponse = await QuizScheduleService.GetAllQuizSchedulesAsync();
+
+            if (quizScheduleResponse == null)
             {
-                new()
-                {
-                    QuizId = Guid.NewGuid(),
-                    Title = "Morning Quiz",
-                    Description = "This is a test hahahaha",
-                    QuizPackageId = package1.Id,
-                    StartTime = DateTime.Now.AddDays(1).Date.AddHours(9),
-                    EndTime = DateTime.Now.AddDays(1).Date.AddHours(10),
-                    ParticipantCount = 25,
-                    QuestionCount = 10
-                },
-                new()
-                {
-                    QuizId = Guid.NewGuid(),
-                    Title = "Afternoon Challenge",
-                    Description = "This is a test hahahaha",
-                    QuizPackageId = package2.Id,
-                    StartTime = DateTime.Now.AddDays(2).Date.AddHours(14),
-                    EndTime = DateTime.Now.AddDays(2).Date.AddHours(15),
-                    ParticipantCount = 30,
-                    QuestionCount = 10
-                },
-                new()
-                {
-                    QuizId = Guid.NewGuid(),
-                    Title = "Evening Showdown",
-                    Description = "This is a test hahahaha",
-                    QuizPackageId = package3.Id,
-                    StartTime = DateTime.Now.AddDays(3).Date.AddHours(18),
-                    EndTime = DateTime.Now.AddDays(3).Date.AddHours(19),
-                    ParticipantCount = 18,
-                    QuestionCount = 10
-                }
-            };
+                ToastService.ShowError("Failed to load quiz schedules.");
+                return;
+            }
 
+            _schedules = quizScheduleResponse.QuizScheduleDtos;
             FilterSchedules();
         }
         catch (Exception ex)
@@ -385,20 +334,29 @@
 
     private void CloseManageParticipantsModal() => _showManageParticipantsModal = false;
 
-    // CRUD operation handlers
     private async Task HandleAddSchedule(CreateQuizScheduleRequest model)
     {
         _isSubmitting = true;
         try
         {
-            // var response = await ScheduleService.CreateScheduleAsync(model);
-            //
-            // if (response?.ScheduleDto != null)
-            // {
-            //     await LoadData();
-            //     CloseAddScheduleModal();
-            //     ToastService.ShowSuccess("Schedule created successfully!");
-            // }
+            var request = new CreateQuizScheduleRequest
+            {
+                QuestionPackageId = model.QuestionPackageId,
+                StartTime = model.StartTime.ToUniversalTime(),
+                EndTime = model.EndTime.ToUniversalTime()
+            };
+
+            var submitResponse = await QuizScheduleService.CreateQuizScheduleAsync(request);
+
+            if (submitResponse == null)
+            {
+                ToastService.ShowError("Failed to create quiz schedule.", "Error!");
+                return;
+            }
+
+            await LoadData();
+            CloseAddScheduleModal();
+            ToastService.ShowSuccess("Schedule created successfully!", "Success!");
         }
         catch (Exception ex)
         {
@@ -416,14 +374,24 @@
         _isSubmitting = true;
         try
         {
-            // var response = await ScheduleService.UpdateScheduleAsync(model);
-            //
-            // if (response?.ScheduleDto != null)
-            // {
-            //     await LoadData();
-            //     CloseEditScheduleModal();
-            //     ToastService.ShowSuccess("Schedule updated successfully!");
-            // }
+            var request = new UpdateQuizScheduleRequest()
+            {
+                QuizId = model.QuizId,
+                QuestionPackageId = model.QuestionPackageId,
+                StartTime = model.StartTime.ToUniversalTime(),
+                EndTime = model.EndTime.ToUniversalTime()
+            };
+            var submitResponse = await QuizScheduleService.UpdateQuizScheduleAsync(request);
+
+            if (submitResponse == null)
+            {
+                ToastService.ShowError("Failed to update quiz schedule.", "Error!");
+                return;
+            }
+
+            await LoadData();
+            CloseEditScheduleModal();
+            ToastService.ShowSuccess("Schedule updated successfully!", "Success!");
         }
         catch (Exception ex)
         {
@@ -441,19 +409,18 @@
         _isSubmitting = true;
         try
         {
-            var request = new DeleteQuizScheduleRequest()
-            {
-                QuizId = _selectedSchedule.QuizId
-            };
+            var request = new DeleteQuizScheduleRequest() { QuizId = _selectedSchedule.QuizId };
+            var submitResponse = await QuizScheduleService.DeleteQuizScheduleAsync(request);
 
-            // var response = await ScheduleService.DeleteScheduleAsync(request);
-            //
-            // if (response != null)
-            // {
-            //     await LoadData();
-            //     CloseDeleteConfirmation();
-            //     ToastService.ShowSuccess("Schedule deleted successfully!");
-            // }
+            if (submitResponse == null)
+            {
+                ToastService.ShowError("Failed to delete quiz schedule.", "Error!");
+                return;
+            }
+
+            await LoadData();
+            CloseDeleteConfirmation();
+            ToastService.ShowSuccess("Schedule deleted successfully!", "Success!");
         }
         catch (Exception ex)
         {

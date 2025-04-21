@@ -39,6 +39,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IQuestionPackageService, QuestionPackageService>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
 builder.Services.AddScoped<IAnswerService, AnswerService>();
+builder.Services.AddScoped<IQuizScheduleService, QuizScheduleService>();
 builder.Services.AddScoped<UserStateService>();
 
 var app = builder.Build();
