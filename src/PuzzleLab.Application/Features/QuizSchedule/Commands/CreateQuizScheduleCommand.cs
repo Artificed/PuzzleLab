@@ -1,6 +1,8 @@
+using MediatR;
+using PuzzleLab.Application.Common.Models;
+using PuzzleLab.Shared.DTOs.QuizSchedule.Responses;
+
 namespace PuzzleLab.Application.Features.QuizSchedule.Commands;
 
-public class CreateQuizScheduleCommand
-{
-    
-}
+public record CreateQuizScheduleCommand(Guid QuestionPackageId, DateTime StartTime, DateTime EndTime)
+    : IRequest<Result<CreateQuizScheduleResponse>>;

@@ -21,4 +21,16 @@ public class ScheduleRepository(DatabaseContext databaseContext) : IScheduleRepo
         await databaseContext.Schedules.AddAsync(schedule, cancellationToken);
         await databaseContext.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task UpdateScheduleAsync(Schedule schedule, CancellationToken cancellationToken = default)
+    {
+        databaseContext.Schedules.Update(schedule);
+        await databaseContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DeleteScheduleAsync(Schedule schedule, CancellationToken cancellationToken = default)
+    {
+        databaseContext.Schedules.Remove(schedule);
+        await databaseContext.SaveChangesAsync(cancellationToken);
+    }
 }

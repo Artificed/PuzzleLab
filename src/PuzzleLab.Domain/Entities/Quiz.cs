@@ -6,7 +6,7 @@ namespace PuzzleLab.Domain.Entities;
 public class Quiz
 {
     [Key] public Guid Id { get; private set; }
-    [Required] public Guid QuestionPackageId { get; private set; }
+    [Required] public Guid QuestionPackageId { get; set; }
     [Required] public Guid ScheduleId { get; private set; }
     [Required] public DateTime CreatedAt { get; private set; }
     [Required] public DateTime LastModifiedAt { get; private set; }
@@ -30,6 +30,12 @@ public class Quiz
         LastModifiedAt = CreatedAt;
         QuizUsers = new List<QuizUser>();
         QuizSessions = new List<QuizSession>();
+    }
+
+    public void UpdateQuestionPackageId(Guid questionPackageId)
+    {
+        QuestionPackageId = questionPackageId;
+        LastModifiedAt = DateTime.UtcNow;
     }
 
     public void AssignSchedule(Guid scheduleId)
