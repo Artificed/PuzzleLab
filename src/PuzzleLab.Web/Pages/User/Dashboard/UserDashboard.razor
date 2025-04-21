@@ -1,11 +1,11 @@
-﻿@page "/dashboard"
+﻿@page "/user/dashboard"
 @using PuzzleLab.Shared.DTOs.QuizSchedule
-@using PuzzleLab.Shared.DTOs.QuizSchedule.Responses
 @using PuzzleLab.Web.Services.Api.Interfaces
 @using PuzzleLab.Web.Services.State
-@using System.Collections.Generic
 @using PuzzleLab.Shared.DTOs.QuizSchedule.Requests
 @using PuzzleLab.Web.Services.Ui
+
+@layout Components.Layout.UserLayout
 
 @inject IQuizScheduleService QuizScheduleService
 @inject UserStateService UserState
@@ -14,7 +14,7 @@
 
 <PageTitle>Dashboard - PuzzleLab</PageTitle>
 
-<div class="space-y-6 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+<div class="space-y-6 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
     <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
         <h1 class="text-2xl font-bold">My Quizzes</h1>
         <div class="flex flex-wrap items-center gap-2">
@@ -62,27 +62,27 @@
                         <thead class="bg-gray-50">
                         <tr>
                             <th scope="col"
-                                class="px-12 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                class="px-7 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Quiz Name
                             </th>
                             <th scope="col"
-                                class="px-12 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                class="px-7 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Questions
                             </th>
                             <th scope="col"
-                                class="px-12 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                class="px-7 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Start Date
                             </th>
                             <th scope="col"
-                                class="px-12 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                class="px-7 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 End Date
                             </th>
                             <th scope="col"
-                                class="px-12 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                class="px-7 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Status
                             </th>
                             <th scope="col"
-                                class="px-12 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                class="px-7 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Actions
                             </th>
                         </tr>
@@ -91,16 +91,16 @@
                         @foreach (var quiz in _filteredQuizzes)
                         {
                             <tr class="hover:bg-gray-50">
-                                <td class="px-12 py-4 text-center whitespace-nowrap text-sm font-medium text-gray-900">@quiz.Title</td>
-                                <td class="px-12 py-4 text-center whitespace-nowrap text-sm text-gray-500">@quiz.QuestionCount</td>
-                                <td class="px-12 py-4 text-center whitespace-nowrap text-sm text-gray-500">@quiz.StartTime.ToString("MMM dd, yyyy HH:mm")</td>
-                                <td class="px-12 py-4 text-center whitespace-nowrap text-sm text-gray-500">@quiz.EndTime.ToString("MMM dd, yyyy HH:mm")</td>
-                                <td class="px-12 py-4 text-center whitespace-nowrap text-sm">
+                                <td class="px-7 py-4 text-center whitespace-nowrap text-sm font-medium text-gray-900">@quiz.Title</td>
+                                <td class="px-7 py-4 text-center whitespace-nowrap text-sm text-gray-500">@quiz.QuestionCount</td>
+                                <td class="px-7 py-4 text-center whitespace-nowrap text-sm text-gray-500">@quiz.StartTime.ToString("MMM dd, yyyy HH:mm")</td>
+                                <td class="px-7 py-4 text-center whitespace-nowrap text-sm text-gray-500">@quiz.EndTime.ToString("MMM dd, yyyy HH:mm")</td>
+                                <td class="px-7 py-4 text-center whitespace-nowrap text-sm">
                                 <span class="@GetStatusBadgeClass(quiz)">
                                     @GetStatusText(quiz)
                                 </span>
                                 </td>
-                                <td class="px-12 py-4 text-center whitespace-nowrap text-sm font-medium">
+                                <td class="px-7 py-4 text-center whitespace-nowrap text-sm font-medium">
                                     <button @onclick="() => ShowQuizDetails(quiz)"
                                             class="text-blue-600 hover:text-blue-900 hover:underline">
                                         View Details

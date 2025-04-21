@@ -1,5 +1,41 @@
-<h3>UserNavbar</h3>
+@inject NavigationManager NavigationManager
+
+<div class="flex justify-between items-center border-gray-200">
+    <div class="flex items-center justify-center gap-16">
+        <a href="/user/dashboard" class="text-xl font-bold text-gray-800">PuzzleLab</a>
+        <div class="flex items-center gap-4">
+            <a href="/user/dashboard"
+               class="inline-flex items-center justify-center whitespace-nowrap text-md focus-visible:ring-gray-950 focus-visible:ring-offset-1 h-10 px-4 py-2 @(IsActive("/user/dashboard") ? "font-medium text-gray-900 underline" : "text-gray-600 hover:text-gray-900")">
+                Home
+            </a>
+            <a href="/user/quiz"
+               class="inline-flex items-center justify-center whitespace-nowrap text-md focus-visible:ring-gray-950 focus-visible:ring-offset-1 h-10 px-4 py-2 @(IsActive("/user/quiz") ? "font-medium text-gray-900 underline" : "text-gray-600 hover:text-gray-900")">
+                Quiz
+            </a>
+        </div>
+    </div>
+
+    <div class="flex items-center space-x-4">
+        <span class="text-sm text-gray-600">User</span>
+        <button @onclick="HandleLogout" class="text-sm text-red-600 hover:text-red-800">Logout</button>
+    </div>
+</div>
 
 @code {
-    
+    [Parameter] public EventCallback HandleLogout { get; set; }
+
+    private bool IsActive(string href)
+    {
+        var relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri).Split('?')[0];
+        var normalizedHref = href.TrimStart('/');
+
+        if (string.IsNullOrEmpty(relativePath) || relativePath.Equals("user", StringComparison.OrdinalIgnoreCase))
+        {
+            return normalizedHref.Equals("user/dashboard", StringComparison.OrdinalIgnoreCase);
+        }
+
+        return relativePath.Equals(normalizedHref, StringComparison.OrdinalIgnoreCase) ||
+               relativePath.StartsWith(normalizedHref + "/", StringComparison.OrdinalIgnoreCase);
+    }
+
 }

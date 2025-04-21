@@ -1,0 +1,38 @@
+@inherits LayoutComponentBase
+@using PuzzleLab.Web.Components.Ui
+@using PuzzleLab.Web.Components.Navbars
+@using PuzzleLab.Web.Services.State
+
+@inject UserStateService UserState
+@inject NavigationManager NavigationManager
+
+<div class="min-h-screen bg-gray-100 flex flex-col">
+    <div class="w-full bg-white shadow-sm flex-shrink-0">
+        <div class="w-full mx-auto px-16 py-4">
+            <UserNavbar HandleLogout="HandleLogout"/>
+        </div>
+    </div>
+
+    <main class="flex-grow flex justify-center items-center">
+        <div class="w-full mx-auto px-40 py-8 mb-6">
+            @Body
+        </div>
+    </main>
+
+    <Toast/>
+</div>
+
+@code {
+
+    private async Task HandleLogout()
+    {
+        Console.WriteLine("User logout requested from layout");
+        NavigationManager.NavigateTo("/login", forceLoad: true);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UserState.InitializeAsync();
+    }
+
+}
