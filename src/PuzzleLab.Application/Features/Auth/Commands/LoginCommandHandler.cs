@@ -23,8 +23,6 @@ public class LoginCommandHandler(IUserRepository userRepository, IJwtGenerator j
             return Result<LoginResponse>.Failure(Error.NotFound($"User with email {request.Email} not found!"));
         }
 
-        Console.WriteLine(request);
-
         var isValidPassword = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
 
         if (!isValidPassword)

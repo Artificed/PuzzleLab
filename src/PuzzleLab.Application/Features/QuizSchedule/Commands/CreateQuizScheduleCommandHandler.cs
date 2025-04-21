@@ -23,7 +23,7 @@ public class CreateQuizScheduleCommandHandler(
 
         if (questionPackage is null)
         {
-            throw new Exception("Question package not found!");
+            return Result<CreateQuizScheduleResponse>.Failure(Error.NotFound("Question package not found!"));
         }
 
         var newSchedule = scheduleFactory.CreateSchedule(request.StartTime, request.EndTime);

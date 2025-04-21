@@ -21,7 +21,7 @@ public class UpdateQuizScheduleCommandHandler(
 
         if (questionPackage is null)
         {
-            throw new Exception("Question package not found!");
+            return Result<UpdateQuizScheduleResponse>.Failure(Error.NotFound("Question package not found!"));
         }
 
         var quiz = await quizRepository.GetQuizByIdAsync(request.QuizId, cancellationToken);

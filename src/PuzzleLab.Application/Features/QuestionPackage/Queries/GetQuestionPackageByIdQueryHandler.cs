@@ -19,9 +19,14 @@ public class GetQuestionPackageByIdQueryHandler(IQuestionPackageRepository quest
             return Result<GetQuestionPackageByIdResponse>.Failure(Error.NotFound("Question Package not found!"));
         }
 
-        var questionPackageDto = new QuestionPackageDto(questionPackage.Id, questionPackage.Name,
+        var questionPackageDto = new QuestionPackageDto(
+            questionPackage.Id,
+            questionPackage.Name,
             questionPackage.Description,
-            questionPackage.Questions.Count, questionPackage.CreatedAt, questionPackage.LastModifiedAt);
+            questionPackage.Questions.Count,
+            questionPackage.CreatedAt,
+            questionPackage.LastModifiedAt
+        );
 
         var response = new GetQuestionPackageByIdResponse(questionPackageDto);
         return Result<GetQuestionPackageByIdResponse>.Success(response);

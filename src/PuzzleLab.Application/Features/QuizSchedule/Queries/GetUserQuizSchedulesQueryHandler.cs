@@ -30,10 +30,16 @@ public class GetUserQuizSchedulesQueryHandler(
             var schedule = await scheduleRepository.GetScheduleByIdAsync(quiz.ScheduleId, cancellationToken);
 
             if (questionPackage is null)
-                throw new Exception($"QuestionPackage with ID {quiz.QuestionPackageId} not found.");
+            {
+                return Result<GetUserQuizScheduleResponse>.Failure(
+                    Error.NotFound($"QuestionPackage with ID {quiz.QuestionPackageId} not found."));
+            }
 
             if (schedule is null)
-                throw new Exception($"Schedule with ID {quiz.ScheduleId} not found.");
+            {
+                return Result<GetUserQuizScheduleResponse>.Failure(
+                    Error.NotFound($"Schedule with ID {quiz.ScheduleId} not found."));
+            }
 
             quizScheduleDtos.Add(new QuizScheduleDto
             {
