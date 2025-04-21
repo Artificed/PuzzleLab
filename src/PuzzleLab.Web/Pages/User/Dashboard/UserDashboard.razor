@@ -2,14 +2,18 @@
 @using PuzzleLab.Shared.DTOs.QuizSchedule
 @using PuzzleLab.Web.Services.State
 @using PuzzleLab.Shared.DTOs.QuizSchedule.Requests
+@using PuzzleLab.Shared.DTOs.QuizSession.Requests
+@using PuzzleLab.Web.Services.Api.Core.Implementations
 @using PuzzleLab.Web.Services.Api.Core.Interfaces
 @using PuzzleLab.Web.Services.Ui
 
 @layout Components.Layout.UserLayout
 
 @inject IQuizScheduleService QuizScheduleService
+@inject IQuizSessionService QuizSessionService
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
+@inject UserStateService UserState
 
 <PageTitle>Dashboard - PuzzleLab</PageTitle>
 
@@ -210,7 +214,7 @@
                         <button @onclick="() => TakeQuiz(_selectedQuiz)"
                                 disabled="@(!IsQuizInProgress(_selectedQuiz))"
                                 class="@(IsQuizInProgress(_selectedQuiz)
-                                           ? "inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                           ? "inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-black cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
                                            : "inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-400 cursor-not-allowed")">
                             Take Test
                         </button>
@@ -374,12 +378,27 @@
         _selectedQuiz = null;
     }
 
-    private void TakeQuiz(QuizScheduleDto quiz)
+    private async Task TakeQuiz(QuizScheduleDto quiz)
     {
+        if (UserState?.CurrentUser?.Id is null)
+        {
+            return;
+        }
+
         if (IsQuizInProgress(quiz))
         {
-            // Navigate to the quiz page
-            NavigationManager.NavigateTo($"/quiz/{quiz.QuizId}");
+            var request = new CreateQuizSessionRequest() { QuizId = quiz.QuizId, UserId = UserState.CurrentUser.Id };
+            var response = await QuizSessionService.CreateQuizSessionAsync(request);
+
+            if (response is null)
+            {
+                ToastService.ShowError("Failed to create quiz session.", "Error");
+                return;
+            }
+
+            ToastService.ShowSuccess("Quiz session created successfully.", "Success");
+
+            // NavigationManager.NavigateTo($"/quiz/{quiz.QuizId}");
         }
     }
 

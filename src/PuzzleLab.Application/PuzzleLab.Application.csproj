@@ -16,4 +16,10 @@
         <ProjectReference Include="..\PuzzleLab.Shared\PuzzleLab.Shared.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <Folder Include="Features\QuizAnswer\Commands\"/>
+        <Folder Include="Features\QuizAnswer\Queries\"/>
+        <Folder Include="Features\QuizSession\Queries\"/>
+    </ItemGroup>
+
 </Project>

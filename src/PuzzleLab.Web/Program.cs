@@ -5,7 +5,6 @@ using PuzzleLab.Web.Services.Api.Client;
 using PuzzleLab.Web.Services.Api.Core.Implementations;
 using PuzzleLab.Web.Services.Api.Core.Interfaces;
 using PuzzleLab.Web.Services.Api.Handlers;
-using PuzzleLab.Web.Services.Api.Client;
 using PuzzleLab.Web.Services.Api.Security;
 using PuzzleLab.Web.Services.State;
 
@@ -44,6 +43,7 @@ builder.Services.AddScoped<IQuestionService, QuestionService>();
 builder.Services.AddScoped<IAnswerService, AnswerService>();
 builder.Services.AddScoped<IQuizScheduleService, QuizScheduleService>();
 builder.Services.AddScoped<IQuizParticipantsService, QuizParticipantsService>();
+builder.Services.AddScoped<IQuizSessionService, QuizSessionService>();
 builder.Services.AddScoped<UserStateService>();
 
 var app = builder.Build();
