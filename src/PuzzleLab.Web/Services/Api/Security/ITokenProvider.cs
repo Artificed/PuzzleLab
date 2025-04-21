@@ -1,4 +1,4 @@
-namespace PuzzleLab.Web.Services.Api.Interfaces;
+namespace PuzzleLab.Web.Services.Api.Security;
 
 public interface ITokenProvider
 {

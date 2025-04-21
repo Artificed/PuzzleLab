@@ -1,9 +1,12 @@
 using System.Net.Http.Headers;
 using Blazored.LocalStorage;
 using PuzzleLab.Web;
-using PuzzleLab.Web.Services.Api;
+using PuzzleLab.Web.Services.Api.Client;
+using PuzzleLab.Web.Services.Api.Core.Implementations;
+using PuzzleLab.Web.Services.Api.Core.Interfaces;
 using PuzzleLab.Web.Services.Api.Handlers;
-using PuzzleLab.Web.Services.Api.Interfaces;
+using PuzzleLab.Web.Services.Api.Client;
+using PuzzleLab.Web.Services.Api.Security;
 using PuzzleLab.Web.Services.State;
 
 var builder = WebApplication.CreateBuilder(args);

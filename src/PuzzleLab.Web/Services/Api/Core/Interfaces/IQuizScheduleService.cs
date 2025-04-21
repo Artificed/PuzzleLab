@@ -1,7 +1,7 @@
 using PuzzleLab.Shared.DTOs.QuizSchedule.Requests;
 using PuzzleLab.Shared.DTOs.QuizSchedule.Responses;
 
-namespace PuzzleLab.Web.Services.Api.Interfaces;
+namespace PuzzleLab.Web.Services.Api.Core.Interfaces;
 
 public interface IQuizScheduleService
 {
@@ -15,4 +15,7 @@ public interface IQuizScheduleService
 
     Task<DeleteQuizScheduleResponse?> DeleteQuizScheduleAsync(
         DeleteQuizScheduleRequest deleteQuestionRequest);
+
+    Task<GetUserQuizScheduleResponse?> GetUserQuizScheduleAsync(
+        GetUserQuizScheduleRequest getUserQuizScheduleRequest);
 }

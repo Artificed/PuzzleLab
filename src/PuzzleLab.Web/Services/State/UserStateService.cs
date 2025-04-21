@@ -1,5 +1,7 @@
 using PuzzleLab.Shared.DTOs.Auth.Responses;
-using PuzzleLab.Web.Services.Api.Interfaces;
+using PuzzleLab.Web.Services.Api.Core.Interfaces;
+using PuzzleLab.Web.Services.Api.Client;
+using PuzzleLab.Web.Services.Api.Security;
 
 namespace PuzzleLab.Web.Services.State;
 

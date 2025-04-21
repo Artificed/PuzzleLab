@@ -1,15 +1,12 @@
 @page "/admin/quiz-schedules"
 @layout Components.Layout.AdminLayout
 
-@using System.Collections.Generic
 @using PuzzleLab.Shared.DTOs.QuestionPackage
 @using PuzzleLab.Shared.DTOs.QuizSchedule
 @using PuzzleLab.Shared.DTOs.QuizSchedule.Requests
-@using PuzzleLab.Web.Services.Api.Interfaces
+@using PuzzleLab.Web.Services.Api.Core.Interfaces
 @using PuzzleLab.Web.Services.Ui
 
-@inject NavigationManager NavigationManager
-@* @inject IScheduleService ScheduleService *@
 @inject IQuestionPackageService QuestionPackageService
 @inject IQuizScheduleService QuizScheduleService
 @rendermode InteractiveServer

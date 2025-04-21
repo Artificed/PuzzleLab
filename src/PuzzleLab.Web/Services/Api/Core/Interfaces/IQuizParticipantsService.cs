@@ -1,7 +1,7 @@
 using PuzzleLab.Shared.DTOs.QuizUser.Requests;
 using PuzzleLab.Shared.DTOs.QuizUser.Responses;
 
-namespace PuzzleLab.Web.Services.Api.Interfaces;
+namespace PuzzleLab.Web.Services.Api.Core.Interfaces;
 
 public interface IQuizParticipantsService
 {

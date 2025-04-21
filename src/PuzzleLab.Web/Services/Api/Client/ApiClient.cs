@@ -1,10 +1,9 @@
 using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
-using PuzzleLab.Web.Services.Api.Interfaces;
 using PuzzleLab.Web.Services.Ui;
 
-namespace PuzzleLab.Web.Services.Api;
+namespace PuzzleLab.Web.Services.Api.Client;
 
 public class ApiClient(HttpClient httpClient) : IApiClient
 {

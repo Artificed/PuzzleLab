@@ -1,8 +1,9 @@
 using PuzzleLab.Shared.DTOs.Auth.Requests;
 using PuzzleLab.Shared.DTOs.Auth.Responses;
-using PuzzleLab.Web.Services.Api.Interfaces;
+using PuzzleLab.Web.Services.Api.Core.Interfaces;
+using PuzzleLab.Web.Services.Api.Client;
 
-namespace PuzzleLab.Web.Services.Api;
+namespace PuzzleLab.Web.Services.Api.Core.Implementations;
 
 public class AuthService(IApiClient apiClient) : IAuthService
 {

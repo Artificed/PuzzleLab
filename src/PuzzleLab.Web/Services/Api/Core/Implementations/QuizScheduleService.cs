@@ -1,8 +1,9 @@
 using PuzzleLab.Shared.DTOs.QuizSchedule.Requests;
 using PuzzleLab.Shared.DTOs.QuizSchedule.Responses;
-using PuzzleLab.Web.Services.Api.Interfaces;
+using PuzzleLab.Web.Services.Api.Core.Interfaces;
+using PuzzleLab.Web.Services.Api.Client;
 
-namespace PuzzleLab.Web.Services.Api;
+namespace PuzzleLab.Web.Services.Api.Core.Implementations;
 
 public class QuizScheduleService(IApiClient apiClient) : IQuizScheduleService
 {
@@ -39,9 +40,12 @@ public class QuizScheduleService(IApiClient apiClient) : IQuizScheduleService
         return response;
     }
 
-    public async Task<GetUserQuizScheduleResponse?> GetUserQuizScheduleAsync(string userId)
+    public async Task<GetUserQuizScheduleResponse?> GetUserQuizScheduleAsync(
+        GetUserQuizScheduleRequest getUserQuizScheduleRequest)
     {
-        var schedules = await apiClient.GetAsync<GetUserQuizScheduleResponse>($"/api/quiz-schedule/user/{userId}");
+        var schedules =
+            await apiClient.GetAsync<GetUserQuizScheduleResponse>(
+                $"/api/quiz-schedule/user/{getUserQuizScheduleRequest.UserId}");
         return schedules;
     }
 }

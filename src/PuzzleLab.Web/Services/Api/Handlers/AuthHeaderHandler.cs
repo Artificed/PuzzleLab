@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
-using PuzzleLab.Web.Services.Api.Interfaces;
+using PuzzleLab.Web.Services.Api.Client;
 using Microsoft.JSInterop;
+using PuzzleLab.Web.Services.Api.Security;
 
 namespace PuzzleLab.Web.Services.Api.Handlers;
 

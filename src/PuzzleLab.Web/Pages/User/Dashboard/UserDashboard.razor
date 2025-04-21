@@ -1,14 +1,13 @@
 ﻿@page "/user/dashboard"
 @using PuzzleLab.Shared.DTOs.QuizSchedule
-@using PuzzleLab.Web.Services.Api.Interfaces
 @using PuzzleLab.Web.Services.State
 @using PuzzleLab.Shared.DTOs.QuizSchedule.Requests
+@using PuzzleLab.Web.Services.Api.Core.Interfaces
 @using PuzzleLab.Web.Services.Ui
 
 @layout Components.Layout.UserLayout
 
 @inject IQuizScheduleService QuizScheduleService
-@inject UserStateService UserState
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
 

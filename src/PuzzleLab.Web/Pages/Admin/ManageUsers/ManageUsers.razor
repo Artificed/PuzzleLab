@@ -2,18 +2,12 @@
 
 @layout Components.Layout.AdminLayout
 
-@using PuzzleLab.Web.Services.State
-@using PuzzleLab.Web.Components.Navbars
-@using System.Collections.Generic
-@using PuzzleLab.Shared.DTOs.User
 @using PuzzleLab.Shared.DTOs.User.Requests
 @using PuzzleLab.Web.Models
-@using PuzzleLab.Web.Services.Api.Interfaces
+@using PuzzleLab.Web.Services.Api.Core.Interfaces
 @using PuzzleLab.Web.Services.Ui
 
-@inject NavigationManager NavigationManager
 @inject IUserService UserService
-@inject UserStateService UserState
 @rendermode InteractiveServer
 
 <PageTitle>Manage Users - PuzzleLab</PageTitle>

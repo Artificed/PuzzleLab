@@ -1,7 +1,7 @@
 using PuzzleLab.Shared.DTOs.Question.Requests;
 using PuzzleLab.Shared.DTOs.Question.Responses;
 
-namespace PuzzleLab.Web.Services.Api.Interfaces;
+namespace PuzzleLab.Web.Services.Api.Core.Interfaces;
 
 public interface IQuestionService
 {

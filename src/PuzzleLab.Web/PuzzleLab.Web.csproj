@@ -32,6 +32,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <AdditionalFiles Include="Pages\User\Dashboard\UserDashboard.razor"/>
         <AdditionalFiles Include="wwwroot\favicon.ico"/>
     </ItemGroup>
 

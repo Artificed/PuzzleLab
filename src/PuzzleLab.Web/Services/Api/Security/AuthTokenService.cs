@@ -1,11 +1,9 @@
 using Blazored.LocalStorage;
-using PuzzleLab.Web.Services.Api.Interfaces;
-
-namespace PuzzleLab.Web.Services.Api;
-
-using PuzzleLab.Web.Services.Api.Interfaces;
+using PuzzleLab.Web.Services.Api.Client;
 using System;
 using System.Threading.Tasks;
+
+namespace PuzzleLab.Web.Services.Api.Security;
 
 public class InMemoryAuthTokenService : ITokenProvider
 {
