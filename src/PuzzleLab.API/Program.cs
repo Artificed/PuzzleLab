@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using PuzzleLab.Application.Common.Interfaces;
+using PuzzleLab.Domain.Entities;
 using PuzzleLab.Domain.Factories;
 using PuzzleLab.Domain.Repositories;
 using PuzzleLab.Infrastructure.Persistence;
@@ -19,6 +20,7 @@ builder.Services.AddScoped<IQuizAnswerRepository, QuizAnswerRepository>();
 builder.Services.AddScoped<IQuizRepository, QuizRepository>();
 builder.Services.AddScoped<IQuizSessionRepository, QuizSessionRepository>();
 builder.Services.AddScoped<IQuizUserRepository, QuizUserRepository>();
+builder.Services.AddScoped<IQuizSessionQuestionRepository, QuizSessionQuestionRepository>();
 builder.Services.AddScoped<IScheduleRepository, ScheduleRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
@@ -29,6 +31,7 @@ builder.Services.AddTransient<QuizAnswerFactory>();
 builder.Services.AddTransient<QuizFactory>();
 builder.Services.AddTransient<QuizSessionFactory>();
 builder.Services.AddTransient<QuizUserFactory>();
+builder.Services.AddTransient<QuizSessionQuestionFactory>();
 builder.Services.AddTransient<ScheduleFactory>();
 builder.Services.AddTransient<UserFactory>();
 

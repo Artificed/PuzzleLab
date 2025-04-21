@@ -10,11 +10,11 @@ namespace PuzzleLab.API.Controllers;
 [Route("api/quiz-session")]
 public class QuizSessionController(ISender sender) : ControllerBase
 {
-    [HttpPost("create")]
-    public async Task<IActionResult> CreateQuizSession([FromBody] CreateQuizSessionRequest request,
+    [HttpPost("create-or-get")]
+    public async Task<IActionResult> CreateOrGetQuizSession([FromBody] CreateOrGetQuizSessionRequest request,
         CancellationToken cancellationToken)
     {
-        var command = new CreateQuizSessionCommand(request.QuizId, request.UserId);
+        var command = new CreateOrGetQuizSessionCommand(request.QuizId, request.UserId);
         var result = await sender.Send(command, cancellationToken);
 
         if (result.IsFailure)

@@ -387,8 +387,8 @@
 
         if (IsQuizInProgress(quiz))
         {
-            var request = new CreateQuizSessionRequest() { QuizId = quiz.QuizId, UserId = UserState.CurrentUser.Id };
-            var response = await QuizSessionService.CreateQuizSessionAsync(request);
+            var request = new CreateOrGetQuizSessionRequest() { QuizId = quiz.QuizId, UserId = UserState.CurrentUser.Id };
+            var response = await QuizSessionService.CreateOrGetQuizSessionAsync(request);
 
             if (response is null)
             {

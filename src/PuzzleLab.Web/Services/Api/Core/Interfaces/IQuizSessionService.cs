@@ -5,6 +5,6 @@ namespace PuzzleLab.Web.Services.Api.Core.Interfaces;
 
 public interface IQuizSessionService
 {
-    Task<CreateQuizSessionResponse?> CreateQuizSessionAsync(
-        CreateQuizSessionRequest createQuizSessionRequest);
+    Task<CreateOrGetQuizSessionResponse?> CreateOrGetQuizSessionAsync(
+        CreateOrGetQuizSessionRequest createOrGetQuizSessionRequest);
 }

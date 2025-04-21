@@ -22,4 +22,13 @@ public class QuizSessionRepository(DatabaseContext databaseContext) : IQuizSessi
         await databaseContext.QuizSessions.AddAsync(session, cancellationToken);
         await databaseContext.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task<QuizSession?> GetExistingQuizSessionAsync(Guid quizId, Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        return await databaseContext.QuizSessions
+            .Include(q => q.Quiz)
+            .Include(q => q.User)
+            .FirstOrDefaultAsync(x => x.QuizId == quizId && x.UserId == userId, cancellationToken);
+    }
 }

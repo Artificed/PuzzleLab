@@ -7,11 +7,11 @@ namespace PuzzleLab.Web.Services.Api.Core.Implementations;
 
 public class QuizSessionService(IApiClient apiClient) : IQuizSessionService
 {
-    public async Task<CreateQuizSessionResponse?> CreateQuizSessionAsync(
-        CreateQuizSessionRequest createQuizSessionRequest)
+    public async Task<CreateOrGetQuizSessionResponse?> CreateOrGetQuizSessionAsync(
+        CreateOrGetQuizSessionRequest createOrGetQuizSessionRequest)
     {
-        var response = await apiClient.PostAsync<CreateQuizSessionResponse>(
-            "/api/quiz-session/create", createQuizSessionRequest);
+        var response = await apiClient.PostAsync<CreateOrGetQuizSessionResponse>(
+            "/api/quiz-session/create", createOrGetQuizSessionRequest);
         return response;
     }
 }
