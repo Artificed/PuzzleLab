@@ -38,9 +38,7 @@ builder.Services.AddTransient<UserFactory>();
 builder.Services.AddScoped<AnswerSeeder>();
 builder.Services.AddScoped<QuestionSeeder>();
 builder.Services.AddScoped<QuestionPackageSeeder>();
-builder.Services.AddScoped<QuizAnswerSeeder>();
 builder.Services.AddScoped<QuizSeeder>();
-builder.Services.AddScoped<QuizSessionSeeder>();
 builder.Services.AddScoped<QuizUserSeeder>();
 builder.Services.AddScoped<ScheduleSeeder>();
 builder.Services.AddScoped<UserSeeder>();
@@ -145,12 +143,6 @@ if (args.Contains("--seed"))
 
         var quizUserSeeder = serviceProvider.GetRequiredService<QuizUserSeeder>();
         await quizUserSeeder.SeedQuizUsersAsync();
-
-        var quizSessionSeeder = serviceProvider.GetRequiredService<QuizSessionSeeder>();
-        await quizSessionSeeder.SeedQuizSessionsAsync();
-
-        var quizAnswerSeeder = serviceProvider.GetRequiredService<QuizAnswerSeeder>();
-        await quizAnswerSeeder.SeedQuizAnswersAsync();
     }
 }
 

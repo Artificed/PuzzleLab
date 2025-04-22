@@ -29,31 +29,32 @@ public class QuestionSeeder(
 
         var packageIdCycle = packages.Select(p => p.Id).ToList();
 
-        var questionsToSeed = new List<(string Text, bool UseImage)>
+        var questionsToSeed = new List<(string Text, string ImageFileName)>
         {
-            ("What is 2 + 2?", false),
-            ("What is the capital of Spain?", false),
-            ("Who wrote 'Hamlet'?", false),
-            ("What element has the symbol 'O'?", false),
-            ("Identify the largest planet in our solar system.", true),
-            ("What is the chemical formula for water?", false),
-            ("In which year did World War II end?", false),
-            ("What is the square root of 144?", false),
-            ("Name the longest river in the world.", false),
-            ("Which country is known as the Land of the Rising Sun?", true)
+            ("What is 2 + 2?", "2+2.png"),
+            ("What is the capital of Spain?", "spain.png"),
+            ("Who wrote 'Hamlet'?", "hamlet.jpg"),
+            ("What element has the symbol 'O'?", "periodic-table.png"),
+            ("Identify the largest planet in our solar system.", "solar-system.png"),
+            ("What is the chemical formula for water?", "water.jpg"),
+            ("In which year did World War II end?", "ww2.png"),
+            ("What is the square root of 144?", "root144.jpg"),
+            ("Name the longest river in the world.", "river.jpg"),
+            ("Which country is known as the Land of the Rising Sun?", "jp.png")
         };
 
         var count = 0;
         for (var i = 0; i < questionsToSeed.Count; i++)
         {
-            var (text, useImage) = questionsToSeed[i];
+            var (text, imageFileName) = questionsToSeed[i];
             var packageId = packageIdCycle[i % packageIdCycle.Count];
 
             Question question;
-            if (useImage)
-            {
-                var imageRelativePath = "Persistence/Seeders/Images/webdev-quiz.jpg";
+            var imageRelativePath = Path.Combine("Persistence", "Seeders", "Images", imageFileName);
+            var fileExtension = Path.GetExtension(imageFileName)?.TrimStart('.').ToLowerInvariant();
 
+            if (!string.IsNullOrEmpty(fileExtension))
+            {
                 byte[] seedImageData;
                 try
                 {
@@ -70,7 +71,13 @@ public class QuestionSeeder(
                         $"Error loading seed image data from '{imageRelativePath}'. See inner exception.", ex);
                 }
 
-                string mimeType = "image/jpg";
+                string mimeType = fileExtension switch
+                {
+                    "jpg" or "jpeg" => "image/jpeg",
+                    "png" => "image/png",
+                    "gif" => "image/gif",
+                    _ => throw new InvalidOperationException($"Unsupported image format: {fileExtension}")
+                };
 
                 question = questionFactory.CreateQuestionWithImage(packageId, text, seedImageData, mimeType);
             }

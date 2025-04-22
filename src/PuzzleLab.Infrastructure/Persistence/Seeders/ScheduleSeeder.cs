@@ -19,11 +19,15 @@ public class ScheduleSeeder(
 
         var schedulesToSeed = new List<(DateTime Start, DateTime End)>
         {
-            (DateTime.UtcNow, DateTime.UtcNow.AddHours(1)),
-            (DateTime.UtcNow.AddHours(2), DateTime.UtcNow.AddHours(3)),
-            (DateTime.UtcNow.AddHours(3), DateTime.UtcNow.AddHours(4)),
+            (DateTime.UtcNow.AddDays(2), DateTime.UtcNow.AddDays(3)),
+            (DateTime.UtcNow, DateTime.UtcNow.AddHours(13)),
+            (DateTime.UtcNow, DateTime.UtcNow.AddSeconds(14)),
+            (DateTime.UtcNow.AddHours(7), DateTime.UtcNow.AddHours(9)),
+            (DateTime.UtcNow.AddHours(12), DateTime.UtcNow.AddHours(14)),
             (DateTime.UtcNow.AddMinutes(10), DateTime.UtcNow.AddHours(2)),
-            (DateTime.UtcNow.AddMinutes(30), DateTime.UtcNow.AddMinutes(90))
+            (DateTime.UtcNow.AddMinutes(30), DateTime.UtcNow.AddMinutes(70)),
+            (DateTime.UtcNow.AddMinutes(10), DateTime.UtcNow.AddHours(3)),
+            (DateTime.UtcNow.AddMinutes(30), DateTime.UtcNow.AddMinutes(40))
         };
 
         for (int i = 0; i < schedulesToSeed.Count; i++)
