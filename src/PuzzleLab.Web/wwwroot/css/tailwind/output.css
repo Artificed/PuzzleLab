@@ -1164,6 +1164,18 @@
   .px-64 {
     padding-inline: calc(var(--spacing) * 64);
   }
+  .px-\[1\%\] {
+    padding-inline: 1%;
+  }
+  .px-\[10\%\] {
+    padding-inline: 10%;
+  }
+  .px-\[12\%\] {
+    padding-inline: 12%;
+  }
+  .px-\[15\%\] {
+    padding-inline: 15%;
+  }
   .py-0\.5 {
     padding-block: calc(var(--spacing) * 0.5);
   }
