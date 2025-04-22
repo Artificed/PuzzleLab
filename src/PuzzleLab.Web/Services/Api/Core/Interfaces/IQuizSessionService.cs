@@ -7,4 +7,7 @@ public interface IQuizSessionService
 {
     Task<CreateOrGetQuizSessionResponse?> CreateOrGetQuizSessionAsync(
         CreateOrGetQuizSessionRequest createOrGetQuizSessionRequest);
+
+    Task<GetCurrentQuestionResponse?> GetCurrentQuestionAsync(
+        GetCurrentQuestionRequest getCurrentQuestionRequest);
 }

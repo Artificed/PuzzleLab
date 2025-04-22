@@ -276,7 +276,7 @@
     private string _errorMessage = string.Empty;
     private string _quizTitle = "Sample Quiz";
     private int _currentQuestionIndex = 0;
-    private int _totalQuestions = 10; // Mock value
+    private int _totalQuestions = 0;
     private int _selectedAnswerIndex = -1;
     private Dictionary<int, int> _answeredQuestions = new Dictionary<int, int>();
     private QuestionWithAnswerDto? _currentQuestion;
@@ -286,80 +286,17 @@
     private bool _showSubmitConfirmation = false;
     private System.Timers.Timer? _timer;
 
-    // Mock data for demonstration
-    private List<QuestionWithAnswerDto> _mockQuestions = new List<QuestionWithAnswerDto>
-    {
-        new QuestionWithAnswerDto(
-            Guid.NewGuid(),
-            "What is the primary purpose of Domain-Driven Design (DDD)?",
-            new byte[0],
-            "",
-            new string[]
-            {
-                "To make code run faster",
-                "To align software design with business domain expertise",
-                "To reduce the number of lines of code",
-                "To eliminate the need for a database"
-            }),
-        new QuestionWithAnswerDto(
-            Guid.NewGuid(),
-            "Which of the following is a key component of Blazor WebAssembly?",
-            new byte[0],
-            "",
-            new string[]
-            {
-                "It requires Node.js to run",
-                "It compiles C# code to run in the browser",
-                "It only works with MongoDB",
-                "It can only be hosted on Azure"
-            }),
-        new QuestionWithAnswerDto(
-            Guid.NewGuid(),
-            "What design pattern is commonly used to implement cross-cutting concerns in DDD?",
-            new byte[0],
-            "",
-            new string[]
-            {
-                "Factory Pattern",
-                "Builder Pattern",
-                "Decorator Pattern",
-                "Repository Pattern"
-            }),
-        new QuestionWithAnswerDto(
-            Guid.NewGuid(),
-            "In DDD, what is an Aggregate Root?",
-            new byte[0],
-            "",
-            new string[]
-            {
-                "The main database table in the application",
-                "An entity that acts as the entry point to an aggregate of domain objects",
-                "The server that hosts the application",
-                "The main UI component that users interact with"
-            })
-    };
-
     protected override async Task OnInitializedAsync()
     {
-        // Simulate loading quiz data
-        await Task.Delay(1000);
-
         try
         {
-            // In a real implementation, you would call your API here to get the session
-            // var userId = UserState.CurrentUser?.Id ?? Guid.Empty;
-            // var sessionResponse = await QuizSessionService.GetQuizSessionAsync(QuizId, userId);
-            // _quizSession = sessionResponse.QuizSession;
-
-            // For now, create mock session data
-
             if (UserState?.CurrentUser?.Id is null)
             {
                 ToastService.ShowError("User is not logged in.", "Error");
                 return;
             }
 
-            var request = new CreateOrGetQuizSessionRequest() { QuizId = QuizId, UserId = UserState.CurrentUser.Id };
+            var request = new CreateOrGetQuizSessionRequest() { QuizId = QuizId, };
             var response = await QuizSessionService.CreateOrGetQuizSessionAsync(request);
 
             if (response is null)
@@ -368,27 +305,28 @@
                 return;
             }
 
-            // Then get the first question
-            // var request = new GetCurrentQuestionRequest {
-            //     QuizId = QuizId.ToString(),
-            //     UserId = userId.ToString(),
-            //     QuestionIndex = _currentQuestionIndex
-            // };
-            // var response = await QuizSessionService.GetCurrentQuestionAsync(request);
-            // _currentQuestion = response.Question;
-            // _totalQuestions = _quizSession.TotalQuestions;
+            _quizSession = response.QuizSessionDto;
+            _totalQuestions = _quizSession.TotalQuestions;
 
-            // For now, use mock data
-            _totalQuestions = _mockQuestions.Count;
-            _currentQuestion = _mockQuestions[_currentQuestionIndex];
+            var questionRequest = new GetCurrentQuestionRequest
+            {
+                QuizId = QuizId.ToString(),
+                QuestionIndex = _currentQuestionIndex
+            };
 
-            // Calculate time remaining based on quiz duration
-            // In a real implementation, you might get this from _quizSession
+            var questionResponse = await QuizSessionService.GetCurrentQuestionAsync(questionRequest);
+            if (questionResponse is null)
+            {
+                ToastService.ShowError("Failed to fetch question!", "Error");
+                return;
+            }
+
+            _totalQuestions = _quizSession.TotalQuestions;
+            _currentQuestion = questionResponse.QuestionWithAnswerDto;
+
             _timeRemaining = TimeSpan.FromMinutes(30); // Mock value
 
-            // Start the timer
             StartTimer();
-
             _isLoading = false;
         }
         catch (Exception ex)
@@ -469,20 +407,20 @@
 
     private async Task LoadCurrentQuestion()
     {
-        // In a real implementation, you would call your API here
-        // var userId = UserState.CurrentUser?.Id ?? Guid.Empty;
-        // var request = new GetCurrentQuestionRequest {
-        //     QuizId = QuizId.ToString(),
-        //     UserId = userId.ToString(),
-        //     QuestionIndex = _currentQuestionIndex
-        // };
-        // var response = await QuizSessionService.GetCurrentQuestionAsync(request);
-        // _currentQuestion = response.Question;
+        var request = new GetCurrentQuestionRequest
+        {
+            QuizId = QuizId.ToString(),
+            QuestionIndex = _currentQuestionIndex
+        };
+        var response = await QuizSessionService.GetCurrentQuestionAsync(request);
 
-        // For demo purposes, use mock data
-        _currentQuestion = _mockQuestions[_currentQuestionIndex];
+        if (response is null)
+        {
+            ToastService.ShowError("Failed to fetch question!", "Error");
+            return;
+        }
 
-        // Set selected answer if this question was already answered
+        _currentQuestion = response.QuestionWithAnswerDto;
         _selectedAnswerIndex = _answeredQuestions.ContainsKey(_currentQuestionIndex) ? _answeredQuestions[_currentQuestionIndex] : -1;
     }
 

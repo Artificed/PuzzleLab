@@ -34,4 +34,12 @@ public class QuizSessionQuestionRepository(DatabaseContext databaseContext) : IQ
         return await databaseContext.QuizSessionQuestions
             .FirstOrDefaultAsync(q => q.Id == quizSessionQuestionId, cancellationToken);
     }
+
+    public async Task<QuizSessionQuestion?> GetQuizSessionQuestionByIdAsync(Guid sessionId, int questionOrder,
+        CancellationToken cancellationToken = default)
+    {
+        return await databaseContext.QuizSessionQuestions
+            .FirstOrDefaultAsync(q =>
+                q.QuizSessionId == sessionId && q.QuestionOrder == questionOrder, cancellationToken);
+    }
 }

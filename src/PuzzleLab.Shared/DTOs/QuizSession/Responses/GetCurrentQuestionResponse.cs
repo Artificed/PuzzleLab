@@ -1,0 +1,3 @@
+namespace PuzzleLab.Shared.DTOs.QuizSession.Responses;
+
+public record GetCurrentQuestionResponse(QuestionWithAnswerDto QuestionWithAnswerDto);

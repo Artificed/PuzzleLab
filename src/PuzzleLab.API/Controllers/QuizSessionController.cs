@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using PuzzleLab.API.Extensions;
 using PuzzleLab.Application.Common.Models;
 using PuzzleLab.Application.Features.QuizSession.Commands;
+using PuzzleLab.Application.Features.QuizSession.Queries;
 using PuzzleLab.Shared.DTOs.QuizSession.Requests;
 
 namespace PuzzleLab.API.Controllers;
@@ -27,6 +28,30 @@ public class QuizSessionController(ISender sender) : ControllerBase
         }
 
         var command = new CreateOrGetQuizSessionCommand(request.QuizId, Guid.Parse(userId));
+        var result = await sender.Send(command, cancellationToken);
+
+        if (result.IsFailure)
+        {
+            return this.MapErrorToAction(result.Error);
+        }
+
+        return Ok(result.Value);
+    }
+
+    [Authorize]
+    [HttpGet("{quizId}/{questionIndex:int}")]
+    public async Task<IActionResult> GetCurrentQuestion(string quizId, int questionIndex,
+        CancellationToken cancellationToken)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (userId == null)
+        {
+            var error = Error.Unauthorized("User is not logged in yet!");
+            return this.MapErrorToAction(error);
+        }
+
+        var command = new GetCurrentQuestionQuery(Guid.Parse(quizId), Guid.Parse(userId), questionIndex);
         var result = await sender.Send(command, cancellationToken);
 
         if (result.IsFailure)

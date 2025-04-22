@@ -15,9 +15,11 @@ public class QuizSessionService(IApiClient apiClient) : IQuizSessionService
         return response;
     }
 
-    // public async Task<GetCurrentQuestionResponse?> GetCurrentQuestionAsync(
-    //     GetCurrentQuestionRequest getCurrentQuestionRequest)
-    // {
-    //     var response = await apiClient.
-    // }
+    public async Task<GetCurrentQuestionResponse?> GetCurrentQuestionAsync(
+        GetCurrentQuestionRequest getCurrentQuestionRequest)
+    {
+        var response = await apiClient.GetAsync<GetCurrentQuestionResponse>(
+            $"api/quiz-session/{getCurrentQuestionRequest.QuizId}/{getCurrentQuestionRequest.QuestionIndex}");
+        return response;
+    }
 }
