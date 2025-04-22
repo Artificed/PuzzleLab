@@ -1,6 +1,7 @@
 using MediatR;
 using PuzzleLab.Application.Common.Models;
 using PuzzleLab.Domain.Repositories;
+using PuzzleLab.Shared.DTOs.Answer;
 using PuzzleLab.Shared.DTOs.QuizSession;
 using PuzzleLab.Shared.DTOs.QuizSession.Responses;
 
@@ -71,11 +72,16 @@ public class GetCurrentQuestionQueryCommandHandler(
 
         var answers =
             await answerRepository.GetAnswersByQuestionIdAsync(question.Id, cancellationToken);
+        var answerOptionDtos = answers.Select(a => new AnswerOptionDto() { Id = a.Id, Text = a.Text }).ToArray();
 
-        var answerStrings = answers.Select(a => a.Text).ToArray();
-
-        var questionWithAnswer = new QuestionWithAnswerDto(question.Id, question.Text, question.ImageData,
-            question.ImageMimeType, answerStrings);
+        var questionWithAnswer = new QuestionWithAnswerDto()
+        {
+            Id = question.Id,
+            Text = question.Text,
+            ImageData = question.ImageData,
+            ImageMimeType = question.ImageMimeType,
+            Answers = answerOptionDtos
+        };
 
         return Result<GetCurrentQuestionResponse>.Success(new GetCurrentQuestionResponse(questionWithAnswer));
     }

@@ -6,4 +6,7 @@ namespace PuzzleLab.Web.Services.Api.Core.Interfaces;
 public interface IQuizAnswerService
 {
     Task<SaveQuizAnswerResponse?> SaveQuizAnswerAsync(SaveQuizAnswerRequest saveQuizAnswerRequest);
+
+    Task<GetQuizAnswersBySessionResponse?> GetQuizAnswersBySessionIdAsync(
+        GetQuizAnswersBySessionRequest getQuizAnswersBySessionRequest);
 }

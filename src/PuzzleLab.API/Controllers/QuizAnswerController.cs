@@ -15,7 +15,7 @@ public class QuizAnswerController(ISender sender) : ControllerBase
     public async Task<IActionResult> SaveQuizAnswer([FromBody] SaveQuizAnswerRequest request,
         CancellationToken cancellationToken)
     {
-        var command = new SaveQuizAnswerCommand(request.SessionId, request.QuestionId, request.Answer);
+        var command = new SaveQuizAnswerCommand(request.SessionId, request.QuestionId, Guid.Parse(request.Answer));
         var result = await sender.Send(command, cancellationToken);
 
         if (result.IsFailure)

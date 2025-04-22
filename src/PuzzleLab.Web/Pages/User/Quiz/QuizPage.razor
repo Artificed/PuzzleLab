@@ -98,7 +98,7 @@
                             <div class="space-y-2">
                                 @for (int i = 0; i < _currentQuestion.Answers.Length; i++)
                                 {
-                                    string answer = _currentQuestion.Answers[i];
+                                    string answer = _currentQuestion.Answers[i].Text;
                                     int index = i; // Capture the index value for the lambda
                                     <div @onclick="() => SelectAnswer(index)"
                                          class="border @(_selectedAnswerIndex == index ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:bg-gray-50")
@@ -288,7 +288,9 @@
     private bool _showSubmitConfirmation = false;
     private System.Timers.Timer? _timer;
     private Dictionary<int, Guid> _questionIdMap = new Dictionary<int, Guid>(); // Maps question index to question ID
+    private Dictionary<Guid, int> _questionIdToAnswerIndexMap = new Dictionary<Guid, int>(); // Maps question ID to answer index
     private bool _isCurrentAnswerSaved = true; // Tracks if current answer has been saved
+    private Dictionary<Guid, Guid> _questionIdToSelectedAnswerIdMap = new Dictionary<Guid, Guid>(); // Maps question ID to selected answer ID
 
     protected override async Task OnInitializedAsync()
     {
@@ -311,6 +313,13 @@
 
             _quizSession = response.QuizSessionDto;
             _totalQuestions = _quizSession.TotalQuestions;
+            // _quizTitle = _quizSession.Title ?? "Sample Quiz";
+
+            // Load saved answers if session exists and has answers
+            if (_quizSession.Id != Guid.Empty)
+            {
+                await LoadSavedAnswers();
+            }
 
             var questionRequest = new GetCurrentQuestionRequest
             {
@@ -325,16 +334,23 @@
                 return;
             }
 
-            _totalQuestions = _quizSession.TotalQuestions;
             _currentQuestion = questionResponse.QuestionWithAnswerDto;
 
             // Store question ID for the current question
             if (_currentQuestion != null)
             {
                 _questionIdMap[_currentQuestionIndex] = _currentQuestion.Id;
+
+                // Set selected answer index if we have a saved answer for this question
+                if (_questionIdToAnswerIndexMap.ContainsKey(_currentQuestion.Id))
+                {
+                    _selectedAnswerIndex = _questionIdToAnswerIndexMap[_currentQuestion.Id];
+                    _answeredQuestions[_currentQuestionIndex] = _selectedAnswerIndex;
+                }
             }
 
-            _timeRemaining = TimeSpan.FromMinutes(30); // Mock value
+            // Set time remaining based on session data (mock for now)
+            _timeRemaining = TimeSpan.FromMinutes(30); // Use actual time from session when available
 
             StartTimer();
             _isLoading = false;
@@ -345,6 +361,128 @@
             _quizError = true;
             _errorMessage = ex.Message;
         }
+    }
+
+    private async Task LoadSavedAnswers()
+    {
+        try
+        {
+            if (_quizSession == null) return;
+
+            var request = new GetQuizAnswersBySessionRequest()
+            {
+                SessionId = _quizSession.Id
+            };
+            var savedAnswersResponse = await QuizAnswerService.GetQuizAnswersBySessionIdAsync(request);
+
+            if (savedAnswersResponse != null && savedAnswersResponse.SaveQuizAnswerDtos.Count > 0)
+            {
+                // Process saved answers
+                foreach (var savedAnswer in savedAnswersResponse.SaveQuizAnswerDtos)
+                {
+                    Guid questionId = savedAnswer.QuestionId;
+                    Guid selectedAnswerId = savedAnswer.SelectedAnswerId;
+
+                    // Store the mapping between question ID and selected answer ID
+                    _questionIdToSelectedAnswerIdMap[questionId] = selectedAnswerId;
+                }
+
+                // Now update the progress indicators
+                await UpdateAnsweredQuestionsFromSavedData();
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError($"Failed to load saved answers: {ex.Message}", "Error");
+        }
+    }
+
+    private async Task UpdateAnsweredQuestionsFromSavedData()
+    {
+        // Clear existing answered questions to avoid any stale data
+        _answeredQuestions.Clear();
+
+        foreach (var kvp in _questionIdToSelectedAnswerIdMap)
+        {
+            var questionId = kvp.Key;
+            var selectedAnswerId = kvp.Value;
+
+            // Find the question index for this question ID
+            int questionIndex = -1;
+            foreach (var pair in _questionIdMap)
+            {
+                if (pair.Value == questionId)
+                {
+                    questionIndex = pair.Key;
+                    break;
+                }
+            }
+
+            // If we haven't loaded this question yet, fetch it and update the maps
+            if (questionIndex == -1)
+            {
+                for (int i = 0; i < _totalQuestions; i++)
+                {
+                    if (_questionIdMap.ContainsKey(i)) continue;
+
+                    var request = new GetCurrentQuestionRequest
+                    {
+                        QuizId = QuizId.ToString(),
+                        QuestionIndex = i
+                    };
+
+                    var response = await QuizSessionService.GetCurrentQuestionAsync(request);
+                    if (response?.QuestionWithAnswerDto != null)
+                    {
+                        _questionIdMap[i] = response.QuestionWithAnswerDto.Id;
+
+                        if (response.QuestionWithAnswerDto.Id == questionId)
+                        {
+                            questionIndex = i;
+                            // Find the index of the selected answer
+                            for (int j = 0; j < response.QuestionWithAnswerDto.Answers.Length; j++)
+                            {
+                                if (response.QuestionWithAnswerDto.Answers[j].Id == selectedAnswerId)
+                                {
+                                    _questionIdToAnswerIndexMap[questionId] = j;
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // If we already have the question loaded, find the answer index
+                var request = new GetCurrentQuestionRequest
+                {
+                    QuizId = QuizId.ToString(),
+                    QuestionIndex = questionIndex
+                };
+                var response = await QuizSessionService.GetCurrentQuestionAsync(request);
+                if (response?.QuestionWithAnswerDto != null)
+                {
+                    for (int j = 0; j < response.QuestionWithAnswerDto.Answers.Length; j++)
+                    {
+                        if (response.QuestionWithAnswerDto.Answers[j].Id == selectedAnswerId)
+                        {
+                            _questionIdToAnswerIndexMap[questionId] = j;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // If we found both the question index and answer index, update _answeredQuestions
+            if (questionIndex >= 0 && _questionIdToAnswerIndexMap.ContainsKey(questionId))
+            {
+                _answeredQuestions[questionIndex] = _questionIdToAnswerIndexMap[questionId];
+            }
+        }
+
+        await InvokeAsync(StateHasChanged);
     }
 
     private void StartTimer()
@@ -379,6 +517,13 @@
     {
         _selectedAnswerIndex = answerIndex;
         _answeredQuestions[_currentQuestionIndex] = answerIndex;
+
+        // Update the question ID to answer mapping
+        if (_currentQuestion != null && _questionIdMap.ContainsKey(_currentQuestionIndex))
+        {
+            _questionIdToAnswerIndexMap[_currentQuestion.Id] = answerIndex;
+        }
+
         _isCurrentAnswerSaved = false; // Mark current answer as not saved
     }
 
@@ -392,11 +537,14 @@
             {
                 int answerIndex = _answeredQuestions[_currentQuestionIndex];
 
+                // Get the ID of the selected answer option
+                Guid selectedAnswerId = _currentQuestion.Answers[answerIndex].Id;
+
                 var request = new SaveQuizAnswerRequest()
                 {
                     SessionId = _quizSession.Id,
                     QuestionId = _currentQuestion.Id,
-                    Answer = _currentQuestion.Answers[answerIndex]
+                    Answer = selectedAnswerId.ToString() // Use the actual answer ID TODO: Might need to fix this
                 };
 
                 var response = await QuizAnswerService.SaveQuizAnswerAsync(request);
@@ -405,8 +553,12 @@
                 {
                     ToastService.ShowError("Failed to save answer!", "Error");
                 }
-
-                _isCurrentAnswerSaved = true;
+                else
+                {
+                    // Update our mapping
+                    _questionIdToSelectedAnswerIdMap[_currentQuestion.Id] = selectedAnswerId;
+                    _isCurrentAnswerSaved = true;
+                }
             }
             catch (Exception e)
             {
@@ -427,19 +579,20 @@
         if (!_isCurrentAnswerSaved && _answeredQuestions.ContainsKey(_currentQuestionIndex) && _currentQuestion != null)
         {
             int answerIndex = _answeredQuestions[_currentQuestionIndex];
+            Guid selectedAnswerId = _currentQuestion.Answers[answerIndex].Id;
 
             var request = new SaveQuizAnswerRequest()
             {
                 SessionId = _quizSession.Id,
                 QuestionId = _currentQuestion.Id,
-                Answer = _currentQuestion.Answers[answerIndex]
+                Answer = selectedAnswerId.ToString()
             };
 
             saveTasks.Add(QuizAnswerService.SaveQuizAnswerAsync(request));
+            _questionIdToSelectedAnswerIdMap[_currentQuestion.Id] = selectedAnswerId;
         }
 
         // Then save any other answers that might not have been saved
-        // This is a safety net in case navigation between questions somehow missed saving an answer
         foreach (var questionIndex in _answeredQuestions.Keys)
         {
             // Skip the current question as we've already handled it
@@ -451,8 +604,6 @@
                 int answerIndex = _answeredQuestions[questionIndex];
 
                 // Fetch the answer options for this question
-                // Note: In a real implementation, you might need to fetch this information differently
-                // This is assuming you have the answer options for all questions
                 var questionRequest = new GetCurrentQuestionRequest
                 {
                     QuizId = QuizId.ToString(),
@@ -463,15 +614,17 @@
                 if (questionResponse != null)
                 {
                     var question = questionResponse.QuestionWithAnswerDto;
+                    Guid selectedAnswerId = question.Answers[answerIndex].Id;
 
                     var request = new SaveQuizAnswerRequest()
                     {
                         SessionId = _quizSession.Id,
                         QuestionId = _questionIdMap[questionIndex],
-                        Answer = question.Answers[answerIndex]
+                        Answer = selectedAnswerId.ToString() // TODO: FIX LATER
                     };
 
                     saveTasks.Add(QuizAnswerService.SaveQuizAnswerAsync(request));
+                    _questionIdToSelectedAnswerIdMap[_questionIdMap[questionIndex]] = selectedAnswerId;
                 }
             }
         }
@@ -538,13 +691,42 @@
         if (_currentQuestion != null)
         {
             _questionIdMap[_currentQuestionIndex] = _currentQuestion.Id;
+
+            // Reset selected answer index
+            _selectedAnswerIndex = -1;
+
+            // Check if we have a saved answer for this question
+            if (_questionIdToSelectedAnswerIdMap.ContainsKey(_currentQuestion.Id))
+            {
+                // Get the saved answer ID
+                Guid savedAnswerId = _questionIdToSelectedAnswerIdMap[_currentQuestion.Id];
+
+                // Find the index of this answer in the current question's answers array
+                for (int i = 0; i < _currentQuestion.Answers.Length; i++)
+                {
+                    if (_currentQuestion.Answers[i].Id == savedAnswerId)
+                    {
+                        _selectedAnswerIndex = i;
+                        _answeredQuestions[_currentQuestionIndex] = i;
+                        break;
+                    }
+                }
+
+                _isCurrentAnswerSaved = true; // This answer was loaded from the database
+            }
+            else if (_answeredQuestions.ContainsKey(_currentQuestionIndex))
+            {
+                // Use locally stored answer if available
+                _selectedAnswerIndex = _answeredQuestions[_currentQuestionIndex];
+                _isCurrentAnswerSaved = false; // This answer wasn't loaded from the database
+            }
+            else
+            {
+                // No answer selected for this question
+                _selectedAnswerIndex = -1;
+                _isCurrentAnswerSaved = false;
+            }
         }
-
-        _selectedAnswerIndex = _answeredQuestions.ContainsKey(_currentQuestionIndex) ? _answeredQuestions[_currentQuestionIndex] : -1;
-
-        // Reset the saved state for the new current question
-        // If this question already has an answer in our local state, we assume it's already been saved in a previous navigation
-        _isCurrentAnswerSaved = !_answeredQuestions.ContainsKey(_currentQuestionIndex) || _answeredQuestions.ContainsKey(_currentQuestionIndex);
     }
 
     private void ShowExitConfirmation()

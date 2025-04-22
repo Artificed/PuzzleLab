@@ -33,7 +33,7 @@ public class SaveQuizAnswerCommandHandler(
         if (correctAnswer is null)
             return Result<SaveQuizAnswerResponse>.Failure(Error.NotFound("Correct answer not found!"));
 
-        bool isCorrect = request.Answer == correctAnswer.Text;
+        bool isCorrect = request.SelectedAnswerId == correctAnswer.Id;
 
         var existing = await quizAnswerRepository
             .GetBySessionAndQuestionAsync(quizSession.Id, request.QuestionId, cancellationToken);

@@ -4,5 +4,5 @@ using PuzzleLab.Shared.DTOs.QuizAnswer.Responses;
 
 namespace PuzzleLab.Application.Features.QuizAnswer.Commands;
 
-public record SaveQuizAnswerCommand(Guid SessionId, Guid QuestionId, string Answer)
+public record SaveQuizAnswerCommand(Guid SessionId, Guid QuestionId, Guid SelectedAnswerId)
     : IRequest<Result<SaveQuizAnswerResponse>>;

@@ -12,4 +12,12 @@ public class QuizAnswerService(IApiClient apiClient) : IQuizAnswerService
         var questions = await apiClient.PostAsync<SaveQuizAnswerResponse>("/api/quiz-answer/save", request);
         return questions;
     }
+
+    public async Task<GetQuizAnswersBySessionResponse?> GetQuizAnswersBySessionIdAsync(
+        GetQuizAnswersBySessionRequest request)
+    {
+        var questions =
+            await apiClient.GetAsync<GetQuizAnswersBySessionResponse>($"/api/quiz-answer/{request.SessionId}");
+        return questions;
+    }
 }
