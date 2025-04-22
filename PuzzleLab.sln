@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PuzzleLab.Web", "src\Puzzle
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PuzzleLab.Shared", "src\PuzzleLab.Shared\PuzzleLab.Shared.csproj", "{E319ED99-47BE-4F78-85B6-38E647A3F2C3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PuzzleLab.BackgroundService", "src\PuzzleLab.BackgroundService\PuzzleLab.BackgroundService.csproj", "{5D5BB18F-62D6-44FB-86B7-26DFD9216BE5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,5 +49,9 @@ Global
 		{E319ED99-47BE-4F78-85B6-38E647A3F2C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E319ED99-47BE-4F78-85B6-38E647A3F2C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E319ED99-47BE-4F78-85B6-38E647A3F2C3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D5BB18F-62D6-44FB-86B7-26DFD9216BE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D5BB18F-62D6-44FB-86B7-26DFD9216BE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D5BB18F-62D6-44FB-86B7-26DFD9216BE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D5BB18F-62D6-44FB-86B7-26DFD9216BE5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
