@@ -8,4 +8,5 @@ public interface IAnswerRepository
     Task ClearAnswersByQuestionIdAsync(Guid questionId, CancellationToken cancellationToken = default);
     Task<List<Answer>> GetAnswersByQuestionIdAsync(Guid questionId, CancellationToken cancellationToken = default);
     Task InsertAnswerAsync(Answer answer, CancellationToken cancellationToken = default);
+    Task<Answer?> GetQuestionAnswer(Guid questionId, CancellationToken cancellationToken = default);
 }

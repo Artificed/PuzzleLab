@@ -31,4 +31,11 @@ public class QuizAnswer
         CreatedAt = DateTime.UtcNow;
         LastModifiedAt = CreatedAt;
     }
+
+    public void UpdateSelectedAnswer(Guid selectedAnswerId, bool isCorrect)
+    {
+        SelectedAnswerId = selectedAnswerId;
+        IsCorrect = isCorrect;
+        LastModifiedAt = DateTime.UtcNow;
+    }
 }

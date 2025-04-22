@@ -4,22 +4,47 @@ using PuzzleLab.Domain.Repositories;
 
 namespace PuzzleLab.Infrastructure.Persistence.Repositories;
 
-public class QuizAnswerRepository(DatabaseContext databaseContext) : IQuizAnswerRepository
+public class QuizAnswerRepository : IQuizAnswerRepository
 {
-    public async Task<List<QuizAnswer>> GetAllQuizAnswersAsync(CancellationToken cancellationToken = default)
-    {
-        return await databaseContext.QuizAnswers.ToListAsync(cancellationToken);
-    }
+    private readonly DatabaseContext _db;
 
-    public async Task<QuizAnswer?> GetQuizAnswerByIdAsync(Guid quizAnswerId,
-        CancellationToken cancellationToken = default)
-    {
-        return await databaseContext.QuizAnswers.FirstOrDefaultAsync(x => x.Id == quizAnswerId, cancellationToken);
-    }
+    public QuizAnswerRepository(DatabaseContext databaseContext)
+        => _db = databaseContext;
 
     public async Task InsertQuizAnswerAsync(QuizAnswer quizAnswer, CancellationToken cancellationToken = default)
     {
-        await databaseContext.QuizAnswers.AddAsync(quizAnswer, cancellationToken);
-        await databaseContext.SaveChangesAsync(cancellationToken);
+        await _db.QuizAnswers.AddAsync(quizAnswer, cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task UpdateQuizAnswerAsync(QuizAnswer quizAnswer, CancellationToken cancellationToken = default)
+    {
+        _db.QuizAnswers.Update(quizAnswer);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<QuizAnswer?> GetBySessionAndQuestionAsync(
+        Guid sessionId,
+        Guid questionId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _db.QuizAnswers
+            .FirstOrDefaultAsync(x =>
+                    x.QuizSessionId == sessionId &&
+                    x.QuestionId == questionId,
+                cancellationToken);
+    }
+
+    public async Task<List<QuizAnswer>> GetAllQuizAnswersAsync(CancellationToken cancellationToken = default)
+    {
+        return await _db.QuizAnswers.ToListAsync(cancellationToken);
+    }
+
+    public async Task<QuizAnswer?> GetQuizAnswerByIdAsync(
+        Guid quizAnswerId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _db.QuizAnswers
+            .FirstOrDefaultAsync(x => x.Id == quizAnswerId, cancellationToken);
     }
 }

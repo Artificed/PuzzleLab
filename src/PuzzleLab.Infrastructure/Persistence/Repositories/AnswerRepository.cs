@@ -34,4 +34,12 @@ public class AnswerRepository(DatabaseContext databaseContext) : IAnswerReposito
         await databaseContext.Answers.AddAsync(answer, cancellationToken);
         await databaseContext.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task<Answer?> GetQuestionAnswer(Guid questionId, CancellationToken cancellationToken = default)
+    {
+        return await databaseContext.Answers
+                   .Where(x => x.QuestionId == questionId && x.IsCorrect)
+                   .FirstOrDefaultAsync(cancellationToken)
+               ?? throw new InvalidOperationException("Correct answer not found.");
+    }
 }

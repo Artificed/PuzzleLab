@@ -17,7 +17,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="Features\QuizAnswer\Commands\"/>
         <Folder Include="Features\QuizAnswer\Queries\"/>
     </ItemGroup>
 
