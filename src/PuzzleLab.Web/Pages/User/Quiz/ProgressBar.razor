@@ -1,0 +1,10 @@
+@code {
+    [Parameter] public int Current { get; set; }
+    [Parameter] public int Total { get; set; }
+
+    private int ProgressPercentage => (Current * 100) / Total;
+}
+
+<div class="w-full bg-gray-200 h-1">
+    <div class="bg-blue-600 h-1" style="width: @ProgressPercentage%"></div>
+</div>

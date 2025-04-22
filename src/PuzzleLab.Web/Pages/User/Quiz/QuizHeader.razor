@@ -1,0 +1,37 @@
+@code {
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public int CurrentQuestion { get; set; }
+    [Parameter] public int TotalQuestions { get; set; }
+    [Parameter] public DateTime StartedAt { get; set; }
+    [Parameter] public TimeSpan TimeRemaining { get; set; }
+    [Parameter] public string Status { get; set; } = "Active";
+    [Parameter] public EventCallback OnExitClick { get; set; }
+
+    private string FormatTimeRemaining(TimeSpan timeSpan)
+    {
+        return $"{(int)timeSpan.TotalHours:D2}:{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}";
+    }
+
+}
+
+<div class="border-b border-gray-200 bg-gray-50 p-4">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+            <h1 class="text-xl font-bold text-gray-900">@Title</h1>
+            <p class="text-sm text-gray-500">Question @CurrentQuestion of @TotalQuestions</p>
+            <p class="text-xs text-gray-500">Started: @StartedAt.ToString("MMM dd, yyyy HH:mm")</p>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="bg-blue-50 border border-blue-200 rounded-md px-3 py-1">
+                <span class="text-blue-800 font-medium">Time Left: @FormatTimeRemaining(TimeRemaining)</span>
+            </div>
+            <div class="bg-green-50 border border-green-200 rounded-md px-3 py-1">
+                <span class="text-green-800 font-medium">Status: @Status</span>
+            </div>
+            <button @onclick="OnExitClick"
+                    class="px-3 py-1 text-sm border border-gray-300 rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Exit Quiz
+            </button>
+        </div>
+    </div>
+</div>

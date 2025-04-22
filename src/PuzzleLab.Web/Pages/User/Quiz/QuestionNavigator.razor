@@ -1,0 +1,58 @@
+@code {
+    [Parameter] public int CurrentIndex { get; set; }
+    [Parameter] public int TotalQuestions { get; set; }
+    [Parameter] public Dictionary<int, int> AnsweredQuestions { get; set; } = new();
+    [Parameter] public string SessionId { get; set; } = string.Empty;
+    [Parameter] public EventCallback<int> OnQuestionSelected { get; set; }
+
+    private string GetQuestionButtonClass(int index)
+    {
+        if (index == CurrentIndex)
+            return "bg-blue-600 text-white";
+        else if (AnsweredQuestions.ContainsKey(index))
+            return "bg-green-100 text-green-800 border border-green-200";
+        else
+            return "bg-gray-100 text-gray-800 hover:bg-gray-200";
+    }
+
+}
+
+<div class="mt-6 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+    <div class="p-4 border-b border-gray-200">
+        <h2 class="font-medium text-gray-900">Question Navigator</h2>
+        <p class="text-sm text-gray-500 mt-1">Session ID: @SessionId</p>
+    </div>
+    <div class="p-4">
+        <div class="flex flex-wrap gap-2">
+            @for (int i = 0; i < TotalQuestions; i++)
+            {
+                int questionNumber = i;
+                <button @onclick="() => OnQuestionSelected.InvokeAsync(questionNumber)"
+                        class="w-10 h-10 flex items-center justify-center rounded-md text-sm font-medium @GetQuestionButtonClass(questionNumber)">
+                    @(questionNumber + 1)
+                </button>
+            }
+        </div>
+    </div>
+    <div class="p-4 border-t border-gray-200 bg-gray-50">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div class="flex items-center gap-4 text-sm">
+                <div class="flex items-center gap-1">
+                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    <span>Answered</span>
+                </div>
+                <div class="flex items-center gap-1">
+                    <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+                    <span>Current</span>
+                </div>
+                <div class="flex items-center gap-1">
+                    <div class="w-3 h-3 rounded-full bg-gray-300"></div>
+                    <span>Unanswered</span>
+                </div>
+            </div>
+            <div class="text-sm text-gray-600">
+                <span>Progress: @AnsweredQuestions.Count / @TotalQuestions questions</span>
+            </div>
+        </div>
+    </div>
+</div>

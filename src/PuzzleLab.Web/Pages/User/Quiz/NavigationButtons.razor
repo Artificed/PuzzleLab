@@ -1,0 +1,35 @@
+@code {
+    [Parameter] public int CurrentIndex { get; set; }
+    [Parameter] public int TotalQuestions { get; set; }
+    [Parameter] public EventCallback OnPrevious { get; set; }
+    [Parameter] public EventCallback OnNext { get; set; }
+    [Parameter] public EventCallback OnSubmit { get; set; }
+
+    private bool IsFirstQuestion => CurrentIndex == 0;
+    private bool IsLastQuestion => CurrentIndex == TotalQuestions - 1;
+}
+
+<div class="border-t border-gray-200 p-4 flex justify-between items-center">
+    <button @onclick="OnPrevious"
+            disabled="@IsFirstQuestion"
+            class="@(IsFirstQuestion
+                       ? "px-4 py-2 border border-gray-300 rounded-md text-gray-400 bg-gray-50 cursor-not-allowed"
+                       : "px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500")">
+        Previous
+    </button>
+
+    @if (!IsLastQuestion)
+    {
+        <button @onclick="OnNext"
+                class="px-4 py-2 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            Next
+        </button>
+    }
+    else
+    {
+        <button @onclick="OnSubmit"
+                class="px-4 py-2 border border-transparent rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+            Submit Quiz
+        </button>
+    }
+</div>
