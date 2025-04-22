@@ -1,6 +1,6 @@
 namespace PuzzleLab.Shared.DTOs.QuizAnswer;
 
-public class SaveQuizAnswerDto
+public class QuizAnswerDto
 {
     public Guid SessionId { get; set; }
     public Guid QuestionId { get; set; }

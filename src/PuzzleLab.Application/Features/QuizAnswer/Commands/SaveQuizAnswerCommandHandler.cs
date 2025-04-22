@@ -38,13 +38,6 @@ public class SaveQuizAnswerCommandHandler(
         var existing = await quizAnswerRepository
             .GetBySessionAndQuestionAsync(quizSession.Id, request.QuestionId, cancellationToken);
 
-        Console.WriteLine("------------------------");
-        Console.WriteLine("session: " + quizSession.Id);
-        Console.WriteLine("question: " + request.QuestionId);
-
-        Console.WriteLine("correct answer: " + correctAnswer.Text);
-        Console.WriteLine("answer: " + request.Answer);
-
         if (existing is not null)
         {
             existing.UpdateSelectedAnswer(correctAnswer.Id, isCorrect);
@@ -57,7 +50,7 @@ public class SaveQuizAnswerCommandHandler(
             await quizAnswerRepository.InsertQuizAnswerAsync(newAnswer, cancellationToken);
         }
 
-        var responseData = new SaveQuizAnswerDto
+        var responseData = new QuizAnswerDto
         {
             SessionId = quizSession.Id,
             QuestionId = quizSessionQuestion.QuestionId,
