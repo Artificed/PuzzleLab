@@ -246,18 +246,7 @@
 
         try
         {
-            var userId = "a1b9456b-751b-4e36-ab6e-7d960f1dca52";
-            // var userId = UserState.CurrentUser?.Id.ToString();
-            if (string.IsNullOrEmpty(userId))
-            {
-                _quizzes = new List<QuizScheduleDto>();
-                return;
-            }
-
-            Console.WriteLine("User ID: " + userId);
-
-            var request = new GetUserQuizScheduleRequest() { UserId = Guid.Parse(userId) };
-            var response = await QuizScheduleService.GetUserQuizScheduleAsync(request);
+            var response = await QuizScheduleService.GetUserQuizScheduleAsync();
             if (response != null)
             {
                 _quizzes = response.QuizScheduleDtos;
@@ -390,4 +379,5 @@
             NavigationManager.NavigateTo($"/quiz/{quiz.QuizId}");
         }
     }
+
 }

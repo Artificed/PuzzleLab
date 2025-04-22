@@ -1,6 +1,9 @@
+using System.Security.Claims;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PuzzleLab.API.Extensions;
+using PuzzleLab.Application.Common.Models;
 using PuzzleLab.Application.Features.QuizSchedule.Commands;
 using PuzzleLab.Application.Features.QuizSchedule.Queries;
 using PuzzleLab.Shared.DTOs.QuizSchedule.Requests;
@@ -75,9 +78,18 @@ public class QuizScheduleController(ISender sender) : ControllerBase
         return Ok(result.Value);
     }
 
-    [HttpGet("user/{userId}")]
-    public async Task<IActionResult> GetUserQuizSchedules(string userId, CancellationToken cancellationToken)
+    [Authorize]
+    [HttpGet("user")]
+    public async Task<IActionResult> GetUserQuizSchedules(CancellationToken cancellationToken)
     {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (userId == null)
+        {
+            var error = Error.Unauthorized("User is not logged in yet!");
+            return this.MapErrorToAction(error);
+        }
+
         var query = new GetUserQuizScheduleQuery(Guid.Parse(userId));
         var result = await sender.Send(query, cancellationToken);
 

@@ -40,12 +40,11 @@ public class QuizScheduleService(IApiClient apiClient) : IQuizScheduleService
         return response;
     }
 
-    public async Task<GetUserQuizScheduleResponse?> GetUserQuizScheduleAsync(
-        GetUserQuizScheduleRequest getUserQuizScheduleRequest)
+    public async Task<GetUserQuizScheduleResponse?> GetUserQuizScheduleAsync()
     {
         var schedules =
             await apiClient.GetAsync<GetUserQuizScheduleResponse>(
-                $"/api/quiz-schedule/user/{getUserQuizScheduleRequest.UserId}");
+                $"/api/quiz-schedule/user");
         return schedules;
     }
 }
