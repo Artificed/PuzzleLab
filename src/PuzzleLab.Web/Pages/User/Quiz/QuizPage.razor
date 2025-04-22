@@ -4,11 +4,13 @@
 @using PuzzleLab.Web.Services.State
 @using PuzzleLab.Web.Services.Ui
 @using System.Timers
+@using PuzzleLab.Shared.DTOs.QuizAnswer.Requests
 @using PuzzleLab.Shared.DTOs.QuizSession.Requests
 
 @layout Components.Layout.UserLayout
 
 @inject IQuizSessionService QuizSessionService
+@inject IQuizAnswerService QuizAnswerService
 @inject NavigationManager NavigationManager
 @inject UserStateService UserState
 @rendermode InteractiveServer
@@ -285,6 +287,8 @@
     private bool _showExitConfirmation = false;
     private bool _showSubmitConfirmation = false;
     private System.Timers.Timer? _timer;
+    private Dictionary<int, Guid> _questionIdMap = new Dictionary<int, Guid>(); // Maps question index to question ID
+    private bool _isCurrentAnswerSaved = true; // Tracks if current answer has been saved
 
     protected override async Task OnInitializedAsync()
     {
@@ -323,6 +327,12 @@
 
             _totalQuestions = _quizSession.TotalQuestions;
             _currentQuestion = questionResponse.QuestionWithAnswerDto;
+
+            // Store question ID for the current question
+            if (_currentQuestion != null)
+            {
+                _questionIdMap[_currentQuestionIndex] = _currentQuestion.Id;
+            }
 
             _timeRemaining = TimeSpan.FromMinutes(30); // Mock value
 
@@ -364,22 +374,119 @@
         return $"{(int)timeSpan.TotalHours:D2}:{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}";
     }
 
-    private async Task SelectAnswer(int answerIndex)
+    // Modified to only store the answer locally, not save to server immediately
+    private void SelectAnswer(int answerIndex)
     {
         _selectedAnswerIndex = answerIndex;
         _answeredQuestions[_currentQuestionIndex] = answerIndex;
+        _isCurrentAnswerSaved = false; // Mark current answer as not saved
+    }
 
-        // In a real implementation, you would save the answer to the backend
-        // var request = new SaveAnswerRequest {
-        //     QuizSessionId = _quizSession.Id,
-        //     QuestionIndex = _currentQuestionIndex,
-        //     AnswerIndex = answerIndex
-        // };
-        // await QuizSessionService.SaveAnswerAsync(request);
+    // Save only the current question's answer to the server
+    private async Task SaveCurrentAnswer()
+    {
+        // Only save if there's an answer selected for the current question and it's not already saved
+        if (_answeredQuestions.ContainsKey(_currentQuestionIndex) && !_isCurrentAnswerSaved && _quizSession != null && _currentQuestion != null)
+        {
+            try
+            {
+                int answerIndex = _answeredQuestions[_currentQuestionIndex];
+
+                var request = new SaveQuizAnswerRequest()
+                {
+                    SessionId = _quizSession.Id,
+                    QuestionId = _currentQuestion.Id,
+                    Answer = _currentQuestion.Answers[answerIndex]
+                };
+
+                var response = await QuizAnswerService.SaveQuizAnswerAsync(request);
+
+                if (response is null)
+                {
+                    ToastService.ShowError("Failed to save answer!", "Error");
+                }
+
+                _isCurrentAnswerSaved = true;
+            }
+            catch (Exception e)
+            {
+                ToastService.ShowError($"Failed to save answer! {e}", "Error");
+            }
+        }
+    }
+
+    // Save all unsaved answers - used when submitting the quiz
+    private async Task SaveAllAnswers()
+    {
+        if (_quizSession == null)
+            return;
+
+        List<Task> saveTasks = new List<Task>();
+
+        // First save the current answer if needed
+        if (!_isCurrentAnswerSaved && _answeredQuestions.ContainsKey(_currentQuestionIndex) && _currentQuestion != null)
+        {
+            int answerIndex = _answeredQuestions[_currentQuestionIndex];
+
+            var request = new SaveQuizAnswerRequest()
+            {
+                SessionId = _quizSession.Id,
+                QuestionId = _currentQuestion.Id,
+                Answer = _currentQuestion.Answers[answerIndex]
+            };
+
+            saveTasks.Add(QuizAnswerService.SaveQuizAnswerAsync(request));
+        }
+
+        // Then save any other answers that might not have been saved
+        // This is a safety net in case navigation between questions somehow missed saving an answer
+        foreach (var questionIndex in _answeredQuestions.Keys)
+        {
+            // Skip the current question as we've already handled it
+            if (questionIndex == _currentQuestionIndex)
+                continue;
+
+            if (_questionIdMap.ContainsKey(questionIndex))
+            {
+                int answerIndex = _answeredQuestions[questionIndex];
+
+                // Fetch the answer options for this question
+                // Note: In a real implementation, you might need to fetch this information differently
+                // This is assuming you have the answer options for all questions
+                var questionRequest = new GetCurrentQuestionRequest
+                {
+                    QuizId = QuizId.ToString(),
+                    QuestionIndex = questionIndex
+                };
+
+                var questionResponse = await QuizSessionService.GetCurrentQuestionAsync(questionRequest);
+                if (questionResponse != null)
+                {
+                    var question = questionResponse.QuestionWithAnswerDto;
+
+                    var request = new SaveQuizAnswerRequest()
+                    {
+                        SessionId = _quizSession.Id,
+                        QuestionId = _questionIdMap[questionIndex],
+                        Answer = question.Answers[answerIndex]
+                    };
+
+                    saveTasks.Add(QuizAnswerService.SaveQuizAnswerAsync(request));
+                }
+            }
+        }
+
+        if (saveTasks.Count > 0)
+        {
+            await Task.WhenAll(saveTasks);
+        }
     }
 
     private async Task NextQuestion()
     {
+        // Save current answer before navigating
+        await SaveCurrentAnswer();
+
         if (_currentQuestionIndex < _totalQuestions - 1)
         {
             _currentQuestionIndex++;
@@ -389,6 +496,9 @@
 
     private async Task PreviousQuestion()
     {
+        // Save current answer before navigating
+        await SaveCurrentAnswer();
+
         if (_currentQuestionIndex > 0)
         {
             _currentQuestionIndex--;
@@ -398,6 +508,9 @@
 
     private async Task JumpToQuestion(int questionIndex)
     {
+        // Save current answer before navigating
+        await SaveCurrentAnswer();
+
         if (questionIndex >= 0 && questionIndex < _totalQuestions)
         {
             _currentQuestionIndex = questionIndex;
@@ -421,7 +534,17 @@
         }
 
         _currentQuestion = response.QuestionWithAnswerDto;
+
+        if (_currentQuestion != null)
+        {
+            _questionIdMap[_currentQuestionIndex] = _currentQuestion.Id;
+        }
+
         _selectedAnswerIndex = _answeredQuestions.ContainsKey(_currentQuestionIndex) ? _answeredQuestions[_currentQuestionIndex] : -1;
+
+        // Reset the saved state for the new current question
+        // If this question already has an answer in our local state, we assume it's already been saved in a previous navigation
+        _isCurrentAnswerSaved = !_answeredQuestions.ContainsKey(_currentQuestionIndex) || _answeredQuestions.ContainsKey(_currentQuestionIndex);
     }
 
     private void ShowExitConfirmation()
@@ -436,8 +559,10 @@
 
     private async Task ConfirmExit()
     {
-        // Save the current progress
-        // In a real implementation, you would call your API here to save the current state
+        // Save current answer before exiting
+        await SaveCurrentAnswer();
+
+        // Implement your save progress logic here if needed
         // var request = new SaveQuizProgressRequest {
         //     QuizSessionId = _quizSession.Id,
         //     Answers = _answeredQuestions
@@ -450,7 +575,6 @@
 
     private void NavigateToUserDashboard()
     {
-        // Clean up timer
         _timer?.Stop();
         _timer?.Dispose();
 
@@ -469,7 +593,6 @@
 
     private async Task SubmitQuiz()
     {
-        // Clean up timer
         _timer?.Stop();
         _timer?.Dispose();
 
@@ -478,6 +601,9 @@
 
         try
         {
+            // Save any unsaved answers (primarily the current one) before submitting
+            await SaveAllAnswers();
+
             // In a real implementation, you would call your API here to submit all answers
             // var request = new FinalizeQuizSessionRequest {
             //     QuizSessionId = _quizSession.Id,

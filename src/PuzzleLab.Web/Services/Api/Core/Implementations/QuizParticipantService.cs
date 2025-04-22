@@ -8,8 +8,6 @@ namespace PuzzleLab.Web.Services.Api.Core.Implementations;
 
 public class QuizParticipantsService(IApiClient apiClient) : IQuizParticipantsService
 {
-    private const string BaseUrl = "api/quiz-participant";
-
     public async Task<GetQuizParticipantsResponse?> GetParticipantsByQuizIdAsync(Guid quizId)
     {
         var response = await apiClient.GetAsync<GetQuizParticipantsResponse>($"/api/quiz-participant/quiz/{quizId}");

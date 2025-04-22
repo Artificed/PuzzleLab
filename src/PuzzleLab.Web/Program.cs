@@ -41,6 +41,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IQuestionPackageService, QuestionPackageService>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
 builder.Services.AddScoped<IAnswerService, AnswerService>();
+builder.Services.AddScoped<IQuizAnswerService, QuizAnswerService>();
 builder.Services.AddScoped<IQuizScheduleService, QuizScheduleService>();
 builder.Services.AddScoped<IQuizParticipantsService, QuizParticipantsService>();
 builder.Services.AddScoped<IQuizSessionService, QuizSessionService>();
