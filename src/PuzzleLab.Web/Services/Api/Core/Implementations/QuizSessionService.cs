@@ -22,4 +22,12 @@ public class QuizSessionService(IApiClient apiClient) : IQuizSessionService
             $"api/quiz-session/{getCurrentQuestionRequest.QuizId}/{getCurrentQuestionRequest.QuestionIndex}");
         return response;
     }
+
+    public async Task<FinalizeQuizResponse?> FinalizeQuizAsync(
+        FinalizeQuizRequest finalizeQuizRequest)
+    {
+        var response = await apiClient.PostAsync<FinalizeQuizResponse>(
+            "/api/quiz-session/finalize", finalizeQuizRequest);
+        return response;
+    }
 }

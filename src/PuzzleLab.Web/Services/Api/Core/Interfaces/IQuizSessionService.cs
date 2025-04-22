@@ -10,4 +10,7 @@ public interface IQuizSessionService
 
     Task<GetCurrentQuestionResponse?> GetCurrentQuestionAsync(
         GetCurrentQuestionRequest getCurrentQuestionRequest);
+
+    Task<FinalizeQuizResponse?> FinalizeQuizAsync(
+        FinalizeQuizRequest finalizeQuizRequest);
 }

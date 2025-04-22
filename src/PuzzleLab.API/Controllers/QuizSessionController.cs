@@ -61,4 +61,28 @@ public class QuizSessionController(ISender sender) : ControllerBase
 
         return Ok(result.Value);
     }
+
+    [Authorize]
+    [HttpPost("finalize")]
+    public async Task<IActionResult> FinalizeQuiz([FromBody] FinalizeQuizRequest request,
+        CancellationToken cancellationToken)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (userId == null)
+        {
+            var error = Error.Unauthorized("User is not logged in yet!");
+            return this.MapErrorToAction(error);
+        }
+
+        var command = new FinalizeQuizCommand(request.SessionId);
+        var result = await sender.Send(command, cancellationToken);
+
+        if (result.IsFailure)
+        {
+            return this.MapErrorToAction(result.Error);
+        }
+
+        return Ok(result.Value);
+    }
 }

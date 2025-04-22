@@ -112,7 +112,7 @@
     private Dictionary<int, int> _answeredQuestions = new Dictionary<int, int>();
     private QuestionWithAnswerDto? _currentQuestion;
     private QuizSessionDto? _quizSession;
-    private TimeSpan _timeRemaining = TimeSpan.FromMinutes(30); // Mock value - 30 minutes
+    private TimeSpan _timeRemaining = TimeSpan.FromMinutes(30);
     private bool _showExitConfirmation = false;
     private bool _showSubmitConfirmation = false;
     private System.Timers.Timer? _timer;
@@ -142,20 +142,14 @@
 
             _quizSession = response.QuizSessionDto;
             _totalQuestions = _quizSession.TotalQuestions;
-            // _quizTitle = _quizSession.Title ?? "Sample Quiz";
 
-            // Load saved answers if session exists and has answers
             if (_quizSession.Id != Guid.Empty)
             {
                 await LoadSavedAnswers();
-
-                // Load all question IDs and update answered questions dictionary
                 await LoadQuestionMappings();
             }
 
             await LoadCurrentQuestion();
-
-            // Set time remaining based on session data (mock for now)
             _timeRemaining = TimeSpan.FromMinutes(30); // Use actual time from session when available
 
             StartTimer();
@@ -183,13 +177,11 @@
 
             if (savedAnswersResponse != null && savedAnswersResponse.SaveQuizAnswerDtos.Count > 0)
             {
-                // Process saved answers
                 foreach (var savedAnswer in savedAnswersResponse.SaveQuizAnswerDtos)
                 {
                     Guid questionId = savedAnswer.QuestionId;
                     Guid selectedAnswerId = savedAnswer.SelectedAnswerId;
 
-                    // Store the mapping between question ID and selected answer ID
                     _questionIdToSelectedAnswerIdMap[questionId] = selectedAnswerId;
                 }
             }
@@ -200,10 +192,8 @@
         }
     }
 
-    // New method to load all question IDs and set up mappings
     private async Task LoadQuestionMappings()
     {
-        // Fetch each question to map indices to question IDs
         for (int i = 0; i < _totalQuestions; i++)
         {
             var request = new GetCurrentQuestionRequest
@@ -213,23 +203,19 @@
             };
 
             var response = await QuizSessionService.GetCurrentQuestionAsync(request);
-
             if (response != null && response.QuestionWithAnswerDto != null)
             {
                 var question = response.QuestionWithAnswerDto;
                 _questionIdMap[i] = question.Id;
 
-                // Check if we have a saved answer for this question
                 if (_questionIdToSelectedAnswerIdMap.ContainsKey(question.Id))
                 {
-                    Guid savedAnswerId = _questionIdToSelectedAnswerIdMap[question.Id];
+                    var savedAnswerId = _questionIdToSelectedAnswerIdMap[question.Id];
 
-                    // Find the index of this answer in the answers array
                     for (int j = 0; j < question.Answers.Length; j++)
                     {
                         if (question.Answers[j].Id == savedAnswerId)
                         {
-                            // Add to answered questions
                             _answeredQuestions[i] = j;
                             break;
                         }
@@ -238,7 +224,6 @@
             }
         }
 
-        // Force UI update
         StateHasChanged();
     }
 
@@ -257,49 +242,41 @@
         if (_timeRemaining.TotalSeconds <= 0)
         {
             _timer?.Stop();
-            // Auto-submit the quiz when time runs out
             InvokeAsync(async () => { await SubmitQuiz(); });
         }
 
         InvokeAsync(StateHasChanged);
     }
 
-    // Modified to only store the answer locally, not save to server immediately
     private void SelectAnswer(int answerIndex)
     {
         _selectedAnswerIndex = answerIndex;
         _answeredQuestions[_currentQuestionIndex] = answerIndex;
 
-        // Update the question ID to answer mapping
         if (_currentQuestion != null && _questionIdMap.ContainsKey(_currentQuestionIndex))
         {
             _questionIdToAnswerIndexMap[_currentQuestion.Id] = answerIndex;
         }
 
-        _isCurrentAnswerSaved = false; // Mark current answer as not saved
-
-        // Force UI update
+        _isCurrentAnswerSaved = false;
         StateHasChanged();
     }
 
-    // Save only the current question's answer to the server
     private async Task SaveCurrentAnswer()
     {
-        // Only save if there's an answer selected for the current question and it's not already saved
         if (_answeredQuestions.ContainsKey(_currentQuestionIndex) && !_isCurrentAnswerSaved && _quizSession != null && _currentQuestion != null)
         {
             try
             {
                 int answerIndex = _answeredQuestions[_currentQuestionIndex];
 
-                // Get the ID of the selected answer option
                 Guid selectedAnswerId = _currentQuestion.Answers[answerIndex].Id;
 
                 var request = new SaveQuizAnswerRequest()
                 {
                     SessionId = _quizSession.Id,
                     QuestionId = _currentQuestion.Id,
-                    Answer = selectedAnswerId.ToString() // Use the actual answer ID TODO: Might need to fix this
+                    Answer = selectedAnswerId.ToString()
                 };
 
                 var response = await QuizAnswerService.SaveQuizAnswerAsync(request);
@@ -310,7 +287,6 @@
                 }
                 else
                 {
-                    // Update our mapping
                     _questionIdToSelectedAnswerIdMap[_currentQuestion.Id] = selectedAnswerId;
                     _isCurrentAnswerSaved = true;
                 }
@@ -322,15 +298,8 @@
         }
     }
 
-    // Save all unsaved answers - used when submitting the quiz
-    private async Task SaveAllAnswers()
-    {
-        // Implementation remains the same
-    }
-
     private async Task NextQuestion()
     {
-        // Save current answer before navigating
         await SaveCurrentAnswer();
 
         if (_currentQuestionIndex < _totalQuestions - 1)
@@ -342,7 +311,6 @@
 
     private async Task PreviousQuestion()
     {
-        // Save current answer before navigating
         await SaveCurrentAnswer();
 
         if (_currentQuestionIndex > 0)
@@ -354,7 +322,6 @@
 
     private async Task JumpToQuestion(int questionIndex)
     {
-        // Save current answer before navigating
         await SaveCurrentAnswer();
 
         if (questionIndex >= 0 && questionIndex < _totalQuestions)
@@ -384,17 +351,12 @@
         if (_currentQuestion != null)
         {
             _questionIdMap[_currentQuestionIndex] = _currentQuestion.Id;
-
-            // Reset selected answer index
             _selectedAnswerIndex = -1;
 
-            // Check if we have a saved answer for this question
             if (_questionIdToSelectedAnswerIdMap.ContainsKey(_currentQuestion.Id))
             {
-                // Get the saved answer ID
                 Guid savedAnswerId = _questionIdToSelectedAnswerIdMap[_currentQuestion.Id];
 
-                // Find the index of this answer in the current question's answers array
                 for (int i = 0; i < _currentQuestion.Answers.Length; i++)
                 {
                     if (_currentQuestion.Answers[i].Id == savedAnswerId)
@@ -405,22 +367,19 @@
                     }
                 }
 
-                _isCurrentAnswerSaved = true; // This answer was loaded from the database
+                _isCurrentAnswerSaved = true;
             }
             else if (_answeredQuestions.ContainsKey(_currentQuestionIndex))
             {
-                // Use locally stored answer if available
                 _selectedAnswerIndex = _answeredQuestions[_currentQuestionIndex];
-                _isCurrentAnswerSaved = false; // This answer wasn't loaded from the database
+                _isCurrentAnswerSaved = false;
             }
             else
             {
-                // No answer selected for this question
                 _selectedAnswerIndex = -1;
                 _isCurrentAnswerSaved = true;
             }
 
-            // Force UI update
             StateHasChanged();
         }
     }
@@ -470,25 +429,17 @@
 
         try
         {
-            // Save any unsaved answers (primarily the current one) before submitting
-            await SaveAllAnswers();
-
-            // Update session status
-            if (_quizSession != null)
+            if (_quizSession is null)
             {
-                _quizSession.Status = "Completed";
-                _quizSession.FinalizedAt = DateTime.Now;
-
-                // Mock calculation of correct answers
-                _quizSession.CorrectAnswers = _answeredQuestions.Count / 2; // Just a mock value
+                ToastService.ShowError("Quiz session not found!", "Error");
+                return;
             }
 
-            // For now, simulate API call
-            await Task.Delay(1000);
+            var request = new FinalizeQuizRequest() { SessionId = _quizSession.Id};
+            var response = QuizSessionService.FinalizeQuizAsync(request);
 
-            ToastService.ShowSuccess("Quiz submitted successfully!", "Success");
+            ToastService.ShowSuccess($"Finalized quiz {response.Id} successfully!", "Success");
 
-            // Navigate to results page or dashboard
             NavigationManager.NavigateTo($"/user/results/{_quizSession?.Id}");
         }
         catch (Exception ex)

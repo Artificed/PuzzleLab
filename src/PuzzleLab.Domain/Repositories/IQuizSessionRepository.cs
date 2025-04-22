@@ -10,4 +10,6 @@ public interface IQuizSessionRepository
 
     Task<QuizSession?> GetExistingQuizSessionAsync(Guid quizId, Guid userId,
         CancellationToken cancellationToken = default);
+
+    Task UpdateQuizSessionAsync(QuizSession quizSession, CancellationToken cancellationToken = default);
 }

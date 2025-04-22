@@ -44,14 +44,7 @@ public class QuizSession
     public void Finalize()
     {
         FinalizedAt = DateTime.UtcNow;
-        Status = "Completed";
-        LastModifiedAt = DateTime.UtcNow;
-    }
-
-    public void Cancel()
-    {
-        FinalizedAt = DateTime.UtcNow;
-        Status = "Cancelled";
+        Status = "Finalized";
         LastModifiedAt = DateTime.UtcNow;
     }
 

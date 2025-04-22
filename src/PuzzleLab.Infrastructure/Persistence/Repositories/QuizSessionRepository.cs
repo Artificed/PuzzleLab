@@ -31,4 +31,10 @@ public class QuizSessionRepository(DatabaseContext databaseContext) : IQuizSessi
             .Include(q => q.User)
             .FirstOrDefaultAsync(x => x.QuizId == quizId && x.UserId == userId, cancellationToken);
     }
+
+    public async Task UpdateQuizSessionAsync(QuizSession quizSession, CancellationToken cancellationToken = default)
+    {
+        databaseContext.QuizSessions.Update(quizSession);
+        await databaseContext.SaveChangesAsync(cancellationToken);
+    }
 }
