@@ -58,61 +58,63 @@
     }
     else
     {
-        <div class="overflow-x-auto w-full">
-            <div class="min-w-full inline-block align-middle">
+        <div class="overflow-hidden w-full">
+            <div class="w-full inline-block align-middle">
                 <div class="shadow overflow-hidden border border-gray-200 sm:rounded-lg">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                        <tr>
-                            <th scope="col"
-                                class="px-7 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Quiz Name
-                            </th>
-                            <th scope="col"
-                                class="px-7 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Questions
-                            </th>
-                            <th scope="col"
-                                class="px-7 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Start Date
-                            </th>
-                            <th scope="col"
-                                class="px-7 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                End Date
-                            </th>
-                            <th scope="col"
-                                class="px-7 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Status
-                            </th>
-                            <th scope="col"
-                                class="px-7 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Actions
-                            </th>
-                        </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                        @foreach (var quiz in _filteredQuizzes)
-                        {
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-7 py-4 text-center whitespace-nowrap text-sm font-medium text-gray-900">@quiz.Title</td>
-                                <td class="px-7 py-4 text-center whitespace-nowrap text-sm text-gray-500">@quiz.QuestionCount</td>
-                                <td class="px-7 py-4 text-center whitespace-nowrap text-sm text-gray-500">@quiz.StartTime.ToString("MMM dd, yyyy HH:mm")</td>
-                                <td class="px-7 py-4 text-center whitespace-nowrap text-sm text-gray-500">@quiz.EndTime.ToString("MMM dd, yyyy HH:mm")</td>
-                                <td class="px-7 py-4 text-center whitespace-nowrap text-sm">
+                    <div class="overflow-x-auto">
+                        <table class="w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col"
+                                    class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Quiz Name
+                                </th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Questions
+                                </th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Start Date
+                                </th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    End Date
+                                </th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Status
+                                </th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Actions
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                            @foreach (var quiz in _filteredQuizzes)
+                            {
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 text-center text-sm font-medium text-gray-900 break-words max-w-xs">@quiz.Title</td>
+                                    <td class="px-6 py-4 text-center text-sm text-gray-500">@quiz.QuestionCount</td>
+                                    <td class="px-6 py-4 text-center text-sm text-gray-500">@quiz.StartTime.ToString("MMM dd, yyyy HH:mm")</td>
+                                    <td class="px-6 py-4 text-center text-sm text-gray-500">@quiz.EndTime.ToString("MMM dd, yyyy HH:mm")</td>
+                                    <td class="px-6 py-4 text-center text-sm">
                                 <span class="@GetStatusBadgeClass(quiz)">
                                     @GetStatusText(quiz)
                                 </span>
-                                </td>
-                                <td class="px-7 py-4 text-center whitespace-nowrap text-sm font-medium">
-                                    <button @onclick="() => ShowQuizDetails(quiz)"
-                                            class="text-blue-600 hover:text-blue-900 hover:underline">
-                                        View Details
-                                    </button>
-                                </td>
-                            </tr>
-                        }
-                        </tbody>
-                    </table>
+                                    </td>
+                                    <td class="px-6 py-4 text-center text-sm font-medium">
+                                        <button @onclick="() => ShowQuizDetails(quiz)"
+                                                class="text-blue-600 hover:text-blue-900 hover:underline">
+                                            View Details
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
