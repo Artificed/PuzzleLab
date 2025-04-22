@@ -387,19 +387,7 @@
 
         if (IsQuizInProgress(quiz))
         {
-            var request = new CreateOrGetQuizSessionRequest() { QuizId = quiz.QuizId, UserId = UserState.CurrentUser.Id };
-            var response = await QuizSessionService.CreateOrGetQuizSessionAsync(request);
-
-            if (response is null)
-            {
-                ToastService.ShowError("Failed to create quiz session.", "Error");
-                return;
-            }
-
-            ToastService.ShowSuccess("Quiz session created successfully.", "Success");
-
-            // NavigationManager.NavigateTo($"/quiz/{quiz.QuizId}");
+            NavigationManager.NavigateTo($"/quiz/{quiz.QuizId}");
         }
     }
-
 }
