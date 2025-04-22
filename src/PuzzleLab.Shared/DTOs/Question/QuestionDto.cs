@@ -7,4 +7,5 @@ public record QuestionDto(
     byte[]? ImageData,
     string? ImageMimeType,
     DateTime CreatedAt,
-    DateTime? LastModifiedAt);
+    DateTime? LastModifiedAt
+);

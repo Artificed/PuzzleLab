@@ -11,7 +11,13 @@ public class QuizSessionService(IApiClient apiClient) : IQuizSessionService
         CreateOrGetQuizSessionRequest createOrGetQuizSessionRequest)
     {
         var response = await apiClient.PostAsync<CreateOrGetQuizSessionResponse>(
-            "/api/quiz-session/create", createOrGetQuizSessionRequest);
+            "/api/quiz-session/create-or-get", createOrGetQuizSessionRequest);
         return response;
     }
+
+    // public async Task<GetCurrentQuestionResponse?> GetCurrentQuestionAsync(
+    //     GetCurrentQuestionRequest getCurrentQuestionRequest)
+    // {
+    //     var response = await apiClient.
+    // }
 }
