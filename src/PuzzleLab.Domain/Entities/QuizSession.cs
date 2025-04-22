@@ -48,9 +48,9 @@ public class QuizSession
         LastModifiedAt = DateTime.UtcNow;
     }
 
-    public void IncrementCorrectAnswers()
+    public void UpdateCorrectAnswers(int correctAnswers)
     {
-        CorrectAnswers++;
+        CorrectAnswers = correctAnswers;
         LastModifiedAt = DateTime.UtcNow;
     }
 }

@@ -10,6 +10,8 @@ public interface IQuizAnswerRepository
     Task<QuizAnswer?> GetBySessionAndQuestionAsync(Guid sessionId, Guid questionId,
         CancellationToken cancellationToken = default);
 
+    Task<List<QuizAnswer>> GetBySessionIdAsync(Guid sessionId, CancellationToken cancellationToken = default);
+
     Task<List<QuizAnswer>> GetAllQuizAnswersAsync(CancellationToken cancellationToken = default);
     Task<QuizAnswer?> GetQuizAnswerByIdAsync(Guid quizAnswerId, CancellationToken cancellationToken = default);
 }

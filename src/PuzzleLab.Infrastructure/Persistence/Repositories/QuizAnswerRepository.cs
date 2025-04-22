@@ -24,15 +24,17 @@ public class QuizAnswerRepository : IQuizAnswerRepository
     }
 
     public async Task<QuizAnswer?> GetBySessionAndQuestionAsync(
-        Guid sessionId,
-        Guid questionId,
-        CancellationToken cancellationToken = default)
+        Guid sessionId, Guid questionId, CancellationToken cancellationToken = default)
     {
         return await _db.QuizAnswers
-            .FirstOrDefaultAsync(x =>
-                    x.QuizSessionId == sessionId &&
-                    x.QuestionId == questionId,
-                cancellationToken);
+            .FirstOrDefaultAsync(x => x.QuizSessionId == sessionId && x.QuestionId == questionId, cancellationToken);
+    }
+
+    public async Task<List<QuizAnswer>> GetBySessionIdAsync(Guid sessionId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _db.QuizAnswers.Where(x => x.QuizSessionId == sessionId)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<List<QuizAnswer>> GetAllQuizAnswersAsync(CancellationToken cancellationToken = default)

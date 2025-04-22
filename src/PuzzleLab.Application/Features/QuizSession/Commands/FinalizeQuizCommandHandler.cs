@@ -8,7 +8,8 @@ using PuzzleLab.Shared.DTOs.QuizSession.Responses;
 namespace PuzzleLab.Application.Features.QuizSession.Commands;
 
 public class FinalizeQuizCommandHandler(
-    IQuizSessionRepository quizSessionRepository
+    IQuizSessionRepository quizSessionRepository,
+    IQuizAnswerRepository quizAnswerRepository
 ) : IRequestHandler<FinalizeQuizCommand, Result<FinalizeQuizResponse>>
 {
     public async Task<Result<FinalizeQuizResponse>> Handle(FinalizeQuizCommand request,
@@ -26,7 +27,12 @@ public class FinalizeQuizCommandHandler(
             return Result<FinalizeQuizResponse>.Failure(Error.Validation("Quiz session already finalized!"));
         }
 
+        var quizAnswers = await quizAnswerRepository.GetBySessionIdAsync(request.SessionId, cancellationToken);
+        var correctCount = quizAnswers.Count(x => x.IsCorrect);
+
+        session.UpdateCorrectAnswers(correctCount);
         session.Finalize();
+
         await quizSessionRepository.UpdateQuizSessionAsync(session, cancellationToken);
 
         var responseData = new QuizSessionDto()
