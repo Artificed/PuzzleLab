@@ -17,6 +17,8 @@ public class RabbitMqDomainEventDispatcher : IDomainEventDispatcher, IAsyncDispo
         _channel = channel;
 
         _channel.ExchangeDeclareAsync("domain-events", ExchangeType.Fanout, durable: true);
+        _channel.QueueDeclareAsync("domain-events-queue", durable: true, exclusive: false, autoDelete: false, arguments: null);
+        _channel.QueueBindAsync("domain-events-queue", "domain-events", string.Empty);
     }
 
     public static async Task<RabbitMqDomainEventDispatcher> CreateAsync(string rabbitMqConnectionString)
@@ -32,14 +34,11 @@ public class RabbitMqDomainEventDispatcher : IDomainEventDispatcher, IAsyncDispo
         return new RabbitMqDomainEventDispatcher(connection, channel);
     }
 
-    public async Task DispatchAsync(IEnumerable<IDomainEvent> events, CancellationToken cancellationToken)
+    public async Task DispatchAsync(IDomainEvent domainEvent, CancellationToken cancellationToken)
     {
-        foreach (var @event in events)
-        {
-            var body = JsonSerializer.SerializeToUtf8Bytes(@event, @event.GetType());
-            await _channel.BasicPublishAsync(exchange: "quiz.session.finalized", routingKey: string.Empty, body: body,
-                cancellationToken);
-        }
+        var body = JsonSerializer.SerializeToUtf8Bytes(domainEvent, domainEvent.GetType());
+        await _channel.BasicPublishAsync(exchange: "domain-events", routingKey: string.Empty, body: body,
+            cancellationToken);
     }
 
     public async ValueTask DisposeAsync()
@@ -57,6 +56,7 @@ public class RabbitMqDomainEventDispatcher : IDomainEventDispatcher, IAsyncDispo
                 Console.Error.WriteLine($"Error closing RabbitMQ channel: {ex.Message}");
             }
         }
+
         _channel?.Dispose();
 
         if (_connection?.IsOpen == true)
@@ -70,6 +70,7 @@ public class RabbitMqDomainEventDispatcher : IDomainEventDispatcher, IAsyncDispo
                 Console.Error.WriteLine($"Error closing RabbitMQ connection: {ex.Message}");
             }
         }
+
         _connection?.Dispose();
 
         _disposed = true;

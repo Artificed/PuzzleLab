@@ -2,5 +2,5 @@ namespace PuzzleLab.Domain.Common;
 
 public interface IDomainEventDispatcher
 {
-    Task DispatchAsync(IEnumerable<IDomainEvent> events, CancellationToken cancellationToken);
+    Task DispatchAsync(IDomainEvent domainEvent, CancellationToken cancellationToken);
 }

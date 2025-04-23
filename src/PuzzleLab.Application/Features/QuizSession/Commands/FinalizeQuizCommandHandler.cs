@@ -1,5 +1,7 @@
 using MediatR;
 using PuzzleLab.Application.Common.Models;
+using PuzzleLab.Domain.Common;
+using PuzzleLab.Domain.Events;
 using PuzzleLab.Domain.Repositories;
 using PuzzleLab.Shared.DTOs.QuizSession;
 using PuzzleLab.Shared.DTOs.QuizSession.Requests;
@@ -9,7 +11,8 @@ namespace PuzzleLab.Application.Features.QuizSession.Commands;
 
 public class FinalizeQuizCommandHandler(
     IQuizSessionRepository quizSessionRepository,
-    IQuizAnswerRepository quizAnswerRepository
+    IQuizAnswerRepository quizAnswerRepository,
+    IDomainEventDispatcher domainEventDispatcher
 ) : IRequestHandler<FinalizeQuizCommand, Result<FinalizeQuizResponse>>
 {
     public async Task<Result<FinalizeQuizResponse>> Handle(FinalizeQuizCommand request,
@@ -27,13 +30,8 @@ public class FinalizeQuizCommandHandler(
             return Result<FinalizeQuizResponse>.Failure(Error.Validation("Quiz session already finalized!"));
         }
 
-        var quizAnswers = await quizAnswerRepository.GetBySessionIdAsync(request.SessionId, cancellationToken);
-        var correctCount = quizAnswers.Count(x => x.IsCorrect);
-
-        session.UpdateCorrectAnswers(correctCount);
-        session.Finalize();
-
-        await quizSessionRepository.UpdateQuizSessionAsync(session, cancellationToken);
+        var quizFinalizedEvent = new QuizFinalizedEvent(session.Id);
+        await domainEventDispatcher.DispatchAsync(quizFinalizedEvent, cancellationToken);
 
         var responseData = new QuizSessionDto()
         {

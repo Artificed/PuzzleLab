@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using PuzzleLab.Application.Common.Interfaces;
+using PuzzleLab.Domain.Common;
 using PuzzleLab.Domain.Entities;
 using PuzzleLab.Domain.Factories;
 using PuzzleLab.Domain.Repositories;
+using PuzzleLab.Infrastructure.Messaging;
 using PuzzleLab.Infrastructure.Persistence;
 using PuzzleLab.Infrastructure.Persistence.Repositories;
 using PuzzleLab.Infrastructure.Persistence.Seeders;
@@ -55,9 +57,19 @@ builder.Services.AddDbContext<DatabaseContext>(options =>
     options.UseSnakeCaseNamingConvention();
 });
 
-builder.Services.AddMediatR(
-    cfg => cfg.RegisterServicesFromAssembly(typeof
-        (PuzzleLab.Application.Features.Auth.Commands.LoginCommand).Assembly));
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof
+    (PuzzleLab.Application.Features.Auth.Commands.LoginCommand).Assembly));
+
+var rabbitMqConnectionString = builder.Configuration.GetConnectionString("RabbitMq");
+
+if (string.IsNullOrEmpty(rabbitMqConnectionString))
+{
+    throw new InvalidOperationException(
+        "RabbitMQ connection string 'RabbitMq:ConnectionString' not found in configuration.");
+}
+
+IDomainEventDispatcher rabbitMqDispatcher = await RabbitMqDomainEventDispatcher.CreateAsync(rabbitMqConnectionString);
+builder.Services.AddSingleton<IDomainEventDispatcher>(_ => rabbitMqDispatcher);
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var issuer = jwtSettings["Issuer"]

@@ -24,9 +24,6 @@ public class QuizSession
     public virtual ICollection<QuizAnswer> QuizAnswers { get; private set; }
     public virtual ICollection<QuizSessionQuestion> QuizSessionQuestions { get; private set; }
 
-    private readonly List<IDomainEvent> _events = new();
-    public IReadOnlyCollection<IDomainEvent> Events => _events.AsReadOnly();
-
     private QuizSession()
     {
     }
@@ -44,19 +41,6 @@ public class QuizSession
         LastModifiedAt = CreatedAt;
         QuizAnswers = new List<QuizAnswer>();
         QuizSessionQuestions = new List<QuizSessionQuestion>();
-    }
-
-    public void Finalize()
-    {
-        FinalizedAt = DateTime.UtcNow;
-        Status = "Finalized";
-        LastModifiedAt = DateTime.UtcNow;
-        _events.Add(new QuizFinalizedEvent(Id, QuizId, UserId, FinalizedAt.Value, CorrectAnswers));
-    }
-
-    public void ClearEvents()
-    {
-        _events.Clear();
     }
 
     public void UpdateCorrectAnswers(int correctAnswers)
