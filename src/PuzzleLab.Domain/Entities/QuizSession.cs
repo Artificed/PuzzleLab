@@ -43,8 +43,9 @@ public class QuizSession
         QuizSessionQuestions = new List<QuizSessionQuestion>();
     }
 
-    public void UpdateCorrectAnswers(int correctAnswers)
+    public void Finalize(int correctAnswers)
     {
+        Status = "Finalized";
         CorrectAnswers = correctAnswers;
         LastModifiedAt = DateTime.UtcNow;
     }
