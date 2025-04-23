@@ -1,33 +1,25 @@
 using Microsoft.EntityFrameworkCore;
+using PuzzleLab.BackgroundWorker.Workers;
 using PuzzleLab.Domain.Repositories;
-using PuzzleLab.Domain.Factories;
 using PuzzleLab.Infrastructure.Persistence;
 using PuzzleLab.Infrastructure.Persistence.Repositories;
-using PuzzleLab.BackgroundWorker.Workers;
 
 var host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((hostContext, services) =>
     {
-        var connectionString = hostContext.Configuration.GetConnectionString("DefaultConnection");
-
-        if (string.IsNullOrEmpty(connectionString))
-        {
-            throw new InvalidOperationException(
-                "Database connection string 'DefaultConnection' not found in configuration.");
-        }
-
-        services.AddDbContext<DatabaseContext>(options =>
-        {
-            options.UseNpgsql(connectionString,
-                npgsqlOptions => { npgsqlOptions.MigrationsAssembly(typeof(DatabaseContext).Assembly.FullName); });
-            options.UseSnakeCaseNamingConvention();
-        });
-
-        services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<UserFactory>();
+        var dbConn = hostContext.Configuration.GetConnectionString("DefaultConnection")
+                     ?? throw new InvalidOperationException("DefaultConnection missing");
+        services.AddDbContext<DatabaseContext>(opts =>
+            opts.UseNpgsql(dbConn, o =>
+                    o.MigrationsAssembly(typeof(DatabaseContext).Assembly.FullName))
+                .UseSnakeCaseNamingConvention());
 
         services.AddScoped<IQuizSessionRepository, QuizSessionRepository>();
         services.AddScoped<IQuizAnswerRepository, QuizAnswerRepository>();
+
+        var rmqUri = hostContext.Configuration.GetConnectionString("RabbitMq")
+                     ?? throw new InvalidOperationException("RabbitMq missing");
+        services.AddSingleton(rmqUri);
 
         services.AddHostedService<QuizFinalizationWorker>();
     })
