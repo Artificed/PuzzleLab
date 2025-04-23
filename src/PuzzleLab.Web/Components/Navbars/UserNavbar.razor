@@ -5,13 +5,13 @@
         <a href="/user/dashboard" class="text-xl font-bold text-gray-800">PuzzleLab</a>
         <div class="flex items-center gap-4">
             <a href="/user/dashboard"
-               class="inline-flex items-center justify-center whitespace-nowrap text-md focus-visible:ring-gray-950 focus-visible:ring-offset-1 h-10 px-4 py-2 @(IsActive("/user/dashboard") ? "font-medium text-gray-900 underline" : "text-gray-600 hover:text-gray-900")">
+               class="inline-flex items-center justify-center whitespace-nowrap text-md focus-visible:ring-gray-950 focus-visible:ring-offset-1 h-10 px-4 py-2 @(IsActive("user/dashboard") ? "font-medium text-gray-900 underline" : "text-gray-600 hover:text-gray-900")">
                 Home
             </a>
-            <a href="/user/quiz"
-               class="inline-flex items-center justify-center whitespace-nowrap text-md focus-visible:ring-gray-950 focus-visible:ring-offset-1 h-10 px-4 py-2 @(IsActive("/user/quiz") ? "font-medium text-gray-900 underline" : "text-gray-600 hover:text-gray-900")">
+            <p
+                class="inline-flex items-center justify-center whitespace-nowrap text-md focus-visible:ring-gray-950 focus-visible:ring-offset-1 h-10 px-4 py-2 @(IsActive("quiz") ? "font-medium text-gray-900 underline" : "text-gray-600 hover:text-gray-900")">
                 Quiz
-            </a>
+            </p>
         </div>
     </div>
 
@@ -27,15 +27,16 @@
     private bool IsActive(string href)
     {
         var relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri).Split('?')[0];
-        var normalizedHref = href.TrimStart('/');
+        var normalizedHref = href.TrimStart('/').ToLowerInvariant();
+        var normalizedPath = relativePath.ToLowerInvariant();
 
-        if (string.IsNullOrEmpty(relativePath) || relativePath.Equals("user", StringComparison.OrdinalIgnoreCase))
+        if (string.IsNullOrEmpty(normalizedPath) || normalizedPath.Equals("user", StringComparison.OrdinalIgnoreCase))
         {
-            return normalizedHref.Equals("user/dashboard", StringComparison.OrdinalIgnoreCase);
+            return normalizedHref == "user/dashboard";
         }
 
-        return relativePath.Equals(normalizedHref, StringComparison.OrdinalIgnoreCase) ||
-               relativePath.StartsWith(normalizedHref + "/", StringComparison.OrdinalIgnoreCase);
+        return normalizedPath.Equals(normalizedHref, StringComparison.OrdinalIgnoreCase) ||
+               normalizedPath.StartsWith(normalizedHref + "/", StringComparison.OrdinalIgnoreCase);
     }
 
 }
