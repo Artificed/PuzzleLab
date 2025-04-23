@@ -25,7 +25,7 @@ public class Answer
         QuestionId = questionId;
         Text = text;
         IsCorrect = isCorrect;
-        CreatedAt = DateTime.UtcNow;
+        CreatedAt = DateTime.UtcNow.AddHours(7);
         LastModifiedAt = CreatedAt;
         QuizAnswers = new List<QuizAnswer>();
     }
@@ -36,12 +36,12 @@ public class Answer
             throw new ArgumentException("Answer text cannot be empty", nameof(newText));
 
         Text = newText;
-        LastModifiedAt = DateTime.UtcNow;
+        LastModifiedAt = DateTime.UtcNow.AddHours(7);
     }
 
     public void SetCorrect(bool correct)
     {
         IsCorrect = correct;
-        LastModifiedAt = DateTime.UtcNow;
+        LastModifiedAt = DateTime.UtcNow.AddHours(7);
     }
 }

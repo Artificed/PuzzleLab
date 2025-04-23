@@ -23,7 +23,7 @@ public class QuizUser
         Id = id;
         UserId = userId;
         QuizId = quizId;
-        CreatedAt = DateTime.UtcNow;
+        CreatedAt = DateTime.UtcNow.AddHours(7);
         LastModifiedAt = CreatedAt;
     }
 }

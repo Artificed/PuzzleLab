@@ -29,7 +29,7 @@ public class Schedule
         Id = id;
         StartDateTime = startDateTime;
         EndDateTime = endDateTime;
-        CreatedAt = DateTime.UtcNow;
+        CreatedAt = DateTime.UtcNow.AddHours(7);
         LastModifiedAt = CreatedAt;
     }
 
@@ -40,6 +40,6 @@ public class Schedule
 
         StartDateTime = newStartDateTime;
         EndDateTime = newEndDateTime;
-        LastModifiedAt = DateTime.UtcNow;
+        LastModifiedAt = DateTime.UtcNow.AddHours(7);
     }
 }

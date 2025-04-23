@@ -23,7 +23,6 @@ public class DeleteQuizScheduleCommandHandler(IScheduleRepository scheduleReposi
             return Result<DeleteQuizScheduleResponse>.Failure(Error.NotFound("Schedule not found!"));
         }
 
-        await quizRepository.DeleteQuizAsync(quiz, cancellationToken);
         await scheduleRepository.DeleteScheduleAsync(schedule, cancellationToken);
 
         return Result<DeleteQuizScheduleResponse>.Success(new DeleteQuizScheduleResponse(quiz.Id));

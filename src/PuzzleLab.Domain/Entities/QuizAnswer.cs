@@ -28,7 +28,7 @@ public class QuizAnswer
         QuestionId = questionId;
         SelectedAnswerId = selectedAnswerId;
         IsCorrect = isCorrect;
-        CreatedAt = DateTime.UtcNow;
+        CreatedAt = DateTime.UtcNow.AddHours(7);
         LastModifiedAt = CreatedAt;
     }
 
@@ -36,6 +36,6 @@ public class QuizAnswer
     {
         SelectedAnswerId = selectedAnswerId;
         IsCorrect = isCorrect;
-        LastModifiedAt = DateTime.UtcNow;
+        LastModifiedAt = DateTime.UtcNow.AddHours(7);
     }
 }

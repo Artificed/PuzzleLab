@@ -28,7 +28,7 @@ public class User
         Email = email;
         PasswordHash = passwordHash;
         Role = role;
-        CreatedAt = DateTime.UtcNow;
+        CreatedAt = DateTime.UtcNow.AddHours(7);
         QuizUsers = new List<QuizUser>();
         QuizSessions = new List<QuizSession>();
     }
@@ -50,6 +50,6 @@ public class User
 
     public void UpdateLastLogin()
     {
-        LastLoginAt = DateTime.UtcNow;
+        LastLoginAt = DateTime.UtcNow.AddHours(7);
     }
 }

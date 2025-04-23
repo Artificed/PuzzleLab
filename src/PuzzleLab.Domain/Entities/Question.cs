@@ -34,8 +34,8 @@ public class Question
         Id = id;
         QuestionPackageId = questionPackageId;
         Text = text;
-        CreatedAt = DateTime.UtcNow;
-        LastModifiedAt = CreatedAt;
+        CreatedAt = DateTime.UtcNow.AddHours(7);
+        LastModifiedAt = CreatedAt.AddHours(7);
         Answers = new List<Answer>();
         QuizAnswers = new List<QuizAnswer>();
         QuizSessionQuestions = new List<QuizSessionQuestion>();
@@ -47,13 +47,13 @@ public class Question
             throw new ArgumentException("Question text cannot be empty", nameof(newText));
 
         Text = newText;
-        LastModifiedAt = DateTime.UtcNow;
+        LastModifiedAt = DateTime.UtcNow.AddHours(7);
     }
 
     public void UpdateImage(byte[]? newImageData, string? mimeType)
     {
         ImageData = newImageData;
         ImageMimeType = mimeType;
-        LastModifiedAt = DateTime.UtcNow;
+        LastModifiedAt = DateTime.UtcNow.AddHours(7);
     }
 }

@@ -33,11 +33,11 @@ public class QuizSession
         Id = id;
         UserId = userId;
         QuizId = quizId;
-        StartedAt = DateTime.UtcNow;
+        StartedAt = DateTime.UtcNow.AddHours(7);
         Status = "In Progress";
         CorrectAnswers = 0;
         TotalQuestions = totalQuestions;
-        CreatedAt = DateTime.UtcNow;
+        CreatedAt = DateTime.UtcNow.AddHours(7);
         LastModifiedAt = CreatedAt;
         QuizAnswers = new List<QuizAnswer>();
         QuizSessionQuestions = new List<QuizSessionQuestion>();
@@ -47,6 +47,7 @@ public class QuizSession
     {
         Status = "Finalized";
         CorrectAnswers = correctAnswers;
-        LastModifiedAt = DateTime.UtcNow;
+        FinalizedAt = DateTime.UtcNow.AddHours(7);
+        LastModifiedAt = DateTime.UtcNow.AddHours(7);
     }
 }

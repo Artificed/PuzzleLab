@@ -22,7 +22,7 @@ public class QuestionPackage
         Id = id;
         Name = name;
         Description = description;
-        CreatedAt = DateTime.UtcNow;
+        CreatedAt = DateTime.UtcNow.AddHours(7);
         LastModifiedAt = CreatedAt;
         Questions = new List<Question>();
         Quizzes = new List<Quiz>();
@@ -34,12 +34,12 @@ public class QuestionPackage
             throw new ArgumentException("Name cannot be empty", nameof(newName));
 
         Name = newName;
-        LastModifiedAt = DateTime.UtcNow;
+        LastModifiedAt = DateTime.UtcNow.AddHours(7);
     }
 
     public void UpdateDescription(string newDescription)
     {
         Description = newDescription;
-        LastModifiedAt = DateTime.UtcNow;
+        LastModifiedAt = DateTime.UtcNow.AddHours(7);
     }
 }

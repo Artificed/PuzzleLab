@@ -26,7 +26,7 @@ public class Quiz
         Id = id;
         QuestionPackageId = questionPackageId;
         ScheduleId = scheduleId;
-        CreatedAt = DateTime.UtcNow;
+        CreatedAt = DateTime.UtcNow.AddHours(7);
         LastModifiedAt = CreatedAt;
         QuizUsers = new List<QuizUser>();
         QuizSessions = new List<QuizSession>();
@@ -35,12 +35,12 @@ public class Quiz
     public void UpdateQuestionPackageId(Guid questionPackageId)
     {
         QuestionPackageId = questionPackageId;
-        LastModifiedAt = DateTime.UtcNow;
+        LastModifiedAt = DateTime.UtcNow.AddHours(7);
     }
 
     public void AssignSchedule(Guid scheduleId)
     {
         ScheduleId = scheduleId;
-        LastModifiedAt = DateTime.UtcNow;
+        LastModifiedAt = DateTime.UtcNow.AddHours(7);
     }
 }

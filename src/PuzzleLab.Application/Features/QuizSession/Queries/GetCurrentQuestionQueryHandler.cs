@@ -39,17 +39,17 @@ public class GetCurrentQuestionQueryCommandHandler(
         if (schedule is null)
             return Result<GetCurrentQuestionResponse>.Failure(Error.NotFound("Schedule not found!"));
 
-        if (schedule.StartDateTime > DateTime.Now)
+        if (schedule.StartDateTime > DateTime.UtcNow)
             return Result<GetCurrentQuestionResponse>.Failure(
                 Error.Validation("Quiz cannot be started before the schedule start time!"));
 
-        if (schedule.EndDateTime < DateTime.Now)
+        if (schedule.EndDateTime < DateTime.UtcNow)
             return Result<GetCurrentQuestionResponse>.Failure(
                 Error.Validation("Quiz cannot be started after the schedule end time!"));
 
         var existingSession =
             await quizSessionRepository.GetExistingQuizSessionAsync(request.QuizId, request.UserId, cancellationToken);
-        if (existingSession is null || existingSession.FinalizedAt is not null || DateTime.Now > schedule.EndDateTime)
+        if (existingSession is null || existingSession.FinalizedAt is not null || DateTime.UtcNow > schedule.EndDateTime)
         {
             return Result<GetCurrentQuestionResponse>.Failure(Error.Validation("Invalid quiz session!"));
         }
