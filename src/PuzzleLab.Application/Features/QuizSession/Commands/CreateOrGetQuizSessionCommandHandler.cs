@@ -39,17 +39,18 @@ public class CreateOrGetQuizSessionCommandHandler(
         if (schedule is null)
             return Result<CreateOrGetQuizSessionResponse>.Failure(Error.NotFound("Schedule not found!"));
 
-        if (schedule.StartDateTime > DateTime.Now)
+        if (schedule.StartDateTime > DateTime.UtcNow)
             return Result<CreateOrGetQuizSessionResponse>.Failure(
                 Error.Validation("Quiz cannot be started before the schedule start time!"));
 
-        if (schedule.EndDateTime < DateTime.Now)
+        if (schedule.EndDateTime < DateTime.UtcNow)
             return Result<CreateOrGetQuizSessionResponse>.Failure(
                 Error.Validation("Quiz cannot be started after the schedule end time!"));
 
         var existingSession =
             await quizSessionRepository.GetExistingQuizSessionAsync(request.QuizId, request.UserId, cancellationToken);
-        if (existingSession is not null && existingSession.FinalizedAt is null && DateTime.Now < schedule.EndDateTime)
+        if (existingSession is not null && existingSession.FinalizedAt is null &&
+            DateTime.UtcNow < schedule.EndDateTime)
         {
             var dto = MapToDto(existingSession);
             return Result<CreateOrGetQuizSessionResponse>.Success(new CreateOrGetQuizSessionResponse(dto));
