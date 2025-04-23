@@ -21,6 +21,16 @@
     ports:
       - "3000:3000"
 
+  background_worker:
+    image: puzzle_lab_bg_worker
+    restart: unless-stopped
+    depends_on:
+      - puzzle_lab_api
+      - rabbitmq
+    build:
+      context: .
+      dockerfile: ./src/PuzzleLab.BackgroundWorker/Dockerfile
+
   database:
     image: postgres:latest
     restart: unless-stopped

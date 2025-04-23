@@ -1,16 +1,12 @@
 ﻿@page "/user/dashboard"
 @using PuzzleLab.Shared.DTOs.QuizSchedule
 @using PuzzleLab.Web.Services.State
-@using PuzzleLab.Shared.DTOs.QuizSchedule.Requests
-@using PuzzleLab.Shared.DTOs.QuizSession.Requests
-@using PuzzleLab.Web.Services.Api.Core.Implementations
 @using PuzzleLab.Web.Services.Api.Core.Interfaces
 @using PuzzleLab.Web.Services.Ui
 
 @layout Components.Layout.UserLayout
 
 @inject IQuizScheduleService QuizScheduleService
-@inject IQuizSessionService QuizSessionService
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
 @inject UserStateService UserState
@@ -271,7 +267,7 @@
         All,
         Current,
         Upcoming,
-        Past
+        Past,
     }
 
     private void FilterQuizzes(QuizFilter filter)
@@ -329,14 +325,13 @@
         {
             return "Active";
         }
-        else if (IsQuizUpcoming(quiz))
+
+        if (IsQuizUpcoming(quiz))
         {
             return "Upcoming";
         }
-        else
-        {
-            return "Expired";
-        }
+
+        return "Expired";
     }
 
     private string GetStatusBadgeClass(QuizScheduleDto quiz)
