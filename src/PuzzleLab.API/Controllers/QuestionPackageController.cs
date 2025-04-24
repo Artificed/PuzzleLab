@@ -52,7 +52,7 @@ public class QuestionPackageController(ISender sender) : ControllerBase
             return this.MapErrorToAction(result.Error);
         }
 
-        return Ok(result.Value); // TODO: Change to created
+        return Ok(result.Value);
     }
 
     [HttpPut("update")]

@@ -15,6 +15,7 @@ public class QuestionPackageRepository(DatabaseContext databaseContext) : IQuest
         CancellationToken cancellationToken = default)
     {
         return await databaseContext.QuestionPackages.Include(qp => qp.Questions)
+            .Include(qp => qp.Quizzes)
             .FirstOrDefaultAsync(x => x.Id == packageId, cancellationToken);
     }
 
