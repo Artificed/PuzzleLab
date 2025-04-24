@@ -21,6 +21,7 @@
         <_ContentIncludedByDefault Remove="Components\Shared\UI\CheckBox.razor"/>
         <_ContentIncludedByDefault Remove="Components\Shared\UI\Input.razor"/>
         <_ContentIncludedByDefault Remove="Components\Shared\UI\Label.razor"/>
+        <_ContentIncludedByDefault Remove="wwwroot\js\site.js"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -38,9 +39,11 @@
 
     <ItemGroup>
         <AdditionalFiles Include="wwwroot\images\"/>
+        <AdditionalFiles Include="wwwroot\css\"/>
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Blazor-ApexCharts" Version="5.1.0"/>
         <PackageReference Include="Blazored.LocalStorage" Version="4.5.0"/>
     </ItemGroup>
 

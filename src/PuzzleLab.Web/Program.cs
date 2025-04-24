@@ -13,6 +13,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services.AddRazorPages();
+builder.Services.AddServerSideBlazor();
+
 var apiBaseUrl = builder.Configuration.GetValue<string>("ApiSettings:BaseUrl");
 if (string.IsNullOrEmpty(apiBaseUrl))
 {
