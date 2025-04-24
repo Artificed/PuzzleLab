@@ -260,7 +260,6 @@
     private int _currentPage = 1;
     private int _totalPages => (_filteredQuestions == null || _filteredQuestions.Count == 0) ? 1 : (int)Math.Ceiling(_filteredQuestions.Count / (double)_pageSize);
 
-    // Modal visibility flags
     private bool _showManageAnswersModal = false;
     private bool _showAddQuestionModal = false;
     private bool _showEditQuestionModal = false;
@@ -394,7 +393,6 @@
         }
     }
 
-    // Modal handling methods
     private void ShowAddQuestionModal()
     {
         _showAddQuestionModal = true;

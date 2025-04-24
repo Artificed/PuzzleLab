@@ -55,7 +55,6 @@ public class GetCurrentQuestionQueryCommandHandler(
         }
 
 
-        // Fetching the data
         var quizSessionQuestion = await quizSessionQuestionRepository.GetQuizSessionQuestionByIdAsync(
             existingSession.Id, request.CurrentIndex, cancellationToken);
 

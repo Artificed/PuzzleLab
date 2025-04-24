@@ -81,7 +81,7 @@ var secretKey = jwtSettings["Key"]
                 ?? throw new InvalidOperationException("JWT Key is not configured in JwtSettings:Key");
 
 var keyBytes = Encoding.UTF8.GetBytes(secretKey);
-const int minKeySizeInBytes = 256 / 8; // HS256 requires 256 bits minimum key size
+const int minKeySizeInBytes = 256 / 8;
 if (keyBytes.Length < minKeySizeInBytes)
 {
     throw new InvalidOperationException(

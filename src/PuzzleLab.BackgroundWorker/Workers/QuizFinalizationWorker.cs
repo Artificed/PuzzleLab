@@ -21,12 +21,10 @@ namespace PuzzleLab.BackgroundWorker.Workers
 
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            // 1) Async connect
             var factory = new ConnectionFactory { Uri = new Uri(rabbitMqUri) };
             _connection = await factory.CreateConnectionAsync(cancellationToken);
             _channel = await _connection.CreateChannelAsync(options: null, cancellationToken);
 
-            // 2) Async topology
             await _channel.ExchangeDeclareAsync(
                 exchange: ExchangeName,
                 type: ExchangeType.Fanout,

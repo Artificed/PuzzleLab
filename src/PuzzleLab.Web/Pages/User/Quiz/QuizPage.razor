@@ -3,6 +3,10 @@
 @using PuzzleLab.Web.Services.Api.Core.Interfaces
 @using PuzzleLab.Web.Services.State
 @using PuzzleLab.Web.Services.Ui
+
+@using PuzzleLab.Web.Services.Time
+@using Microsoft.Extensions.Logging
+
 @using System.Timers
 @using PuzzleLab.Shared.DTOs.QuizAnswer.Requests
 @using PuzzleLab.Shared.DTOs.QuizSchedule.Requests
@@ -16,6 +20,9 @@
 @inject IQuizAnswerService QuizAnswerService
 @inject NavigationManager NavigationManager
 @inject UserStateService UserState
+
+@inject IServerTimeService ServerTimeService
+
 @rendermode InteractiveServer
 
 <PageTitle>Quiz - PuzzleLab</PageTitle>
@@ -32,20 +39,17 @@
     else
     {
         <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
-            <!-- Quiz Header Component -->
             <QuizHeader
                 Title="@_quizTitle"
                 CurrentQuestion="@(_currentQuestionIndex + 1)"
                 TotalQuestions="@_totalQuestions"
                 StartedAt="@(_quizSession?.StartedAt ?? DateTime.Now)"
-                TimeRemaining="@_timeRemaining"
+                TimeRemaining="@_displayTimeRemaining"
                 Status="@(_quizSession?.Status ?? "Active")"
                 OnExitClick="ShowExitConfirmation"/>
 
-            <!-- Progress Bar -->
             <ProgressBar Current="@(_currentQuestionIndex + 1)" Total="@_totalQuestions"/>
 
-            <!-- Question Display Component -->
             @if (_currentQuestion != null)
             {
                 <QuestionDisplay
@@ -54,7 +58,6 @@
                     OnAnswerSelected="SelectAnswer"/>
             }
 
-            <!-- Navigation Buttons Component -->
             <NavigationButtons
                 CurrentIndex="@_currentQuestionIndex"
                 TotalQuestions="@_totalQuestions"
@@ -63,7 +66,6 @@
                 OnSubmit="ShowSubmitConfirmation"/>
         </div>
 
-        <!-- Question Navigator Component -->
         <QuestionNavigator
             CurrentIndex="@_currentQuestionIndex"
             TotalQuestions="@_totalQuestions"
@@ -73,7 +75,6 @@
     }
 </div>
 
-<!-- Confirmation Dialog Components -->
 <ConfirmationDialog
     IsVisible="@_showExitConfirmation"
     Title="Exit Quiz"
@@ -90,7 +91,7 @@
     ConfirmButtonText="Submit Quiz"
     ConfirmButtonClass="bg-green-600 hover:bg-green-700"
     OnCancel="CancelSubmit"
-    OnConfirm="SubmitQuiz">
+    OnConfirm="ConfirmSubmitQuiz">
     @if (_answeredQuestions.Count < _totalQuestions)
     {
         <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
@@ -118,19 +119,29 @@
     private TimeSpan _timeRemaining;
     private bool _showExitConfirmation = false;
     private bool _showSubmitConfirmation = false;
-    private System.Timers.Timer? _timer;
-    private Dictionary<int, Guid> _questionIdMap = new Dictionary<int, Guid>(); // Maps question index to question ID
-    private Dictionary<Guid, int> _questionIdToAnswerIndexMap = new Dictionary<Guid, int>(); // Maps question ID to answer index
-    private bool _isCurrentAnswerSaved = true; // Tracks if current answer has been saved
-    private Dictionary<Guid, Guid> _questionIdToSelectedAnswerIdMap = new Dictionary<Guid, Guid>(); // Maps question ID to selected answer ID
+
+    private bool _isQuizFinished = false;
+    private bool _isAutoSubmitting = false;
+
+    private DateTimeOffset? _quizEndTimeUtc;
+    private TimeSpan _displayTimeRemaining = TimeSpan.MaxValue;
+    private string _timeSyncStatus = "Syncing...";
+
+    private Dictionary<int, Guid> _questionIdMap = new Dictionary<int, Guid>();
+    private Dictionary<Guid, int> _questionIdToAnswerIndexMap = new Dictionary<Guid, int>();
+    private bool _isCurrentAnswerSaved = true;
+    private Dictionary<Guid, Guid> _questionIdToSelectedAnswerIdMap = new Dictionary<Guid, Guid>();
 
     protected override async Task OnInitializedAsync()
     {
+        ServerTimeService.TimeUpdated += HandleServerTimeUpdate;
+        UpdateRemainingTimeDisplay();
         try
         {
             if (UserState?.CurrentUser?.Id is null)
             {
                 ToastService.ShowError("User is not logged in.", "Error");
+                NavigationManager.NavigateTo("/login");
                 return;
             }
 
@@ -146,16 +157,24 @@
             _quizSession = response.QuizSessionDto;
             _totalQuestions = _quizSession.TotalQuestions;
 
+            if (_quizSession.Status.Equals("Finalized", StringComparison.OrdinalIgnoreCase))
+            {
+                _isQuizFinished = true;
+                _isLoading = false;
+                ToastService.ShowInfo("This quiz session has already been finalized.", "Quiz Finished");
+                NavigateToUserDashboard();
+                return;
+            }
+
             if (_quizSession.Id != Guid.Empty)
             {
+                await LoadQuizEndTime();
                 await LoadSavedAnswers();
                 await LoadQuestionMappings();
             }
 
             await LoadCurrentQuestion();
-            await LoadQuizEndTime();
 
-            StartTimer();
             _isLoading = false;
         }
         catch (Exception ex)
@@ -230,29 +249,63 @@
         StateHasChanged();
     }
 
-    private void StartTimer()
+    private void HandleServerTimeUpdate()
     {
-        _timer = new System.Timers.Timer(1000);
-        _timer.Elapsed += TimerElapsed;
-        _timer.AutoReset = true;
-        _timer.Enabled = true;
+        InvokeAsync(() =>
+        {
+            UpdateRemainingTimeDisplay();
+            StateHasChanged();
+        });
     }
 
-    private void TimerElapsed(object? sender, ElapsedEventArgs e)
+    private void UpdateRemainingTimeDisplay()
     {
-        _timeRemaining = _timeRemaining.Subtract(TimeSpan.FromSeconds(1));
-
-        if (_timeRemaining.TotalSeconds <= 0)
+        if (_isQuizFinished)
         {
-            _timer?.Stop();
-            InvokeAsync(async () => { await SubmitQuiz(); });
+            _displayTimeRemaining = TimeSpan.Zero;
+            _timeSyncStatus = "Finished";
+            return;
         }
 
-        InvokeAsync(StateHasChanged);
+        if (_quizEndTimeUtc.HasValue)
+        {
+            if (ServerTimeService.CurrentServerTimeUtc.HasValue)
+            {
+                var serverTime = ServerTimeService.CurrentServerTimeUtc.Value;
+                var remaining = _quizEndTimeUtc.Value - serverTime;
+
+                if (remaining <= TimeSpan.Zero)
+                {
+                    _displayTimeRemaining = TimeSpan.Zero;
+                    _timeSyncStatus = "Time Expired";
+                    if (!_isQuizFinished && !_isAutoSubmitting)
+                    {
+                        InvokeAsync(AutoSubmitQuiz);
+                    }
+                }
+                else
+                {
+                    _displayTimeRemaining = remaining;
+                    _timeSyncStatus = "Synced";
+                }
+            }
+            else
+            {
+                _displayTimeRemaining = TimeSpan.MaxValue;
+                _timeSyncStatus = "Syncing...";
+            }
+        }
+        else
+        {
+            _displayTimeRemaining = TimeSpan.MaxValue;
+            _timeSyncStatus = "Waiting for end time...";
+        }
     }
 
     private void SelectAnswer(int answerIndex)
     {
+        if (_isQuizFinished) return;
+
         _selectedAnswerIndex = answerIndex;
         _answeredQuestions[_currentQuestionIndex] = answerIndex;
 
@@ -344,7 +397,8 @@
         var response = await QuizScheduleService.GetQuizEndTimeAsync(request);
         if (response != null)
         {
-            _timeRemaining = response.EndTime - DateTime.UtcNow.AddHours(7);
+            _quizEndTimeUtc = response.EndTime;
+            UpdateRemainingTimeDisplay();
         }
         else
         {
@@ -417,16 +471,13 @@
 
     private async Task ConfirmExit()
     {
-        // Save current answer before exiting
         await SaveCurrentAnswer();
         NavigateToUserDashboard();
     }
 
     private void NavigateToUserDashboard()
     {
-        _timer?.Stop();
-        _timer?.Dispose();
-
+        CleanupResources();
         NavigationManager.NavigateTo("/user/dashboard");
     }
 
@@ -440,40 +491,77 @@
         _showSubmitConfirmation = false;
     }
 
-    private async Task SubmitQuiz()
+    private async Task ConfirmSubmitQuiz()
     {
-        _timer?.Stop();
-        _timer?.Dispose();
+        _showSubmitConfirmation = false;
+        await SubmitQuiz("Manual");
+    }
 
+    private async Task AutoSubmitQuiz()
+    {
+        if (_isQuizFinished || _isAutoSubmitting) return;
+
+        _isAutoSubmitting = true;
+        ToastService.ShowInfo("Time is up! Submitting your quiz automatically.", "Auto Submit");
+        await SubmitQuiz("AutoSubmit");
+        _isAutoSubmitting = false;
+    }
+
+    private async Task SubmitQuiz(string submissionType)
+    {
         _isLoading = true;
+        _isQuizFinished = true;
         await InvokeAsync(StateHasChanged);
+
+        await SaveCurrentAnswer();
 
         try
         {
             if (_quizSession is null)
             {
-                ToastService.ShowError("Quiz session not found!", "Error");
                 return;
             }
 
             var request = new FinalizeQuizRequest() { SessionId = _quizSession.Id };
-            var response = QuizSessionService.FinalizeQuizAsync(request);
+            var response = await QuizSessionService.FinalizeQuizAsync(request);
 
-            ToastService.ShowSuccess($"Finalized quiz {response.Id} successfully!", "Success");
-
-            NavigationManager.NavigateTo($"/user/dashboard");
+            if (response == null)
+            {
+                ToastService.ShowError($"Failed to finalize quiz submission on the server.", "Submission Error");
+                _isLoading = false;
+                _quizError = true;
+                _errorMessage = "Failed to submit quiz to server. Please contact support.";
+                await InvokeAsync(StateHasChanged);
+            }
+            else
+            {
+                ToastService.ShowSuccess($"Quiz submitted successfully!", "Success");
+                NavigateToUserDashboard();
+            }
         }
         catch (Exception ex)
         {
-            _isLoading = false;
-            ToastService.ShowError($"Error submitting quiz: {ex.Message}", "Error");
+            ToastService.ShowError("Error occurred while submitting the quiz.", "Error");
+        }
+        finally
+        {
+            if (_isLoading) _isLoading = false;
+            CleanupResources();
+            await InvokeAsync(StateHasChanged);
         }
     }
 
-    public void Dispose()
+    private void CleanupResources()
     {
-        _timer?.Stop();
-        _timer?.Dispose();
+        ServerTimeService.TimeUpdated -= HandleServerTimeUpdate;
+    }
+
+
+    public async ValueTask DisposeAsync()
+    {
+        CleanupResources();
+        await ValueTask.CompletedTask;
+        GC.SuppressFinalize(this);
     }
 
 }

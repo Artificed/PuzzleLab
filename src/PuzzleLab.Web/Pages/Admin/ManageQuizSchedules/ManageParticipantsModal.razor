@@ -432,21 +432,6 @@
 
         try
         {
-            // Mock implementation - just remove from list
-            // _participants.RemoveAll(p => p.Id == _userToRemove.Id);
-            // _filteredParticipants = _participants.ToList();
-            //
-            // // Add back to available users
-            // var userToAdd = new UserDto(
-            //     _userToRemove.UserId,
-            //     _userToRemove.Username,
-            //     $"{_userToRemove.Username}@example.com", // Mock email
-            //     DateTime.Now,
-            //     DateTime.Now
-            // );
-            //
-            // _availableUsers.Add(userToAdd);
-
             var request = new DeleteQuizParticipantRequest()
             {
                 QuizId = Schedule.QuizId,

@@ -29,16 +29,4 @@
         Console.WriteLine("Logout requested from Layout");
         NavigationManager.NavigateTo("/login", forceLoad: true);
     }
-
-    // Optional: Add authorization check for the entire layout
-    // protected override async Task OnInitializedAsync()
-    // {
-    //     var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-    //     var user = authState.User;
-    //     if (!user.Identity.IsAuthenticated || !user.IsInRole("Admin"))
-    //     {
-    //         NavigationManager.NavigateTo("/login"); // Redirect if not authenticated/authorized
-    //     }
-    // }
-    // @inject AuthenticationStateProvider AuthenticationStateProvider
 }

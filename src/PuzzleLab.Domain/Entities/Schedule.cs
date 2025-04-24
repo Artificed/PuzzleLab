@@ -15,7 +15,6 @@ public class Schedule
 
     public DateTime LastModifiedAt { get; private set; }
 
-    // For EF Core
     private Schedule()
     {
     }
