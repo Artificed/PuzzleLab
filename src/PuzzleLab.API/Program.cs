@@ -2,9 +2,10 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using PuzzleLab.API.Hubs;
+using PuzzleLab.API.Services;
 using PuzzleLab.Application.Common.Interfaces;
 using PuzzleLab.Domain.Common;
-using PuzzleLab.Domain.Entities;
 using PuzzleLab.Domain.Factories;
 using PuzzleLab.Domain.Repositories;
 using PuzzleLab.Infrastructure.Messaging;
@@ -118,6 +119,9 @@ builder.Services.AddAuthentication(x =>
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
+builder.Services.AddSignalR();
+builder.Services.AddHostedService<TimePublisherService>();
+
 builder.Services.AddScoped<IJwtGenerator, JwtGenerator>();
 
 var app = builder.Build();
@@ -168,4 +172,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<TimeHub>("/hubs/time");
+
 app.Run();

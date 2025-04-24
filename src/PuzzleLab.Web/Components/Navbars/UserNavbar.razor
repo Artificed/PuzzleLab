@@ -1,23 +1,31 @@
 @inject NavigationManager NavigationManager
+@using PuzzleLab.Web.Components.Ui
 
-<div class="flex justify-between items-center border-gray-200">
-    <div class="flex items-center justify-center gap-16">
+<div class="flex justify-between items-center border-b border-gray-200 py-2 px-4 md:px-6">
+    <div class="flex items-center justify-center gap-8 md:gap-16">
         <a href="/user/dashboard" class="text-xl font-bold text-gray-800">PuzzleLab</a>
-        <div class="flex items-center gap-4">
+        <div class="hidden md:flex items-center gap-4">
             <a href="/user/dashboard"
-               class="inline-flex items-center justify-center whitespace-nowrap text-md focus-visible:ring-gray-950 focus-visible:ring-offset-1 h-10 px-4 py-2 @(IsActive("user/dashboard") ? "font-medium text-gray-900 underline" : "text-gray-600 hover:text-gray-900")">
+               class="inline-flex items-center justify-center whitespace-nowrap text-md focus-visible:ring-gray-950 focus-visible:ring-offset-1 h-10 px-4 py-2 @(IsActive("user/dashboard") ? "font-medium text-gray-900 underline underline-offset-4" : "text-gray-600 hover:text-gray-900 hover:underline hover:underline-offset-4")">
                 Home
             </a>
-            <p
-                class="inline-flex items-center justify-center whitespace-nowrap text-md focus-visible:ring-gray-950 focus-visible:ring-offset-1 h-10 px-4 py-2 @(IsActive("quiz") ? "font-medium text-gray-900 underline" : "text-gray-600 hover:text-gray-900")">
+            <span
+                class="inline-flex items-center justify-center whitespace-nowrap text-md focus-visible:ring-gray-950 focus-visible:ring-offset-1 h-10 px-4 py-2 @(IsActive("quiz") ? "font-medium text-gray-900 underline underline-offset-4" : "text-gray-600 hover:text-gray-900")">
                 Quiz
-            </p>
+            </span>
         </div>
     </div>
 
     <div class="flex items-center space-x-4">
+        <span class="text-sm text-gray-600 flex items-center">
+            <Clock/>
+        </span>
+
         <span class="text-sm text-gray-600">User</span>
-        <button @onclick="HandleLogout" class="text-sm text-red-600 hover:text-red-800">Logout</button>
+        <button @onclick="HandleLogout"
+                class="text-sm text-red-600 hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded">
+            Logout
+        </button>
     </div>
 </div>
 
@@ -30,9 +38,9 @@
         var normalizedHref = href.TrimStart('/').ToLowerInvariant();
         var normalizedPath = relativePath.ToLowerInvariant();
 
-        if (string.IsNullOrEmpty(normalizedPath) || normalizedPath.Equals("user", StringComparison.OrdinalIgnoreCase))
+        if (normalizedHref == "user/dashboard")
         {
-            return normalizedHref == "user/dashboard";
+            return normalizedPath == normalizedHref || normalizedPath == "user" || string.IsNullOrEmpty(normalizedPath);
         }
 
         return normalizedPath.Equals(normalizedHref, StringComparison.OrdinalIgnoreCase) ||

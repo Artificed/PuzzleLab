@@ -22,7 +22,7 @@
                     <option value="">All Quizzes</option>
                     @foreach (var quizId in _availableQuizIds)
                     {
-                        <option value="@quizId.Key">@quizId.Value</option>
+                        <option value="@quizId.Key">@quizId.Key - @quizId.Value</option>
                     }
                 </select>
             </div>
