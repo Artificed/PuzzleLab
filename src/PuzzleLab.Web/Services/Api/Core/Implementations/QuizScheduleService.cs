@@ -47,4 +47,12 @@ public class QuizScheduleService(IApiClient apiClient) : IQuizScheduleService
                 $"/api/quiz-schedule/user");
         return schedules;
     }
+
+    public async Task<GetQuizEndTimeResponse?> GetQuizEndTimeAsync(
+        GetQuizEndTimeRequest getQuizEndTimeRequest)
+    {
+        var response = await apiClient.GetAsync<GetQuizEndTimeResponse>(
+            $"/api/quiz-schedule/end-time/{getQuizEndTimeRequest.QuizId}");
+        return response;
+    }
 }

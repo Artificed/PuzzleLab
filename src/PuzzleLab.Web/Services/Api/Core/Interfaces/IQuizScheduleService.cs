@@ -17,4 +17,7 @@ public interface IQuizScheduleService
         DeleteQuizScheduleRequest deleteQuestionRequest);
 
     Task<GetUserQuizScheduleResponse?> GetUserQuizScheduleAsync();
+
+    Task<GetQuizEndTimeResponse?> GetQuizEndTimeAsync(
+        GetQuizEndTimeRequest getQuizEndTimeRequest);
 }

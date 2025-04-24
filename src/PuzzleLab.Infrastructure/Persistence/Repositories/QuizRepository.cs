@@ -13,7 +13,9 @@ public class QuizRepository(DatabaseContext databaseContext) : IQuizRepository
 
     public async Task<Quiz?> GetQuizByIdAsync(Guid quizId, CancellationToken cancellationToken = default)
     {
-        return await databaseContext.Quizzes.Include(q => q.QuestionPackage).Include(q => q.QuizUsers)
+        return await databaseContext.Quizzes.Include(q => q.QuestionPackage)
+            .Include(q => q.QuizUsers)
+            .Include(q => q.Schedule)
             .FirstOrDefaultAsync(x => x.Id == quizId, cancellationToken);
     }
 

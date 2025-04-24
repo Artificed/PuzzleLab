@@ -78,6 +78,28 @@ public class QuizScheduleController(ISender sender) : ControllerBase
         return Ok(result.Value);
     }
 
+    [HttpGet("end-time/{quizId}")]
+    public async Task<IActionResult> GetQuizEndTime(string quizId, CancellationToken cancellationToken)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (userId == null)
+        {
+            var error = Error.Unauthorized("User is not logged in yet!");
+            return this.MapErrorToAction(error);
+        }
+
+        var query = new GetQuizEndTimeQuery(Guid.Parse(quizId));
+        var result = await sender.Send(query, cancellationToken);
+
+        if (result.IsFailure)
+        {
+            return this.MapErrorToAction(result.Error);
+        }
+
+        return Ok(result.Value);
+    }
+
     [Authorize]
     [HttpGet("user")]
     public async Task<IActionResult> GetUserQuizSchedules(CancellationToken cancellationToken)

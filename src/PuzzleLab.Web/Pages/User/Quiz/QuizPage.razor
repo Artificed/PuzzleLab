@@ -5,10 +5,13 @@
 @using PuzzleLab.Web.Services.Ui
 @using System.Timers
 @using PuzzleLab.Shared.DTOs.QuizAnswer.Requests
+@using PuzzleLab.Shared.DTOs.QuizSchedule.Requests
 @using PuzzleLab.Shared.DTOs.QuizSession.Requests
+@using PuzzleLab.Web.Services.Api.Core.Implementations
 
 @layout Components.Layout.UserLayout
 
+@inject IQuizScheduleService QuizScheduleService
 @inject IQuizSessionService QuizSessionService
 @inject IQuizAnswerService QuizAnswerService
 @inject NavigationManager NavigationManager
@@ -112,7 +115,7 @@
     private Dictionary<int, int> _answeredQuestions = new Dictionary<int, int>();
     private QuestionWithAnswerDto? _currentQuestion;
     private QuizSessionDto? _quizSession;
-    private TimeSpan _timeRemaining = TimeSpan.FromMinutes(30);
+    private TimeSpan _timeRemaining;
     private bool _showExitConfirmation = false;
     private bool _showSubmitConfirmation = false;
     private System.Timers.Timer? _timer;
@@ -150,7 +153,7 @@
             }
 
             await LoadCurrentQuestion();
-            _timeRemaining = TimeSpan.FromMinutes(30); // Use actual time from session when available
+            await LoadQuizEndTime();
 
             StartTimer();
             _isLoading = false;
@@ -331,6 +334,24 @@
         }
     }
 
+    private async Task LoadQuizEndTime()
+    {
+        var request = new GetQuizEndTimeRequest()
+        {
+            QuizId = QuizId
+        };
+
+        var response = await QuizScheduleService.GetQuizEndTimeAsync(request);
+        if (response != null)
+        {
+            _timeRemaining = response.EndTime - DateTime.UtcNow.AddHours(7);
+        }
+        else
+        {
+            ToastService.ShowError("Failed to load quiz end time!", "Error");
+        }
+    }
+
     private async Task LoadCurrentQuestion()
     {
         var request = new GetCurrentQuestionRequest
@@ -435,12 +456,12 @@
                 return;
             }
 
-            var request = new FinalizeQuizRequest() { SessionId = _quizSession.Id};
+            var request = new FinalizeQuizRequest() { SessionId = _quizSession.Id };
             var response = QuizSessionService.FinalizeQuizAsync(request);
 
             ToastService.ShowSuccess($"Finalized quiz {response.Id} successfully!", "Success");
 
-            NavigationManager.NavigateTo($"/user/results/{_quizSession?.Id}");
+            NavigationManager.NavigateTo($"/user/dashboard");
         }
         catch (Exception ex)
         {
