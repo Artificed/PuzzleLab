@@ -1,6 +1,6 @@
 namespace PuzzleLab.Shared.DTOs.QuizSession;
 
-public class QuizResultDto
+public class QuizStatisticsDto
 {
     public Guid QuizId { get; set; }
     public string QuizName { get; set; } = string.Empty;

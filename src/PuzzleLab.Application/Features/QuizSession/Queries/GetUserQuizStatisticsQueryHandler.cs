@@ -24,7 +24,7 @@ public class GetUserQuizStatisticsQueryHandler(
 
         var quizSessions = await quizSessionRepository.GetQuizSessionsByUserIdAsync(user.Id, cancellationToken);
 
-        var quizResultDtos = new List<QuizResultDto>();
+        var quizStatisticDtos = new List<QuizStatisticsDto>();
 
         foreach (var qs in quizSessions.Where(q => q.FinalizedAt.HasValue))
         {
@@ -37,7 +37,7 @@ public class GetUserQuizStatisticsQueryHandler(
                 ? (double)qs.CorrectAnswers / qs.TotalQuestions * 100
                 : 0;
 
-            quizResultDtos.Add(new QuizResultDto
+            quizStatisticDtos.Add(new QuizStatisticsDto
             {
                 QuizId = qs.QuizId,
                 QuizName = quiz.QuestionPackage.Name,
@@ -54,7 +54,7 @@ public class GetUserQuizStatisticsQueryHandler(
         {
             UserId = user.Id.ToString(),
             Username = user.Username,
-            QuizResults = quizResultDtos
+            QuizStatistics = quizStatisticDtos
         };
 
         return Result<GetUserQuizStatisticsResponse>.Success(new GetUserQuizStatisticsResponse(responseData));

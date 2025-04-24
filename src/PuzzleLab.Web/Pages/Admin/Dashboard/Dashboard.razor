@@ -77,7 +77,7 @@
             <span class="block sm:inline">Please select a user to view their quiz statistics.</span>
         </div>
     }
-    else if (userStats == null || !userStats.QuizResults.Any())
+    else if (userStats == null || !userStats.QuizStatistics.Any())
     {
         <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative mb-4"
              role="alert">
@@ -94,19 +94,19 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div class="bg-blue-50 p-4 rounded-lg">
                         <p class="text-sm text-gray-500">Total Quizzes</p>
-                        <p class="text-2xl font-bold">@userStats?.QuizResults.Count</p>
+                        <p class="text-2xl font-bold">@userStats?.QuizStatistics.Count</p>
                     </div>
                     <div class="bg-green-50 p-4 rounded-lg">
                         <p class="text-sm text-gray-500">Average Score</p>
-                        <p class="text-2xl font-bold">@(userStats?.QuizResults.Any() == true ? $"{userStats.QuizResults.Average(r => r.ScorePercentage):F1}%" : "N/A")</p>
+                        <p class="text-2xl font-bold">@(userStats?.QuizStatistics.Any() == true ? $"{userStats.QuizStatistics.Average(r => r.ScorePercentage):F1}%" : "N/A")</p>
                     </div>
                     <div class="bg-purple-50 p-4 rounded-lg">
                         <p class="text-sm text-gray-500">Best Score</p>
-                        <p class="text-2xl font-bold">@(userStats?.QuizResults.Any() == true ? $"{userStats.QuizResults.Max(r => r.ScorePercentage):F1}%" : "N/A")</p>
+                        <p class="text-2xl font-bold">@(userStats?.QuizStatistics.Any() == true ? $"{userStats.QuizStatistics.Max(r => r.ScorePercentage):F1}%" : "N/A")</p>
                     </div>
                     <div class="bg-yellow-50 p-4 rounded-lg">
                         <p class="text-sm text-gray-500">Completed</p>
-                        <p class="text-2xl font-bold">@(userStats?.QuizResults.Count(r => r.QuizCompletedDate <= DateTime.Now))</p>
+                        <p class="text-2xl font-bold">@(userStats?.QuizStatistics.Count(r => r.QuizCompletedDate <= DateTime.Now))</p>
                     </div>
                 </div>
             </div>
@@ -148,7 +148,7 @@
                     </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                    @foreach (var result in userStats?.QuizResults.OrderByDescending(r => r.ScheduleStartDate) ?? Enumerable.Empty<QuizResultDto>())
+                    @foreach (var result in userStats?.QuizStatistics.OrderByDescending(r => r.ScheduleStartDate) ?? Enumerable.Empty<QuizStatisticsDto>())
                     {
                         <tr>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@result.ScheduleStartDate.ToString("MMM dd, yyyy")</td>
@@ -178,7 +178,7 @@
 
         @if (selectedQuizId != null)
         {
-            var quizResult = userStats?.QuizResults.FirstOrDefault(r => r.QuizId.ToString() == selectedQuizId);
+            var quizResult = userStats?.QuizStatistics.FirstOrDefault(r => r.QuizId.ToString() == selectedQuizId);
             if (quizResult != null)
             {
                 <div
@@ -274,13 +274,13 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!loading && error == null && userStats?.QuizResults.Any() == true && !chartsRendered)
+        if (!loading && error == null && userStats?.QuizStatistics.Any() == true && !chartsRendered)
         {
             chartsRendered = true;
             await RenderPerformanceChartAsync();
         }
 
-        if (selectedQuizId != null && userStats?.QuizResults.Any(r => r.QuizId.ToString() == selectedQuizId) == true)
+        if (selectedQuizId != null && userStats?.QuizStatistics.Any(r => r.QuizId.ToString() == selectedQuizId) == true)
         {
             await Task.Delay(50);
             await RenderQuizDetailsChartsAsync();
@@ -383,9 +383,9 @@
 
     private async Task RenderPerformanceChartAsync()
     {
-        if (userStats?.QuizResults.Any() != true) return;
+        if (userStats?.QuizStatistics.Any() != true) return;
 
-        var chartData = userStats.QuizResults
+        var chartData = userStats.QuizStatistics
             .OrderBy(r => r.ScheduleStartDate)
             .Select(r => new { date = r.ScheduleStartDate.ToString("yyyy-MM-dd"), score = r.ScorePercentage, quiz = r.QuizName })
             .ToArray();
@@ -406,7 +406,7 @@
     {
         if (selectedQuizId == null || userStats == null) return;
 
-        var quizResult = userStats.QuizResults.FirstOrDefault(r => r.QuizId.ToString() == selectedQuizId);
+        var quizResult = userStats.QuizStatistics.FirstOrDefault(r => r.QuizId.ToString() == selectedQuizId);
         if (quizResult == null) return;
 
         var scoreData = new[]
@@ -418,7 +418,7 @@
         var timeData = new[]
         {
             new { name = "Time Spent (min)", value = Math.Round(quizResult.CompletionTime.TotalMinutes, 2) },
-            new { name = "Avg Time (min)", value = Math.Round(userStats.QuizResults.Any() ? userStats.QuizResults.Average(r => r.CompletionTime.TotalMinutes) : 0, 2) }
+            new { name = "Avg Time (min)", value = Math.Round(userStats.QuizStatistics.Any() ? userStats.QuizStatistics.Average(r => r.CompletionTime.TotalMinutes) : 0, 2) }
         };
 
         try
