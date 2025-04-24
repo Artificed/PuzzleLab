@@ -1,6 +1,6 @@
 namespace PuzzleLab.Shared.DTOs.QuizSession.Requests;
 
-public class GetQuizUserResultsRequest()
+public class GetQuizResultRequest()
 {
     public string QuizId { get; set; } = string.Empty;
 }

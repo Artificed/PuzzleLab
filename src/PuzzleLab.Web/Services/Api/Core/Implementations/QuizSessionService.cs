@@ -35,7 +35,16 @@ public class QuizSessionService(IApiClient apiClient) : IQuizSessionService
         GetUserQuizStatisticsRequest getUserQuizStatisticsRequest)
     {
         var response = await apiClient.GetAsync<GetUserQuizStatisticsResponse>(
-            $"api/quiz-session/quiz-results/{getUserQuizStatisticsRequest.UserId}");
+            $"api/quiz-session/quiz-statistics/{getUserQuizStatisticsRequest.UserId}");
+        return response;
+    }
+
+    public async Task<GetQuizResultResponse?> GetQuizResultAsync(
+        GetQuizResultRequest getQuizResultRequest)
+    {
+        Console.WriteLine($"api/quiz-session/quiz-results/{getQuizResultRequest.QuizId}");
+        var response = await apiClient.GetAsync<GetQuizResultResponse>(
+            $"api/quiz-session/quiz-results/{getQuizResultRequest.QuizId}");
         return response;
     }
 }

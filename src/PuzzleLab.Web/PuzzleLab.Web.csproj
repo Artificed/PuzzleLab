@@ -51,4 +51,8 @@
         <Folder Include="wwwroot\images\"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <Compile Remove="Pages\Admin\QuizResults\QuizResults.razor.cs"/>
+    </ItemGroup>
+
 </Project>

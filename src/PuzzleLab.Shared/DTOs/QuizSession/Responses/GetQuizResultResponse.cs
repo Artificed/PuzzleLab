@@ -1,6 +1,3 @@
 namespace PuzzleLab.Shared.DTOs.QuizSession.Responses;
 
-public class GetQuizResultResponse
-{
-    
-}
+public record GetQuizResultResponse(List<QuizResultDto> QuizResultDtos);

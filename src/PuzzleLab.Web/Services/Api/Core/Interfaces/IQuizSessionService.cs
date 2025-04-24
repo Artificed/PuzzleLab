@@ -16,4 +16,7 @@ public interface IQuizSessionService
 
     Task<GetUserQuizStatisticsResponse?> GetUserQuizStatisticsAsync(
         GetUserQuizStatisticsRequest getUserQuizStatisticsRequest);
+
+    Task<GetQuizResultResponse?> GetQuizResultAsync(
+        GetQuizResultRequest getQuizResultRequest);
 }

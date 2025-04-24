@@ -87,10 +87,26 @@ public class QuizSessionController(ISender sender) : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("quiz-results/{userId}")]
+    [HttpGet("quiz-statistics/{userId}")]
     public async Task<IActionResult> GetUserQuizStatistics(string userId, CancellationToken cancellationToken)
     {
-        var command = new GetUserQuizStatisticsQuery(System.Guid.Parse(userId));
+        var command = new GetUserQuizStatisticsQuery(Guid.Parse(userId));
+
+        var result = await sender.Send(command, cancellationToken);
+
+        if (result.IsFailure)
+        {
+            return this.MapErrorToAction(result.Error);
+        }
+
+        return Ok(result.Value);
+    }
+
+    [Authorize]
+    [HttpGet("quiz-results/{quizId}")]
+    public async Task<IActionResult> GetQuizResults(string quizId, CancellationToken cancellationToken)
+    {
+        var command = new GetQuizResultQuery(Guid.Parse(quizId));
 
         var result = await sender.Send(command, cancellationToken);
 

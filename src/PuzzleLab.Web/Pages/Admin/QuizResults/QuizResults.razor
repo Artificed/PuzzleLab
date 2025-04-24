@@ -1,0 +1,285 @@
+@page "/admin/quiz-results"
+
+@layout Components.Layout.AdminLayout
+
+@using PuzzleLab.Shared.DTOs.QuizSession
+@using PuzzleLab.Shared.DTOs.QuizSession.Requests
+@using PuzzleLab.Web.Services.Api.Core.Interfaces
+@using PuzzleLab.Web.Services.Ui
+@inject IJSRuntime JSRuntime
+
+@inject IQuizSessionService QuizSessionService
+@inject IQuizService QuizService
+
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+        <h1 class="text-2xl font-bold">Quiz Results</h1>
+        <div class="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+            <div class="relative w-full sm:w-auto">
+                <select @bind="_selectedQuizId"
+                        @bind:after="FilterResultsByQuiz"
+                        class="h-10 w-full sm:w-64 rounded-md border border-gray-200 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1">
+                    <option value="">All Quizzes</option>
+                    @foreach (var quizId in _availableQuizIds)
+                    {
+                        <option value="@quizId.Key">@quizId.Value</option>
+                    }
+                </select>
+            </div>
+            <button @onclick="RefreshResults"
+                    class="w-full sm:w-auto inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-gray-900 text-gray-50 hover:bg-gray-900/90 h-10 px-4 py-2">
+                Refresh
+            </button>
+        </div>
+    </div>
+
+    @if (_isLoading)
+    {
+        <div class="flex justify-center p-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        </div>
+    }
+    else if (_filteredResults.Count == 0)
+    {
+        <div class="text-center p-8 border border-gray-200 rounded-lg bg-white shadow-sm">
+            <p class="text-gray-500">No quiz results found for the selected criteria.</p>
+        </div>
+    }
+    else
+    {
+        <div class="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Username
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Quiz Name
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Score
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Completion Time
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Completed Date
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach (var result in _filteredResults.Skip((_currentPage - 1) * _pageSize).Take(_pageSize))
+                    {
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">@result.Username</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@result.QuizName</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <div class="flex items-center">
+                                    <span class="mr-2">@result.ScorePercentage.ToString("0.##")%</span>
+                                    <span
+                                        class="text-xs text-gray-400">(@result.CorrectAnswers/@result.TotalQuestions)</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@FormatTimeSpan(result.CompletionTime)</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@result.QuizCompletedDate.ToString("MMM dd, yyyy HH:mm")</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button @onclick="() => ShowResultDetails(result)"
+                                        class="text-blue-600 hover:text-blue-900 hover:underline">
+                                    View Details
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        @if (_totalPages > 1)
+        {
+            <div class="flex flex-col sm:flex-row justify-between items-center mt-4 gap-4">
+                <div class="text-sm text-gray-500">
+                    Showing @(((_currentPage - 1) * _pageSize) + 1)
+                    to @(Math.Min(_currentPage * _pageSize, _filteredResults.Count))
+                    of @_filteredResults.Count results
+                </div>
+                <div class="flex space-x-2">
+                    <button @onclick="PreviousPage"
+                            disabled="@(_currentPage <= 1)"
+                            class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 border border-gray-200 bg-white hover:bg-gray-100 h-10 px-4 py-2">
+                        Previous
+                    </button>
+                    <span class="inline-flex items-center justify-center h-10 px-4 py-2 text-sm text-gray-700">
+                        Page @_currentPage of @_totalPages
+                    </span>
+                    <button @onclick="NextPage"
+                            disabled="@(_currentPage >= _totalPages)"
+                            class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 border border-gray-200 bg-white hover:bg-gray-100 h-10 px-4 py-2">
+                        Next
+                    </button>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+<QuizResultDetailsModal IsVisible="_showDetailsModal"
+                        Result="_selectedResult"
+                        OnClose="CloseDetailsModal"/>
+
+@code {
+    private List<QuizResultDto> _allResults = new List<QuizResultDto>();
+    private List<QuizResultDto> _filteredResults = new List<QuizResultDto>();
+    private Dictionary<string, string> _availableQuizIds = new Dictionary<string, string>();
+    private string _selectedQuizId = "";
+    private bool _isLoading = true;
+    private int _currentPage = 1;
+    private int _pageSize = 10;
+    private int _totalPages => (int)Math.Ceiling(_filteredResults.Count / (double)_pageSize);
+
+    private bool _showDetailsModal = false;
+    private QuizResultDto _selectedResult = new QuizResultDto();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadQuizResults();
+    }
+
+    private async Task LoadQuizResults()
+    {
+        _isLoading = true;
+
+        try
+        {
+            await LoadAvailableQuizzes();
+
+            if (!string.IsNullOrEmpty(_selectedQuizId))
+            {
+                var request = new GetQuizResultRequest() { QuizId = _selectedQuizId };
+                var response = await QuizSessionService.GetQuizResultAsync(request);
+                if (response != null)
+                {
+                    _allResults = response.QuizResultDtos;
+                }
+            }
+            else
+            {
+                _allResults = new List<QuizResultDto>();
+                foreach (var quizId in _availableQuizIds.Keys)
+                {
+                    var request = new GetQuizResultRequest { QuizId = quizId };
+                    var response = await QuizSessionService.GetQuizResultAsync(request);
+                    if (response != null)
+                    {
+                        _allResults.AddRange(response.QuizResultDtos);
+                    }
+                }
+            }
+
+            FilterResults();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error loading quiz results: {ex.Message}");
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task LoadAvailableQuizzes()
+    {
+        var quizzes = await QuizService.GetQuizzesAsync();
+
+        if (quizzes is null)
+        {
+            ToastService.ShowError("Failed to load quizzes.");
+            return;
+        }
+
+        _availableQuizIds = quizzes.QuizDtos.ToDictionary(
+            q => q.QuizId.ToString(),
+            q => q.QuizName
+        );
+    }
+
+    private void FilterResults()
+    {
+        _filteredResults = _allResults;
+
+        if (!string.IsNullOrEmpty(_selectedQuizId))
+        {
+            _filteredResults = _allResults
+                .Where(r => r.QuizId.ToString() == _selectedQuizId)
+                .ToList();
+        }
+
+        _currentPage = 1;
+    }
+
+    private async Task FilterResultsByQuiz()
+    {
+        await LoadQuizResults();
+    }
+
+    private async Task RefreshResults()
+    {
+        await LoadQuizResults();
+    }
+
+    private void PreviousPage()
+    {
+        if (_currentPage > 1)
+        {
+            _currentPage--;
+        }
+    }
+
+    private void NextPage()
+    {
+        if (_currentPage < _totalPages)
+        {
+            _currentPage++;
+        }
+    }
+
+    private string FormatTimeSpan(TimeSpan time)
+    {
+        if (time.TotalHours >= 1)
+        {
+            return $"{(int)time.TotalHours}h {time.Minutes}m {time.Seconds}s";
+        }
+        else if (time.TotalMinutes >= 1)
+        {
+            return $"{time.Minutes}m {time.Seconds}s";
+        }
+        else
+        {
+            return $"{time.Seconds}s";
+        }
+    }
+
+    private void ShowResultDetails(QuizResultDto result)
+    {
+        _selectedResult = result;
+        _showDetailsModal = true;
+    }
+
+    private void CloseDetailsModal()
+    {
+        _showDetailsModal = false;
+    }
+
+}
