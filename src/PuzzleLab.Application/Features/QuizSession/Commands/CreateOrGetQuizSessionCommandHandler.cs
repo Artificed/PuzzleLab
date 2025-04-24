@@ -49,11 +49,17 @@ public class CreateOrGetQuizSessionCommandHandler(
 
         var existingSession =
             await quizSessionRepository.GetExistingQuizSessionAsync(request.QuizId, request.UserId, cancellationToken);
-        if (existingSession is not null && existingSession.FinalizedAt is null &&
-            DateTime.UtcNow.AddHours(7) < schedule.EndDateTime)
+
+        if (existingSession is not null)
         {
-            var dto = MapToDto(existingSession);
-            return Result<CreateOrGetQuizSessionResponse>.Success(new CreateOrGetQuizSessionResponse(dto));
+            if (existingSession.FinalizedAt is null)
+            {
+                var dto = MapToDto(existingSession);
+                return Result<CreateOrGetQuizSessionResponse>.Success(new CreateOrGetQuizSessionResponse(dto));
+            }
+
+            return Result<CreateOrGetQuizSessionResponse>.Failure(
+                Error.Validation("You have already completed this quiz and cannot retake it."));
         }
 
         var questionPackage =
@@ -64,7 +70,6 @@ public class CreateOrGetQuizSessionCommandHandler(
         var newSession =
             quizSessionFactory.CreateQuizSession(request.UserId, request.QuizId, questionPackage.Questions.Count);
         await quizSessionRepository.InsertQuizSessionAsync(newSession, cancellationToken);
-
         await InsertShuffledQuestions(newSession.Id, questionPackage.Questions.ToList(), cancellationToken);
 
         var newDto = MapToDto(newSession);
