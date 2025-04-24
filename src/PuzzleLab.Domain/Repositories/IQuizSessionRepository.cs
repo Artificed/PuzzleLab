@@ -12,4 +12,5 @@ public interface IQuizSessionRepository
         CancellationToken cancellationToken = default);
 
     Task UpdateQuizSessionAsync(QuizSession quizSession, CancellationToken cancellationToken = default);
+    Task<List<QuizSession>> GetQuizSessionsByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
 }

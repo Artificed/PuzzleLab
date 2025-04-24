@@ -13,4 +13,7 @@ public interface IQuizSessionService
 
     Task<FinalizeQuizResponse?> FinalizeQuizAsync(
         FinalizeQuizRequest finalizeQuizRequest);
+
+    Task<GetUserQuizStatisticsResponse?> GetUserQuizStatisticsAsync(
+        GetUserQuizStatisticsRequest getUserQuizStatisticsRequest);
 }

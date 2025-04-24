@@ -37,4 +37,12 @@ public class QuizSessionRepository(DatabaseContext databaseContext) : IQuizSessi
         databaseContext.QuizSessions.Update(quizSession);
         await databaseContext.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task<List<QuizSession>> GetQuizSessionsByUserIdAsync(Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        return await databaseContext.QuizSessions
+            .Where(q => q.UserId == userId)
+            .ToListAsync(cancellationToken);
+    }
 }

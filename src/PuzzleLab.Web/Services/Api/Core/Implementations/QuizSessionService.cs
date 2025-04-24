@@ -30,4 +30,12 @@ public class QuizSessionService(IApiClient apiClient) : IQuizSessionService
             "/api/quiz-session/finalize", finalizeQuizRequest);
         return response;
     }
+
+    public async Task<GetUserQuizStatisticsResponse?> GetUserQuizStatisticsAsync(
+        GetUserQuizStatisticsRequest getUserQuizStatisticsRequest)
+    {
+        var response = await apiClient.GetAsync<GetUserQuizStatisticsResponse>(
+            $"api/quiz-session/quiz-results/{getUserQuizStatisticsRequest.UserId}");
+        return response;
+    }
 }
