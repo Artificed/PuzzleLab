@@ -7,6 +7,7 @@ using PuzzleLab.Web.Services.Api.Core.Interfaces;
 using PuzzleLab.Web.Services.Api.Handlers;
 using PuzzleLab.Web.Services.Api.Security;
 using PuzzleLab.Web.Services.State;
+using PuzzleLab.Web.Services.Time;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,7 +52,15 @@ builder.Services.AddScoped<IQuizService, QuizService>();
 builder.Services.AddScoped<IQuizSessionService, QuizSessionService>();
 builder.Services.AddScoped<UserStateService>();
 
+builder.Services.AddSingleton<IServerTimeService, ServerTimeService>();
+
 var app = builder.Build();
+
+var timeService = app.Services.GetService<IServerTimeService>();
+if (timeService != null)
+{
+    _ = Task.Run(() => timeService.InitializeAsync());
+}
 
 if (!app.Environment.IsDevelopment())
 {

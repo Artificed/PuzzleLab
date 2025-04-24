@@ -1,67 +1,45 @@
-@using Microsoft.AspNetCore.SignalR.Client
-@inject NavigationManager NavigationManager
-@inject IConfiguration Configuration
-@implements IAsyncDisposable
+@using PuzzleLab.Web.Services.Time
+@inject IServerTimeService ServerTimeService
+@implements IDisposable
 
 <span class="server-time-clock-signalr">@_displayTime</span>
 
 @code {
+
     private string _displayTime = "Connecting...";
-    private HubConnection? _hubConnection;
+    private readonly TimeSpan _targetOffset = TimeSpan.FromHours(7); // GMT+7
 
-    private readonly TimeSpan _targetOffset = TimeSpan.FromHours(7);
-
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        var apiBaseUrl = Configuration["ApiSettings:BaseUrl"];
+        ServerTimeService.TimeUpdated += HandleTimeUpdated;
 
-        if (string.IsNullOrEmpty(apiBaseUrl))
+        UpdateTimeDisplay();
+        base.OnInitialized();
+    }
+
+    private void HandleTimeUpdated()
+    {
+        UpdateTimeDisplay();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void UpdateTimeDisplay()
+    {
+        if (ServerTimeService.CurrentServerTimeUtc.HasValue)
         {
-            _displayTime = "Config Error";
-            Console.WriteLine("Error: 'ApiSettings:BaseUrl' is not configured in appsettings.json");
-            return;
-        }
-
-        var hubUrl = $"{apiBaseUrl.TrimEnd('/')}/hubs/time";
-
-
-        Console.WriteLine($"Connecting to SignalR Hub at: {hubUrl}");
-
-        _hubConnection = new HubConnectionBuilder()
-            .WithUrl(hubUrl)
-            .WithAutomaticReconnect()
-            .Build();
-
-        _hubConnection.On<DateTimeOffset>("ReceiveServerTime", (serverTimeUtc) =>
-        {
+            var serverTimeUtc = ServerTimeService.CurrentServerTimeUtc.Value;
             var targetTime = serverTimeUtc.ToOffset(_targetOffset);
-            _displayTime = targetTime.ToString("HH:mm:ss"); // Format as needed
-            InvokeAsync(StateHasChanged);
-        });
-
-        try
-        {
-            await _hubConnection.StartAsync();
-            _displayTime = "Waiting...";
-            Console.WriteLine("SignalR Connection started.");
+            _displayTime = targetTime.ToString("HH:mm:ss");
         }
-        catch (Exception ex)
+        else
         {
-            _displayTime = "Error";
-            Console.WriteLine($"Error starting SignalR connection: {ex.Message}");
+            _displayTime = "Connecting...";
         }
     }
 
-    public async ValueTask DisposeAsync()
+    public void Dispose()
     {
-        if (_hubConnection is not null)
-        {
-            Console.WriteLine("Disposing SignalR connection.");
-
-            await _hubConnection.StopAsync();
-            await _hubConnection.DisposeAsync();
-        }
-
+        ServerTimeService.TimeUpdated -= HandleTimeUpdated;
         GC.SuppressFinalize(this);
     }
 

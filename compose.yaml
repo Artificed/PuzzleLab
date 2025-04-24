@@ -2,13 +2,14 @@
   puzzle_lab_web:
     image: puzzle_lab_web
     restart: unless-stopped
-    depends_on:
-      - puzzle_lab_api
     build:
       context: .
       dockerfile: ./src/PuzzleLab.Web/Dockerfile
     ports:
       - "8000:8000"
+    depends_on:
+      puzzle_lab_api:
+        condition: service_healthy
 
   puzzle_lab_api:
     image: puzzle_lab_api
@@ -23,6 +24,12 @@
       dockerfile: ./src/PuzzleLab.API/Dockerfile
     ports:
       - "3000:3000"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/health" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
   background_worker:
     image: puzzle_lab_bg_worker
