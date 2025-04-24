@@ -30,6 +30,8 @@ public class LoginCommandHandler(IUserRepository userRepository, IJwtGenerator j
             return Result<LoginResponse>.Failure(Error.Unauthorized("Invalid password!"));
         }
 
+        user.UpdateLastLogin();
+        await userRepository.UpdateUserAsync(user, cancellationToken);
         var tokenString = jwtGenerator.GenerateToken(user);
 
         return Result<LoginResponse>.Success(new LoginResponse(tokenString));

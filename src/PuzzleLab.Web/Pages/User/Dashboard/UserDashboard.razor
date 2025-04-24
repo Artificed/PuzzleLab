@@ -305,18 +305,18 @@
 
     private bool IsQuizInProgress(QuizScheduleDto quiz)
     {
-        var now = DateTime.UtcNow;
+        var now = DateTime.UtcNow.AddHours(7);
         return now >= quiz.StartTime && now <= quiz.EndTime;
     }
 
     private bool IsQuizUpcoming(QuizScheduleDto quiz)
     {
-        return DateTime.UtcNow < quiz.StartTime;
+        return DateTime.UtcNow.AddHours(7) < quiz.StartTime;
     }
 
     private bool IsQuizExpired(QuizScheduleDto quiz)
     {
-        return DateTime.UtcNow > quiz.EndTime;
+        return DateTime.UtcNow.AddHours(7) > quiz.EndTime;
     }
 
     private string GetStatusText(QuizScheduleDto quiz)

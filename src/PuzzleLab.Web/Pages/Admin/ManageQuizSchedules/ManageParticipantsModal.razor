@@ -252,7 +252,6 @@
     private List<QuizParticipantDto> _participants = new();
     private List<QuizParticipantDto> _filteredParticipants = new();
 
-    // For adding participants
     private bool _showAddParticipantModal = false;
     private bool _isLoadingAvailableUsers = false;
     private string _availableUserSearchTerm = "";
@@ -405,6 +404,7 @@
                 return;
             }
 
+            CloseAddParticipantModal();
             await OnSaveSuccess.InvokeAsync();
         }
         catch (Exception ex)
