@@ -32,6 +32,14 @@ public class QuizSessionRepository(DatabaseContext databaseContext) : IQuizSessi
             .FirstOrDefaultAsync(x => x.QuizId == quizId && x.UserId == userId, cancellationToken);
     }
 
+    public async Task<List<QuizSession>> GetQuizSessionsByQuizAsync(Guid quizId,
+        CancellationToken cancellationToken = default)
+    {
+        return await databaseContext.QuizSessions
+            .Where(q => q.QuizId == quizId)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task UpdateQuizSessionAsync(QuizSession quizSession, CancellationToken cancellationToken = default)
     {
         databaseContext.QuizSessions.Update(quizSession);

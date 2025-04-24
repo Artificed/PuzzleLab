@@ -8,7 +8,8 @@ public class QuizRepository(DatabaseContext databaseContext) : IQuizRepository
 {
     public async Task<List<Quiz>> GetAllQuizzesAsync(CancellationToken cancellationToken = default)
     {
-        return await databaseContext.Quizzes.Include(q => q.QuizUsers).ToListAsync(cancellationToken);
+        return await databaseContext.Quizzes.Include(q => q.QuizUsers).Include(q => q.QuestionPackage)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<Quiz?> GetQuizByIdAsync(Guid quizId, CancellationToken cancellationToken = default)
